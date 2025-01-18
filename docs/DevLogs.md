@@ -7,6 +7,7 @@ TODO:
 ## 1.18
 - 创建项目
 - 配置基本的开发环境
+  - 创建并关联git仓库
   - only-allow
   - vue-router@4
   - pinia
