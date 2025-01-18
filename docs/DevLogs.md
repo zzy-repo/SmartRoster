@@ -2,7 +2,8 @@
 
 TODO:
 - 侧边栏
-
+- 顶部导航栏
+- 设置布局
 
 ## 1.18
 - 创建项目
@@ -12,4 +13,7 @@ TODO:
   - vue-router@4
   - pinia
   - axios
-
+  - unocss
+  - @antfu/eslint-config
+  - animate.css
+- 添加了布局

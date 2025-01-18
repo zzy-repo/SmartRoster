@@ -1,23 +1,30 @@
 {
   "name": "smartroster",
-  "private": true,
-  "version": "0.0.0",
   "type": "module",
+  "version": "0.0.0",
+  "private": true,
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc -b && vite build",
     "preview": "vite preview",
-    "preinstall": "npx only-allow pnpm"
+    "preinstall": "npx only-allow pnpm",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
   },
   "dependencies": {
+    "@icon-park/vue-next": "^1.4.2",
+    "animate.css": "^4.1.1",
     "axios": "^1.7.9",
     "pinia": "^2.3.0",
+    "unocss": "^65.4.2",
     "vue": "^3.5.13",
     "vue-router": "4"
   },
   "devDependencies": {
+    "@antfu/eslint-config": "^3.14.0",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
+    "eslint": "^9.18.0",
     "only-allow": "^1.2.1",
     "typescript": "~5.6.2",
     "vite": "^6.0.5",
