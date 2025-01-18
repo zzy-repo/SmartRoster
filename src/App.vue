@@ -4,15 +4,24 @@ import {Plan, Github} from '@icon-park/vue-next'
 
 <template>
   <div class="flex flex-col w-full  min-h-screen">
-    <nav class="h-15 b-b-2 b-b-gray-3 b-b-solid p-x-3 flex flex-items-center flex-justify-between">
-      <a href="#" class="flex flex-row flex-items-center no-underline">
-        <Plan theme="outline" size="40" fill="#333"/>
-        <p class="ml-2 text-xl text-gray-800 font-bold">智能排班系统</p>
-      </a>
-      <a class="no-underline transition-all duration-250 hover:scale-110" href="https://github.com/zzy-repo/SmartRoster"
-         target="_blank">
-        <Github theme="outline" size="30" fill="#333"/>
-      </a>
+    <nav class="h-15 b-b-2 b-b-gray-3 b-b-solid p-x-5 flex flex-items-center flex-justify-between">
+      <div class="right">
+        <a href="#" class="flex flex-row flex-items-center no-underline">
+          <Plan theme="outline" size="40" fill="#333"/>
+          <p class="ml-3 text-lg text-gray-700 font-bold">SmartRoster 智能排班系统</p>
+        </a>
+      </div>
+      <div class="left flex">
+        <a class="no-underline transition-all duration-250 hover:scale-110"
+           href="https://github.com/zzy-repo/SmartRoster"
+           target="_blank">
+          <Github theme="outline" size="27" fill="#333"/>
+        </a>
+        <div class="userInfo ml-2 flex flex-items-center">
+          <img class="rounded-lg" src="https://gitee.com/zzy2401/picbed/raw/master/images/小熊猫-白底.jpg" alt="头像">
+          <p>zzy</p>
+        </div>
+      </div>
     </nav>
     <div class="grow flex flex-row">
       <aside class="w-30 b-r-2 b-r-gray-3 b-r-solid">
