@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <main class="grow m-b-2 bg-white shadow shadow-blueGray">
+  <main class="grow bg-white shadow shadow-blueGray">
     这是主模块
   </main>
 </template>

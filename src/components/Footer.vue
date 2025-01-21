@@ -3,7 +3,7 @@
 </script>
 
 <template>
-  <footer class="h-15 bg-white shadow shadow-blueGray">
+  <footer class="h-7 m-t-1 bg-white shadow shadow-blueGray">
     这是底部
   </footer>
 </template>
