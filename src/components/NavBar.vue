@@ -3,7 +3,7 @@ import {Github, Plan} from "@icon-park/vue-next";
 </script>
 
 <template>
-  <nav class="h-15 b-b-2 b-b-gray-3 b-b-solid p-x-5 flex flex-items-center flex-justify-between">
+  <nav class="h-15 m-b-2 p-x-5 flex flex-items-center flex-justify-between bg-white shadow shadow-blueGray">
     <div class="right">
     </div>
     <div class="left flex">

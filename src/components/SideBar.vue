@@ -11,8 +11,8 @@ const toggleSidebar = () => {
 
 <template>
   <aside
-      :class="['w-[200px] transition-width duration-300', { 'w-[50px]': isCollapsed }]"
-      class="b-r-2 b-r-gray-3 b-r-solid"
+      :class="['w-[210px] transition-width duration-300', { 'w-[50px]': isCollapsed }]"
+      class="m-r-2 bg-white shadow shadow-blueGray"
   >
     <header class="flex flex-col flex-items-center flex-justify-between p-x-3">
       <a href="#" class="flex flex-row flex-items-center no-underline">

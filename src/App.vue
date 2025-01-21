@@ -6,7 +6,7 @@ import Footer from "./components/Footer.vue";
 </script>
 
 <template>
-  <div class="flex w-full min-h-screen">
+  <div class="flex w-full min-h-screen bg-[#f0f2f5]">
     <SideBar></SideBar>
     <div class="grow flex flex-row">
       <div class="grow flex flex-col">
