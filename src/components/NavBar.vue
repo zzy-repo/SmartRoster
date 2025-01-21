@@ -5,10 +5,6 @@ import {Github, Plan} from "@icon-park/vue-next";
 <template>
   <nav class="h-15 b-b-2 b-b-gray-3 b-b-solid p-x-5 flex flex-items-center flex-justify-between">
     <div class="right">
-      <a href="#" class="flex flex-row flex-items-center no-underline">
-        <Plan theme="outline" size="40" fill="#333"/>
-        <p class="ml-3 text-lg text-gray-700 font-bold">SmartRoster 智能排班系统</p>
-      </a>
     </div>
     <div class="left flex">
       <a class="transition-all duration-250 hover:scale-110"
