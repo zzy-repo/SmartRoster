@@ -1,10 +1,17 @@
 <script setup lang="ts">
 import { Github } from '@icon-park/vue-next'
+// defineProps<{
+//   toggleSidebar: () => void
+// }>()
 </script>
 
 <template>
   <nav class="h-15 m-b-2 p-x-5 flex flex-items-center flex-justify-between bg-white shadow shadow-blueGray">
-    <div class="right" />
+    <div class="right" >
+<!--      <button @click="toggleSidebar">-->
+<!--        ☰-->
+<!--      </button>-->
+    </div>
     <div class="left flex">
       <a
         class="transition-all duration-250 hover:scale-110"
