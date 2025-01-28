@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import {Plan, Home, Me, Setting, MouseOne} from '@icon-park/vue-next'
+import {Home, Me, MouseOne, Plan, Setting} from '@icon-park/vue-next'
 import {ref} from 'vue'
+import SideMenu from "./SideMenu.vue";
 
 const isCollapsed = ref(false)
 
@@ -8,7 +9,7 @@ function toggleSidebar() {
   isCollapsed.value = !isCollapsed.value
 }
 
-const items = [
+const menuData = [
   {
     name: '首页',
     icon: Home,
@@ -41,29 +42,16 @@ const items = [
       :class="[{ 'w-[80px]': isCollapsed }]"
       class="m-r-2 bg-white shadow shadow-blueGray w-[210px] transition-width duration-300"
   >
-    <header class="m-b-3 flex flex-col flex-items-center flex-justify-between p-x-3">
-      <a href="#" class="flex flex-row flex-items-center no-underline">
+    <header class="m-b-3 flex flex-col items-center justify-between p-x-3">
+      <a href="#" class="flex flex-row items-center no-underline">
         <Plan theme="outline" size="40" fill="#333"/>
         <p v-if="!isCollapsed" class="ml-3 text-lg text-gray-700 font-bold">SmartRoster 智能排班系统</p>
+        <button @click="toggleSidebar">
+          ☰
+        </button>
       </a>
-      <button @click="toggleSidebar">
-        ☰
-      </button>
     </header>
-    <ur class="flex flex-col flex-items-center">
-      <li v-for="(item,index) in items" :key="index"
-          class="rounded-lg w-90% h-10 flex flex-items-center flex-justify-center hover:bg-#f1f5fa group transition-all transition-duration-300 active:scale-80">
-        <a class="w-full h-full no-underline   flex flex-items-center flex-justify-center"
-           href="#">
-          <component class="flex flex-items-center" :is="item.icon" theme="outline" size="30" fill="#333"
-                     strokeLinecap="square"/>
-          <p v-if="!isCollapsed"
-             class="font-300 w-60% flex flex-justify-center color-#333 group-hover:color-#0065ff">
-            {{ item.name }}
-          </p>
-        </a>
-      </li>
-    </ur>
+    <SideMenu :menuData="menuData" :isCollapsed="isCollapsed"/>
   </aside>
 </template>
 
