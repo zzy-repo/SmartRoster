@@ -6,7 +6,7 @@ import { Github } from '@icon-park/vue-next'
 </script>
 
 <template>
-  <nav class="h-15 m-b-2 p-x-5 flex flex-items-center flex-justify-between bg-white shadow shadow-blueGray">
+  <nav class="h-10 p-x-5 flex flex-items-center flex-justify-between bg-[#fafafa]">
     <div class="right">
       <!--      <button @click="toggleSidebar"> -->
       <!--        ☰ -->

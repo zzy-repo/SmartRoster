@@ -40,12 +40,14 @@ const menuData = [
 <template>
   <aside
       :class="[{ 'w-[80px]': isCollapsed }]"
-      class="m-r-2 bg-white shadow shadow-blueGray w-[210px] transition-width duration-300"
+      class="bg-white w-[260px] transition-width duration-300"
   >
-    <header class="m-b-3 flex flex-col items-center justify-between p-x-3">
-      <a href="#" class="flex flex-row items-center no-underline">
-        <Plan theme="outline" size="40" fill="#333"/>
-        <p v-if="!isCollapsed" class="ml-3 text-lg text-gray-700 font-bold">SmartRoster 智能排班系统</p>
+    <header class="p-3 w-full">
+      <a href="#" class="flex flex-row items-center justify-between no-underline">
+        <div class="flex flex-row items-center">
+          <Plan theme="outline" size="25" fill="#333"/>
+          <p v-if="!isCollapsed" class="m-x-1 text-sm text-gray-700 font-bold">SmartRoster</p>
+        </div>
         <button @click="toggleSidebar">
           ☰
         </button>
