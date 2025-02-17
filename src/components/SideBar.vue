@@ -45,8 +45,8 @@ const menuData = [
     <header class="p-3 w-full">
       <a href="#" class="flex flex-row items-center justify-between no-underline">
         <div class="flex flex-row items-center">
-          <Plan theme="outline" size="25" fill="#333"/>
-          <p v-if="!isCollapsed" class="m-x-1 text-sm text-gray-700 font-bold">SmartRoster</p>
+          <Plan theme="outline" size="25" fill="black"/>
+          <p v-if="!isCollapsed" class="m-x-1 text-sm color-black font-bold">SmartRoster</p>
         </div>
         <button @click="toggleSidebar">
           ☰
