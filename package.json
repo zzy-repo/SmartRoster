@@ -17,6 +17,7 @@
     "@icon-park/vue-next": "^1.4.2",
     "animate.css": "^4.1.1",
     "axios": "^1.8.2",
+    "element-plus": "^2.9.7",
     "nodemon": "^3.1.9",
     "pinia": "^2.3.1",
     "unocss": "^65.5.0",
