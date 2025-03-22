@@ -1,58 +1,55 @@
 <template>
-  <div class="min-h-screen flex items-center justify-center bg-gray-100">
-    <el-form 
-      class="bg-white p-8 rounded-lg shadow-lg w-full max-w-sm"
-      @submit.prevent="login"
-    >
-      <h1 class="text-2xl font-bold text-center mb-6 text-gray-800">系统登录</h1>
-      
-      <el-form-item class="mb-5">
-        <el-input
-          v-model="username"
-          placeholder="用户名"
-          class="[&>input]:pl-9"
-          clearable
-        >
-          <template #prefix>
-            <i class="i-ic-round-account-circle text-gray-400 text-lg" />
-          </template>
-        </el-input>
-      </el-form-item>
-
-      <el-form-item class="mb-6">
-        <el-input
-          v-model="password"
-          type="password"
-          placeholder="密码"
-          show-password
-          class="[&>input]:pl-9"
-          clearable
-        >
-          <template #prefix>
-            <i class="i-ic-round-lock text-gray-400 text-lg" />
-          </template>
-        </el-input>
-      </el-form-item>
-
-      <el-button 
-        native-type="submit"
-        type="primary" 
-        class="w-full !text-base h-10"
-      >
-        立即登录
-      </el-button>
-    </el-form>
+  <div class="flex justify-center items-center h-screen bg-gray-100">
+    <div class="bg-white p-8 rounded shadow-md w-96">
+      <h1 class="text-2xl font-bold text-center mb-6">登录</h1>
+      <el-form :model="form" ref="formRef" :rules="rules" label-width="80px">
+        <el-form-item label="用户名" prop="username">
+          <!-- 监听 keyup 事件，当按下回车键时调用 login 方法 -->
+          <el-input v-model="form.username" placeholder="请输入用户名" @keyup.enter="login"></el-input>
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <!-- 监听 keyup 事件，当按下回车键时调用 login 方法 -->
+          <el-input v-model="form.password" placeholder="请输入密码" type="password" @keyup.enter="login"></el-input>
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" @click="login" class="w-full">登录</el-button>
+        </el-form-item>
+      </el-form>
+    </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref } from 'vue';
+import { ElForm } from 'element-plus';
+import { useRouter } from 'vue-router'; // 引入 useRouter
 
-const username = ref('');
-const password = ref('');
+const form = ref({
+  username: '',
+  password: ''
+});
+const formRef = ref<InstanceType<typeof ElForm>>();
+const router = useRouter(); // 获取路由实例
+
+const rules = ref({
+  username: [
+    { required: true, message: '请输入用户名', trigger: 'blur' }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' }
+  ]
+});
 
 const login = () => {
-  // 这里可以添加登录逻辑，暂时不需要连接后端
-  console.log('登录成功:', username.value, password.value);
+  formRef.value?.validate((valid) => {
+    if (valid) {
+      // 这里可以添加登录逻辑，暂时不需要连接后端
+      console.log('登录成功:', form.value.username, form.value.password);
+      router.push('/'); // 登录成功后跳转到根路径（Layout 页面）
+    } else {
+      console.log('表单验证失败');
+      // 删除返回语句，因为 validate 回调不需要返回值
+    }
+  });
 };
 </script>
