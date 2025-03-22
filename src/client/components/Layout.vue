@@ -27,7 +27,9 @@ const menuItems = [
 <template>
   <div class="common-layout">
     <el-container>
-      <el-header>Header</el-header>
+      <el-header>
+        <router-link to="/login">登录</router-link>
+      </el-header>
       <el-container>
         <el-aside width="200px">
           <!-- 使用 SideMenu 组件 -->
