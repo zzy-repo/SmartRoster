@@ -23,14 +23,20 @@ const activeMenu = ref(props.defaultActive);
     mode="vertical"
   >
     <template v-for="item in menuItems" :key="item.id">
-      <el-sub-menu :index="item.id">
+      <!-- 有子菜单时渲染 el-sub-menu -->
+      <el-sub-menu v-if="item.children?.length" :index="item.id">
         <template #title>
           <span>{{ item.label }}</span>
         </template>
-        <template v-for="child in item.children" :key="child.id">
-          <el-menu-item :index="child.id">{{ child.label }}</el-menu-item>
-        </template>
+        <el-menu-item v-for="child in item.children" :key="child.id" :index="child.id">
+          {{ child.label }}
+        </el-menu-item>
       </el-sub-menu>
+      
+      <!-- 没有子菜单时直接渲染可点击的菜单项 -->
+      <el-menu-item v-else :index="item.id">
+        <span>{{ item.label }}</span>
+      </el-menu-item>
     </template>
   </el-menu>
 </template>

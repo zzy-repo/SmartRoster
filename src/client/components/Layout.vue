@@ -7,19 +7,29 @@ const activeMenu = ref('1');
 const menuItems = [
   {
     id: '1',
-    label: '菜单1',
-    children: [
-      { id: '1-1', label: '子菜单1-1' },
-      { id: '1-2', label: '子菜单1-2' }
-    ]
+    label: '主页',
+    children: []
   },
   {
     id: '2',
-    label: '菜单2',
+    label: '我的排班',
     children: [
-      { id: '2-1', label: '子菜单2-1' },
-      { id: '2-2', label: '子菜单2-2' }
+      { id: '2-1', label: '意向申报' },
+      { id: '2-2', label: '排班日历' }
     ]
+  },
+  {
+    id: '3',
+    label: '排班管理',
+    children: [
+      { id: '3-1', label: '流程管理' },
+      { id: '3-2', label: '分组管理' }
+    ]
+  },
+  {
+    id: '4',
+    label: '系统设置',
+    children: []
   }
 ];
 </script>
