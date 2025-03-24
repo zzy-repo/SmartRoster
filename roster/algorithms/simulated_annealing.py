@@ -190,78 +190,65 @@ class SchedulingAlgorithm:
         return new_schedule
 
     def simulated_annealing(self):
-        """模拟退火算法主流程"""
-        logger.info("==== 开始模拟退火算法 ====")
-        # 数据收集变量
-        temperatures = []
-        current_costs = []
-        best_costs = []
+        """使用模拟退火算法生成排班表"""
+        # 初始化收敛数据记录
+        convergence_data = {"temperatures": [], "current_costs": [], "best_costs": []}
 
-        # 初始化
-        current_sol = self.generate_initial_solution()
-        current_cost = self.calculate_cost(current_sol)
-        best_sol = copy.deepcopy(current_sol)
+        # 初始化随机排班
+        current_schedule = self.generate_initial_solution()
+        current_cost = self.calculate_cost(current_schedule)
+
+        # 记录最佳解
+        best_schedule = copy.deepcopy(current_schedule)
         best_cost = current_cost
 
-        temp = self.sa_config["initial_temp"]
+        # 初始化温度和迭代计数
+        temperature = self.sa_config["initial_temp"]
         iteration = 0
 
-        logger.info(
-            f"初始温度：{self.sa_config['initial_temp']} 初始成本：{current_cost}"
-        )
+        # 记录初始状态
+        convergence_data["temperatures"].append(temperature)
+        convergence_data["current_costs"].append(current_cost)
+        convergence_data["best_costs"].append(best_cost)
 
-        # 主循环
-        while temp > self.sa_config["min_temp"]:
-            iteration += 1
-            logger.debug(
-                f"当前温度：{temp:.2f} 当前成本：{current_cost} 最佳成本：{best_cost}"
+        # 模拟退火主循环
+        while temperature > self.sa_config["min_temp"]:
+            for _ in range(self.sa_config["iter_per_temp"]):
+                # 生成邻域解
+                new_schedule = self.generate_neighbor(current_schedule)
+                new_cost = self.calculate_cost(new_schedule)
+
+                # 计算成本差异
+                cost_diff = new_cost - current_cost
+
+                # 接受准则
+                if cost_diff < 0 or random.random() < math.exp(
+                    -cost_diff / temperature
+                ):
+                    current_schedule = new_schedule
+                    current_cost = new_cost
+
+                    # 更新最佳解
+                    if current_cost < best_cost:
+                        best_schedule = copy.deepcopy(current_schedule)
+                        best_cost = current_cost
+
+                iteration += 1
+
+            # 记录当前状态
+            convergence_data["temperatures"].append(temperature)
+            convergence_data["current_costs"].append(current_cost)
+            convergence_data["best_costs"].append(best_cost)
+
+            # 降温
+            temperature *= self.sa_config["cooling_rate"]
+
+            # 日志输出
+            logger.info(
+                f"温度: {temperature:.2f}, 当前成本: {current_cost:.2f}, 最佳成本: {best_cost:.2f}"
             )
 
-            for _ in range(self.sa_config["iterations"]):
-                neighbor = self.generate_neighbor(current_sol)
-                neighbor_cost = self.calculate_cost(neighbor)
+        logger.info(f"模拟退火完成，最终成本: {best_cost:.2f}")
 
-                cost_diff = neighbor_cost - current_cost
-                accept_prob = math.exp(-cost_diff / temp) if cost_diff > 0 else 1
-
-                if neighbor_cost < current_cost or random.random() < accept_prob:
-                    current_sol = neighbor
-                    current_cost = neighbor_cost
-                    logger.debug(f"接受新解（成本变化：{cost_diff}）")
-
-                    if neighbor_cost < best_cost:
-                        best_sol = copy.deepcopy(neighbor)
-                        best_cost = neighbor_cost
-                        logger.info(f"发现新最佳解！温度：{temp:.2f} 成本：{best_cost}")
-
-            # 数据收集
-            temperatures.append(temp)
-            current_costs.append(current_cost)
-            best_costs.append(best_cost)
-
-            if iteration % 10 == 0:
-                logger.info(
-                    f"迭代 [{iteration}] 温度：{temp:.2f} 当前成本：{current_cost} 最佳成本：{best_cost}"
-                )
-
-            temp *= self.sa_config["cooling_rate"]
-
-        # 将结果保存到CSV文件中
-        import csv
-        import os
-        from datetime import datetime
-
-        csv_filename = os.path.join(DATA_DIR, f"sa_results.csv")
-
-        with open(csv_filename, "w", newline="") as csvfile:
-            writer = csv.writer(csvfile)
-            writer.writerow(["Iteration", "Temperature", "Current_Cost", "Best_Cost"])
-            for i, (temp, curr, best) in enumerate(
-                zip(temperatures, current_costs, best_costs)
-            ):
-                writer.writerow([i + 1, temp, curr, best])
-
-        logger.info(f"模拟退火结果已保存到: {csv_filename}")
-
-        logger.info("==== 算法结束 ====")
-        return best_sol, best_cost
+        # 返回最佳排班表和成本，以及收敛数据
+        return best_schedule, best_cost, convergence_data

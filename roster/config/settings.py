@@ -5,9 +5,10 @@ DATA_DIR = r"e:\workplace\SmartRoster\roster\data"
 
 # 模拟退火算法参数
 SA_CONFIG = {
-    "initial_temp": 1000,  # 初始温度
-    "min_temp": 0.1,       # 最小温度
-    "cooling_rate": 0.95,  # 冷却率
+    "initial_temp": 100.0,
+    "min_temp": 0.1,
+    "cooling_rate": 0.95,
+    "iter_per_temp": 100,  # 添加这个键
     "iterations": 50,      # 每个温度下的迭代次数
 }
 

@@ -12,8 +12,8 @@ from model.entities import Employee, Shift
 # 导入配置
 from config.settings import DATA_DIR, SA_CONFIG, COST_PARAMS
 
-# 导入数据生成器
-from utils.data_generator import DataGenerator
+# 导入数据IO模块
+from utils.data_io import DataGenerator, DataExporter
 
 # 导入日志配置
 from utils.logger import get_logger
@@ -21,7 +21,9 @@ from utils.logger import get_logger
 # 导入算法模块
 from algorithms.simulated_annealing import SchedulingAlgorithm
 from utils.schedule_analyzer import ScheduleAnalyzer
-from utils.data_exporter import DataExporter
+
+# 导入可视化模块
+from utils.visualization import plot_violations, plot_workload_distribution, plot_coverage_analysis, plot_convergence_from_csv
 
 # 获取logger实例
 logger = get_logger(__name__)
@@ -48,11 +50,28 @@ if __name__ == "__main__":
 
     # 运行排班算法
     scheduler = SchedulingAlgorithm(employees, shifts)
-    best_schedule, cost = scheduler.simulated_annealing()
+    best_schedule, cost, convergence_data = scheduler.simulated_annealing()
+
+    # 导出收敛数据
+    DataExporter.export_convergence_data(convergence_data)
 
     # 分析并输出结果
     analyzer = ScheduleAnalyzer(best_schedule, employees)
-    analyzer.print_schedule()
+    violations = analyzer.print_schedule()
 
     # 导出排班结果
     DataExporter.export_schedule(best_schedule)
+    
+    # 从CSV文件读取收敛数据并分析
+    plot_convergence_from_csv()
+    
+    # 可视化违规统计
+    plot_violations(analyzer.detector.violation_stats)
+    
+    # 可视化员工工时分布
+    plot_workload_distribution(analyzer.detector.employee_weekly_hours)
+    
+    # 可视化班次覆盖率分析
+    plot_coverage_analysis(best_schedule, shifts)
+    
+    logger.info("排班分析与可视化完成，结果已保存至数据目录")
