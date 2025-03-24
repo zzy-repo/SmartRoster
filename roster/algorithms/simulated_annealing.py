@@ -149,26 +149,114 @@ class SchedulingAlgorithm:
         """生成相邻解"""
         logger.debug("生成相邻解...")
         new_schedule = copy.deepcopy(current_schedule)
-
+        
+        # 随机选择邻域操作类型
+        operation_type = random.choice(["swap", "replace", "move"])
+        logger.debug(f"选择邻域操作: {operation_type}")
+        
+        if operation_type == "swap":
+            # 操作1: 交换两个班次中的员工
+            if len(new_schedule) < 2:
+                return self.generate_neighbor_replace(new_schedule)  # 如果只有一个班次，退化为替换操作
+                
+            # 随机选择两个不同的班次
+            idx1, idx2 = random.sample(range(len(new_schedule)), 2)
+            shift1, assignment1 = new_schedule[idx1]
+            shift2, assignment2 = new_schedule[idx2]
+            
+            # 尝试找到可以交换的员工
+            common_positions = set(assignment1.keys()) & set(assignment2.keys())
+            if not common_positions:
+                return self.generate_neighbor_replace(new_schedule)  # 没有共同职位，退化为替换操作
+                
+            selected_pos = random.choice(list(common_positions))
+            
+            workers1 = assignment1.get(selected_pos, [])
+            workers2 = assignment2.get(selected_pos, [])
+            
+            if not workers1 or not workers2:
+                return self.generate_neighbor_replace(new_schedule)  # 任一班次没有该职位的员工，退化为替换操作
+                
+            # 随机选择要交换的员工
+            worker1 = random.choice(workers1)
+            worker2 = random.choice(workers2)
+            
+            # 检查门店匹配
+            if worker1.store == shift2.store and worker2.store == shift1.store:
+                # 执行交换
+                workers1.remove(worker1)
+                workers2.remove(worker2)
+                workers1.append(worker2)
+                workers2.append(worker1)
+                logger.debug(f"交换员工: {worker1.name} 和 {worker2.name}")
+            else:
+                return self.generate_neighbor_replace(new_schedule)  # 门店不匹配，退化为替换操作
+                
+        elif operation_type == "move":
+            # 操作2: 将员工从一个班次移动到另一个班次
+            if len(new_schedule) < 2:
+                return self.generate_neighbor_replace(new_schedule)  # 如果只有一个班次，退化为替换操作
+                
+            # 随机选择两个不同的班次
+            idx1, idx2 = random.sample(range(len(new_schedule)), 2)
+            shift1, assignment1 = new_schedule[idx1]
+            shift2, assignment2 = new_schedule[idx2]
+            
+            # 随机选择一个职位
+            if not assignment1:
+                return self.generate_neighbor_replace(new_schedule)
+                
+            selected_pos = random.choice(list(assignment1.keys()))
+            workers1 = assignment1.get(selected_pos, [])
+            
+            if not workers1:
+                return self.generate_neighbor_replace(new_schedule)
+                
+            # 随机选择要移动的员工
+            worker = random.choice(workers1)
+            
+            # 检查目标班次是否需要该职位且员工门店匹配
+            if (selected_pos in shift2.required_positions and 
+                worker.store == shift2.store and
+                worker.name not in [w.name for w in assignment2.get(selected_pos, [])]):
+                
+                # 执行移动
+                workers1.remove(worker)
+                if selected_pos not in assignment2:
+                    assignment2[selected_pos] = []
+                assignment2[selected_pos].append(worker)
+                logger.debug(f"移动员工: {worker.name} 从班次{shift1.day} 到班次{shift2.day}")
+            else:
+                return self.generate_neighbor_replace(new_schedule)  # 条件不满足，退化为替换操作
+        else:
+            # 操作3: 替换员工（原有的操作）
+            return self.generate_neighbor_replace(new_schedule)
+            
+        return new_schedule
+        
+    def generate_neighbor_replace(self, current_schedule):
+        """原有的替换员工操作，作为基础邻域操作"""
+        new_schedule = copy.deepcopy(current_schedule)
+        
         idx = random.randint(0, len(new_schedule) - 1)
         shift, assignment = new_schedule[idx]
-
+        
         positions = list(shift.required_positions.keys())
         if not positions:
             return new_schedule
         selected_pos = random.choice(positions)
-
+        
         current_workers = assignment.get(selected_pos, [])
         if current_workers:
             remove_idx = random.randint(0, len(current_workers) - 1)
             removed = current_workers.pop(remove_idx)
             logger.debug(f"移除员工：{removed.name}（{selected_pos}）")
-
+        
         # 获取当前班次中所有已分配的员工（跨职位）
         already_assigned = []
         for pos, workers in assignment.items():
             already_assigned.extend([w.name for w in workers])
-
+        
         # 只选择同一门店的员工，且排除已分配到该班次的员工
         candidates = [
             e
@@ -177,16 +265,14 @@ class SchedulingAlgorithm:
             and e.store == shift.store
             and e.name not in already_assigned
         ]
-
+        
         if candidates:
             new_worker = random.choice(candidates)
             current_workers.append(new_worker)
-            logger.debug(
-                f"新增员工：{new_worker.name}（{selected_pos}）- 门店：{shift.store}"
-            )
+            logger.debug(f"新增员工：{new_worker.name}（{selected_pos}）- 门店：{shift.store}")
         else:
             logger.debug(f"没有可用的未分配员工，跳过添加")
-
+            
         return new_schedule
 
     def simulated_annealing(self):
