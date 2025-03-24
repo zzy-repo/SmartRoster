@@ -53,84 +53,35 @@ class SchedulingAlgorithm:
         logger.info("开始生成初始解...")
         schedule = []
         
-        # 预处理：计算每个职位的稀缺度（员工数量/需求总量）
-        position_scarcity = {}
-        position_demand = {}
-        for shift in self.shifts:
-            for position, count in shift.required_positions.items():
-                if position not in position_demand:
-                    position_demand[position] = 0
-                position_demand[position] += count
-        
-        # 计算每个职位的员工数量
-        position_supply = {}
-        for employee in self.employees:
-            if employee.position not in position_supply:
-                position_supply[employee.position] = 0
-            position_supply[employee.position] += 1
-        
-        # 计算稀缺度
-        for position in position_demand:
-            if position in position_supply and position_supply[position] > 0:
-                position_scarcity[position] = position_supply[position] / position_demand[position]
-            else:
-                position_scarcity[position] = 0  # 极度稀缺
+        # 计算职位稀缺度
+        position_demand = self._calculate_position_demand()
+        position_supply = self._calculate_position_supply()
+        position_scarcity = self._calculate_position_scarcity(position_demand, position_supply)
         
         logger.debug(f"职位稀缺度: {position_scarcity}")
         
-        # 跟踪每个员工的已分配工时
+        # 跟踪每个员工的已分配工时和工作日
         employee_assigned_hours = {e.name: 0 for e in self.employees}
         employee_assigned_days = {e.name: set() for e in self.employees}
         
-        # 按稀缺度对班次进行排序（先处理包含稀缺职位的班次）
-        sorted_shifts = sorted(
-            self.shifts,
-            key=lambda s: min([position_scarcity.get(p, float('inf')) for p in s.required_positions.keys()], default=float('inf'))
-        )
+        # 按稀缺度对班次进行排序
+        sorted_shifts = self._sort_shifts_by_scarcity(position_scarcity)
         
         for shift in sorted_shifts:
             assignment = {}
             
-            # 按稀缺度对职位进行排序（先分配稀缺职位）
-            sorted_positions = sorted(
-                shift.required_positions.items(),
-                key=lambda x: position_scarcity.get(x[0], 0)
-            )
+            # 按稀缺度对职位进行排序
+            sorted_positions = self._sort_positions_by_scarcity(shift.required_positions.items(), position_scarcity)
             
             for position, count in sorted_positions:
-                # 使用预处理的数据结构获取候选员工
+                # 获取并评分候选员工
                 candidates = self.employee_store_position_map.get((shift.store, position), [])
-                
-                # 根据员工偏好和已分配工作量进行排序
-                scored_candidates = []
-                for e in candidates:
-                    # 如果员工已经在这一天被分配了，降低其优先级
-                    day_penalty = 5 if shift.day in employee_assigned_days[e.name] else 0
-                    
-                    # 计算工作日偏好匹配度
-                    day_pref_match = 1 if e.workday_pref[0] <= shift.day <= e.workday_pref[1] else 0
-                    
-                    # 计算时间偏好匹配度
-                    shift_start = time_to_minutes(shift.start_time)
-                    shift_end = time_to_minutes(shift.end_time)
-                    pref_start = time_to_minutes(e.time_pref[0])
-                    pref_end = time_to_minutes(e.time_pref[1])
-                    time_pref_match = 1 if (shift_start >= pref_start and shift_end <= pref_end) else 0
-                    
-                    # 考虑已分配工时，优先分配工时少的员工
-                    hours_score = 1 / (1 + employee_assigned_hours[e.name])
-                    
-                    # 综合评分
-                    score = (3 * day_pref_match + 2 * time_pref_match + hours_score - day_penalty)
-                    scored_candidates.append((e, score))
-                
-                # 按评分排序
-                scored_candidates.sort(key=lambda x: x[1], reverse=True)
+                scored_candidates = self._score_candidates(
+                    candidates, shift, employee_assigned_hours, employee_assigned_days
+                )
                 
                 # 选择评分最高的员工
-                selected = []
-                for i in range(min(count, len(scored_candidates))):
-                    selected.append(scored_candidates[i][0])
+                selected = [scored_candidates[i][0] for i in range(min(count, len(scored_candidates)))]
                 
                 # 更新员工工时和工作日记录
                 for employee in selected:
@@ -147,92 +98,186 @@ class SchedulingAlgorithm:
         
         logger.info(f"初始解生成完成，共安排{len(self.shifts)}个班次")
         return schedule
+        
+    def _calculate_position_demand(self):
+        """计算各职位需求总量"""
+        position_demand = {}
+        for shift in self.shifts:
+            for position, count in shift.required_positions.items():
+                position_demand[position] = position_demand.get(position, 0) + count
+        return position_demand
+    
+    def _calculate_position_supply(self):
+        """计算各职位员工数量"""
+        position_supply = {}
+        for employee in self.employees:
+            # 修复：将 position 改为 employee.position
+            position_supply[employee.position] = position_supply.get(employee.position, 0) + 1
+        return position_supply
+    
+    def _calculate_position_scarcity(self, demand, supply):
+        """计算职位稀缺度"""
+        scarcity = {}
+        for position in demand:
+            if position in supply and supply[position] > 0:
+                scarcity[position] = supply[position] / demand[position]
+            else:
+                scarcity[position] = 0  # 极度稀缺
+        return scarcity
+    
+    def _sort_shifts_by_scarcity(self, position_scarcity):
+        """按稀缺度对班次进行排序（先处理包含稀缺职位的班次）"""
+        return sorted(
+            self.shifts,
+            key=lambda s: min([position_scarcity.get(p, float('inf')) for p in s.required_positions.keys()], default=float('inf'))
+        )
+    
+    def _sort_positions_by_scarcity(self, positions, position_scarcity):
+        """按稀缺度对职位进行排序（先分配稀缺职位）"""
+        return sorted(positions, key=lambda x: position_scarcity.get(x[0], 0))
+    
+    def _score_candidates(self, candidates, shift, employee_assigned_hours, employee_assigned_days):
+        """根据员工偏好和已分配工作量对候选员工进行评分"""
+        scored_candidates = []
+        for e in candidates:
+            # 如果员工已经在这一天被分配了，降低其优先级
+            day_penalty = 5 if shift.day in employee_assigned_days[e.name] else 0
+            
+            # 计算工作日偏好匹配度
+            day_pref_match = 1 if e.workday_pref[0] <= shift.day <= e.workday_pref[1] else 0
+            
+            # 计算时间偏好匹配度
+            shift_start = time_to_minutes(shift.start_time)
+            shift_end = time_to_minutes(shift.end_time)
+            pref_start = time_to_minutes(e.time_pref[0])
+            pref_end = time_to_minutes(e.time_pref[1])
+            time_pref_match = 1 if (shift_start >= pref_start and shift_end <= pref_end) else 0
+            
+            # 考虑已分配工时，优先分配工时少的员工
+            hours_score = 1 / (1 + employee_assigned_hours[e.name])
+            
+            # 综合评分
+            score = (3 * day_pref_match + 2 * time_pref_match + hours_score - day_penalty)
+            scored_candidates.append((e, score))
+        
+        # 按评分排序
+        scored_candidates.sort(key=lambda x: x[1], reverse=True)
+        return scored_candidates
 
     def calculate_cost(self, schedule):
         """计算排班方案成本"""
         logger.debug("开始计算方案成本...")
         cost = 0
-        # 修改数据结构，按员工和日期分别统计工时
-        employee_weekly_hours = {e.name: 0 for e in self.employees}
-        employee_daily_hours = {
-            e.name: {day: 0 for day in range(7)} for e in self.employees
-        }
+        
+        # 初始化工时统计和违规记录
+        employee_weekly_hours, employee_daily_hours = self._init_hours_tracking()
         violation_details = []
-
+        
+        # 计算班次需求和员工约束相关成本
         for shift, assignment in schedule:
             # 检查班次需求是否满足
-            for position, count in shift.required_positions.items():
-                assigned_count = len(assignment.get(position, []))
-                if assigned_count < count:
-                    penalty = self.cost_params["understaff_penalty"] * (
-                        count - assigned_count
-                    )
+            cost += self._check_shift_requirements(shift, assignment, violation_details)
+            
+            # 检查员工约束并更新工时
+            cost += self._check_employee_constraints(shift, assignment, employee_weekly_hours, 
+                                                   employee_daily_hours, violation_details)
+        
+        # 检查工时限制
+        cost += self._check_hours_limits(employee_weekly_hours, employee_daily_hours, violation_details)
+        
+        # 记录详细违规信息
+        self._log_violations(violation_details)
+        
+        logger.debug(f"总成本计算完成：{cost}")
+        return cost
+    
+    def _init_hours_tracking(self):
+        """初始化工时跟踪数据结构"""
+        employee_weekly_hours = {e.name: 0 for e in self.employees}
+        employee_daily_hours = {e.name: {day: 0 for day in range(7)} for e in self.employees}
+        return employee_weekly_hours, employee_daily_hours
+    
+    def _check_shift_requirements(self, shift, assignment, violation_details):
+        """检查班次需求是否满足"""
+        cost = 0
+        for position, count in shift.required_positions.items():
+            assigned_count = len(assignment.get(position, []))
+            if assigned_count < count:
+                penalty = self.cost_params["understaff_penalty"] * (count - assigned_count)
+                violation_details.append(
+                    f"班次{shift.day} {position} 缺少{count - assigned_count}人（惩罚+{penalty}）"
+                )
+                cost += penalty
+        return cost
+    
+    def _check_employee_constraints(self, shift, assignment, weekly_hours, daily_hours, violation_details):
+        """检查员工约束并更新工时"""
+        cost = 0
+        for position, workers in assignment.items():
+            for employee in workers:
+                # 检查工作日偏好
+                if not (employee.workday_pref[0] <= shift.day <= employee.workday_pref[1]):
                     violation_details.append(
-                        f"班次{shift.day} {position} 缺少{count - assigned_count}人（惩罚+{penalty}）"
+                        f"{employee.name} 工作日偏好冲突（周{shift.day+1}，偏好周{employee.workday_pref[0]+1}-周{employee.workday_pref[1]+1}）"
                     )
-                    cost += penalty
-
-            # 检查员工约束
-            for position, workers in assignment.items():
-                for employee in workers:
-                    # 工作日偏好
-                    if not (
-                        employee.workday_pref[0]
-                        <= shift.day
-                        <= employee.workday_pref[1]
-                    ):
-                        violation_details.append(
-                            f"{employee.name} 工作日偏好冲突（周{shift.day+1}，偏好周{employee.workday_pref[0]+1}-周{employee.workday_pref[1]+1}）"
-                        )
-                        cost += self.cost_params["workday_violation"]
-
-                    # 工作时间偏好
-                    shift_start = time_to_minutes(shift.start_time)
-                    shift_end = time_to_minutes(shift.end_time)
-                    pref_start = time_to_minutes(employee.time_pref[0])
-                    pref_end = time_to_minutes(employee.time_pref[1])
-                    if shift_start < pref_start or shift_end > pref_end:
-                        violation_details.append(
-                            f"{employee.name} 时间偏好冲突（班次{shift.start_time}-{shift.end_time} vs 偏好{employee.time_pref[0]}-{employee.time_pref[1]}）"
-                        )
-                        cost += self.cost_params["time_pref_violation"]
-
-                    # 更新工作时长 - 同时更新每日和每周工时
-                    duration = calculate_shift_duration(shift)
-                    employee_weekly_hours[employee.name] += duration
-                    employee_daily_hours[employee.name][shift.day] += duration
-
+                    cost += self.cost_params["workday_violation"]
+                
+                # 检查工作时间偏好
+                cost += self._check_time_preference(employee, shift, violation_details)
+                
+                # 更新工作时长
+                duration = calculate_shift_duration(shift)
+                weekly_hours[employee.name] += duration
+                daily_hours[employee.name][shift.day] += duration
+        return cost
+    
+    def _check_time_preference(self, employee, shift, violation_details):
+        """检查时间偏好是否满足"""
+        shift_start = time_to_minutes(shift.start_time)
+        shift_end = time_to_minutes(shift.end_time)
+        pref_start = time_to_minutes(employee.time_pref[0])
+        pref_end = time_to_minutes(employee.time_pref[1])
+        
+        if shift_start < pref_start or shift_end > pref_end:
+            violation_details.append(
+                f"{employee.name} 时间偏好冲突（班次{shift.start_time}-{shift.end_time} vs 偏好{employee.time_pref[0]}-{employee.time_pref[1]}）"
+            )
+            return self.cost_params["time_pref_violation"]
+        return 0
+    
+    def _check_hours_limits(self, weekly_hours, daily_hours, violation_details):
+        """检查工时限制"""
+        cost = 0
+        
         # 检查每日时长限制
-        for name, daily_hours in employee_daily_hours.items():
+        for name, days in daily_hours.items():
             employee = next(e for e in self.employees if e.name == name)
-            for day, hours in daily_hours.items():
+            for day, hours in days.items():
                 if hours > employee.max_daily_hours:
                     violation_details.append(
                         f"{name} 周{day+1}日工作{hours:.1f}小时（限制{employee.max_daily_hours}小时）"
                     )
                     cost += self.cost_params["daily_hours_violation"]
-
+        
         # 检查每周时长限制
-        for name, hours in employee_weekly_hours.items():
-            max_hours = next(
-                e.max_weekly_hours for e in self.employees if e.name == name
-            )
+        for name, hours in weekly_hours.items():
+            max_hours = next(e.max_weekly_hours for e in self.employees if e.name == name)
             if hours > max_hours:
                 violation_details.append(
                     f"{name} 周总工时{hours:.1f}小时（限制{max_hours}小时）"
                 )
                 cost += self.cost_params["weekly_hours_violation"]
-
-        # 记录详细违规信息
+                
+        return cost
+    
+    def _log_violations(self, violation_details):
+        """记录违规详情"""
         if violation_details:
             logger.debug(f"发现{len(violation_details)}条违规：")
             for detail in violation_details[:3]:  # 只显示前3条避免日志过多
                 logger.debug(f"  * {detail}")
             if len(violation_details) > 3:
                 logger.debug(f"  还有{len(violation_details)-3}条未显示...")
-
-        logger.debug(f"总成本计算完成：{cost}")
-        return cost
 
     def generate_neighbor(self, current_schedule):
         """生成相邻解"""
