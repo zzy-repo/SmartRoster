@@ -502,9 +502,59 @@ shifts = [
     Shift(5, "16:00", "02:00", {"小组长": 1, "店员（导购）": 6}, "分店B"),
 ]
 
+# 新增Excel导出函数
+def export_input_data(employees, shifts):
+    import csv
+    from datetime import datetime
+    
+    # 导出员工数据
+    with open(r'e:\workplace\SmartRoster\roster\data\employees.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['姓名', '职位', '门店', '工作日偏好', '时间偏好', '最大日工时', '最大周工时'])
+        for e in employees:
+            writer.writerow([
+                e.name, e.position, e.store,
+                f"周{e.workday_pref[0]+1}-周{e.workday_pref[1]+1}",
+                f"{e.time_pref[0]}-{e.time_pref[1]}",
+                e.max_daily_hours, e.max_weekly_hours
+            ])
+    
+    # 导出班次需求
+    with open(r'e:\workplace\SmartRoster\roster\data\shifts.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['周几', '开始时间', '结束时间', '门店', '职位需求'])
+        for s in shifts:
+            writer.writerow([
+                s.day+1, s.start_time, s.end_time, 
+                s.store, str(s.required_positions)
+            ])
+
+def export_schedule(schedule):
+    import csv
+    from datetime import datetime
+    
+    # 导出排班结果
+    with open(r'e:\workplace\SmartRoster\roster\data\schedule.csv', 'w', newline='', encoding='utf-8') as f:
+        writer = csv.writer(f)
+        writer.writerow(['周几', '开始时间', '结束时间', '门店', '职位', '分配员工'])
+        for shift, assignment in schedule:
+            for position, workers in assignment.items():
+                writer.writerow([
+                    shift.day+1, shift.start_time, shift.end_time,
+                    shift.store, position, 
+                    '、'.join([w.name for w in workers])
+                ])
+
+# 在现有代码中找到主程序部分添加调用
 if __name__ == "__main__":
+    # 运行算法前导出输入数据
+    export_input_data(employees, shifts)  # 新增
+    
     # 运行算法
     best_schedule, cost = simulated_annealing(employees, shifts)
-
+    
     # 输出结果
     print_schedule(best_schedule)
+    
+    # 导出排班结果  # 新增
+    export_schedule(best_schedule)
