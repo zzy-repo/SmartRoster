@@ -36,11 +36,12 @@ class Employee:
         self.max_weekly_hours = max_weekly_hours
 
 class Shift:
-    def __init__(self, day, start_time, end_time, required_positions):
+    def __init__(self, day, start_time, end_time, required_positions, store):  # 添加store参数
         self.day = day
         self.start_time = start_time
         self.end_time = end_time
         self.required_positions = required_positions
+        self.store = store  # 新增门店属性
 
 # 辅助函数（保持不变）
 def time_to_minutes(t):
@@ -59,10 +60,11 @@ def generate_initial_solution(shifts, employees):
     for shift in shifts:
         assignment = {}
         for position, count in shift.required_positions.items():
-            candidates = [e for e in employees if e.position == position]
+            # 修改：只选择同一门店的员工
+            candidates = [e for e in employees if e.position == position and e.store == shift.store]
             selected = random.sample(candidates, min(count, len(candidates)))
             assignment[position] = selected
-            logger.debug(f"班次{shift.day} {shift.start_time}-{shift.end_time} - 分配{position} {len(selected)}人")
+            logger.debug(f"班次{shift.day} {shift.start_time}-{shift.end_time} - 门店{shift.store} - 分配{position} {len(selected)}人")
         schedule.append((shift, assignment))
     logger.info(f"初始解生成完成，共安排{len(shifts)}个班次")
     return schedule
@@ -156,11 +158,12 @@ def generate_neighbor(current_schedule):
         removed = current_workers.pop(remove_idx)
         logger.debug(f"移除员工：{removed.name}（{selected_pos}）")
     
-    candidates = [e for e in employees if e.position == selected_pos]
+    # 修改：只选择同一门店的员工
+    candidates = [e for e in employees if e.position == selected_pos and e.store == shift.store]
     if candidates:
         new_worker = random.choice(candidates)
         current_workers.append(new_worker)
-        logger.debug(f"新增员工：{new_worker.name}（{selected_pos}）")
+        logger.debug(f"新增员工：{new_worker.name}（{selected_pos}）- 门店：{shift.store}")
     
     return new_schedule
 
@@ -240,6 +243,10 @@ employees = [
              workday_pref=(0, 3), time_pref=('08:00', '17:00'), max_weekly_hours=30),
     Employee("周杰", "店员（库房）", "13800010005", "zhou@store.com", "旗舰店",
              workday_pref=(0, 6), time_pref=('06:00', '14:00'), max_daily_hours=8),
+    Employee("慕容云", "店员（收银）", "13800040002", "murong@store.com", "旗舰店",
+             workday_pref=(0, 4), time_pref=('07:30', '16:30')),
+    Employee("司马燕", "店员（导购）", "13800040004", "sima@store.com", "旗舰店",
+             workday_pref=(0, 6), time_pref=('00:00', '23:59')),
 
     # 分店A员工
     Employee("陈婷", "门店经理", "13800020001", "chen@store.com", "分店A",
@@ -252,6 +259,8 @@ employees = [
              workday_pref=(0, 6), time_pref=('00:00', '23:59'), max_weekly_hours=40),
     Employee("吴倩", "店员（导购）", "13800020005", "wu@store.com", "分店A",
              workday_pref=(1, 5), time_pref=('09:30', '18:30'), max_daily_hours=7),
+    Employee("欧阳雪", "店员（导购）", "13800040001", "ouyang@store.com", "分店A",
+             workday_pref=(0, 6), time_pref=('10:00', '22:00'), max_weekly_hours=60),
 
     # 分店B员工
     Employee("郑凯", "门店经理", "13800030001", "zheng@store.com", "分店B",
@@ -264,40 +273,32 @@ employees = [
              workday_pref=(4, 6), time_pref=('14:00', '22:00')),
     Employee("韩磊", "店员（库房）", "13800030005", "han@store.com", "分店B",
              workday_pref=(0, 3), time_pref=('04:00', '12:00'), max_weekly_hours=35),
-
-    # 跨店支援员工
-    Employee("欧阳雪", "店员（导购）", "13800040001", "ouyang@store.com", "分店A",
-             workday_pref=(0, 6), time_pref=('10:00', '22:00'), max_weekly_hours=60),
-    Employee("慕容云", "店员（收银）", "13800040002", "murong@store.com", "旗舰店",
-             workday_pref=(0, 4), time_pref=('07:30', '16:30')),
     Employee("诸葛明", "副经理", "13800040003", "zhuge@store.com", "分店B",
              workday_pref=(5, 6), time_pref=('18:00', '24:00'), max_daily_hours=8),
-    Employee("司马燕", "店员（导购）", "13800040004", "sima@store.com", "旗舰店",
-             workday_pref=(0, 6), time_pref=('00:00', '23:59')),
 ]
 
 # 创建复杂班次需求
 shifts = [
     # 旗舰店班次
-    Shift(0, "08:00", "12:00", {"门店经理":1, "店员（导购）":2}),
-    Shift(0, "12:00", "18:00", {"副经理":1, "店员（收银）":2, "店员（导购）":3}),
-    Shift(0, "18:00", "22:00", {"小组长":1, "店员（收银）":1, "店员（库房）":2}),
-    Shift(5, "09:00", "21:00", {"门店经理":1, "副经理":1, "店员（收银）":4, "店员（导购）":5}),
+    Shift(0, "08:00", "12:00", {"门店经理":1, "店员（导购）":2}, "旗舰店"),
+    Shift(0, "12:00", "18:00", {"副经理":1, "店员（收银）":2, "店员（导购）":3}, "旗舰店"),
+    Shift(0, "18:00", "22:00", {"小组长":1, "店员（收银）":1, "店员（库房）":2}, "旗舰店"),
+    Shift(5, "09:00", "21:00", {"门店经理":1, "副经理":1, "店员（收银）":4, "店员（导购）":5}, "旗舰店"),
 
     # 分店A班次
-    Shift(2, "06:00", "12:00", {"店员（库房）":3}),
-    Shift(3, "12:00", "24:00", {"副经理":1, "店员（收银）":3, "店员（导购）":4}),
-    Shift(6, "10:00", "22:00", {"门店经理":1, "小组长":2, "店员（导购）":6}),
+    Shift(2, "06:00", "12:00", {"店员（库房）":3}, "分店A"),
+    Shift(3, "12:00", "24:00", {"副经理":1, "店员（收银）":3, "店员（导购）":4}, "分店A"),
+    Shift(6, "10:00", "22:00", {"门店经理":1, "小组长":2, "店员（导购）":6}, "分店A"),
 
     # 分店B班次
-    Shift(4, "22:00", "06:00", {"副经理":1, "店员（库房）":3}),  # 跨天班次
-    Shift(5, "08:00", "20:00", {"门店经理":1, "店员（收银）":3, "店员（导购）":3}),
-    Shift(6, "09:00", "18:00", {"小组长":1, "店员（导购）":4}),
+    Shift(4, "22:00", "06:00", {"副经理":1, "店员（库房）":3}, "分店B"),
+    Shift(5, "08:00", "20:00", {"门店经理":1, "店员（收银）":3, "店员（导购）":3}, "分店B"),
+    Shift(6, "09:00", "18:00", {"小组长":1, "店员（导购）":4}, "分店B"),
 
     # 特殊班次
-    Shift(0, "00:00", "24:00", {"副经理":2, "店员（收银）":2}),  # 全天候班次
-    Shift(3, "04:00", "08:00", {"店员（库房）":2}),  # 凌晨班次
-    Shift(5, "16:00", "02:00", {"门店经理":1, "店员（导购）":5}),  # 跨午夜班次
+    Shift(0, "00:00", "24:00", {"副经理":2, "店员（收银）":2}, "旗舰店"),
+    Shift(3, "04:00", "08:00", {"店员（库房）":2}, "分店A"),
+    Shift(5, "16:00", "02:00", {"门店经理":1, "店员（导购）":5}, "分店B"),
 ]
 
 if __name__ == "__main__":
