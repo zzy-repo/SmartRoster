@@ -13,6 +13,7 @@ from utils.logger import get_logger
 # 获取logger实例
 logger = get_logger(__name__)
 
+
 # 辅助函数
 def time_to_minutes(t):
     hours, mins = map(int, t.split(":"))
@@ -245,9 +246,22 @@ class SchedulingAlgorithm:
 
             temp *= self.sa_config["cooling_rate"]
 
-        # 可视化结果 - 改为调用外部可视化服务
-        from utils.visualization import visualize_convergence
-        visualize_convergence(temperatures, current_costs, best_costs, DATA_DIR)
+        # 将结果保存到CSV文件中
+        import csv
+        import os
+        from datetime import datetime
+
+        csv_filename = os.path.join(DATA_DIR, f"sa_results.csv")
+
+        with open(csv_filename, "w", newline="") as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow(["Iteration", "Temperature", "Current_Cost", "Best_Cost"])
+            for i, (temp, curr, best) in enumerate(
+                zip(temperatures, current_costs, best_costs)
+            ):
+                writer.writerow([i + 1, temp, curr, best])
+
+        logger.info(f"模拟退火结果已保存到: {csv_filename}")
 
         logger.info("==== 算法结束 ====")
         return best_sol, best_cost

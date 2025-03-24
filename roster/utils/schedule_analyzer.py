@@ -68,10 +68,7 @@ class ViolationDetector:
     def _check_shift_violations(self):
         """检测与班次相关的违规"""
         for shift, assignment in self.schedule:
-            logger.info(
-                f"\n班次 {shift.day+1}（周{shift.day+1}）{shift.start_time}-{shift.end_time}:"
-            )
-            
+            # 移除班次信息的输出
             # 检查人手不足
             self._check_understaffing(shift, assignment)
             
@@ -102,7 +99,7 @@ class ViolationDetector:
     def _check_employee_constraints(self, shift, assignment):
         """检查员工约束违规"""
         for position, workers in assignment.items():
-            logger.info(f"  {position}: {', '.join([w.name for w in workers])}")
+            # 移除员工分配信息的输出
             for employee in workers:
                 # 工作日冲突
                 self._check_workday_conflict(employee, shift, position)
@@ -238,8 +235,6 @@ class ScheduleAnalyzer:
 
     def print_schedule(self):
         """打印排班结果和违规统计"""
-        logger.info("\n最终排班方案：")
-        
         # 初始化数据结构
         self.detector.initialize_hour_tracking()
         
@@ -249,9 +244,6 @@ class ScheduleAnalyzer:
         # 检测违规
         violation_stats, violation_examples = self.detector.detect_violations()
         
-        # 输出统计结果
-        self._print_violation_stats(violation_stats, violation_examples)
-        
         # 导出违规记录到CSV
         self.exporter.export_violations(violation_examples)
         
@@ -259,19 +251,3 @@ class ScheduleAnalyzer:
         self.exporter.export_violation_stats(violation_stats)
         
         return violation_examples
-    
-    def _print_violation_stats(self, violation_stats, violation_examples):
-        """打印违规统计结果"""
-        logger.info("\n=== 违规统计 ===")
-        logger.info(f"1. 人手不足: {violation_stats['understaff']}次")
-        logger.info(f"2. 工作日冲突: {violation_stats['workday_conflict']}次")
-        logger.info(f"3. 时间偏好冲突: {violation_stats['time_pref_conflict']}次")
-        logger.info(f"4. 单日超时: {violation_stats['daily_overhours']}次")
-        logger.info(f"5. 周超时: {violation_stats['weekly_overhours']}次")
-        
-        # 输出示例（最多5条）
-        logger.info("\n=== 违规示例 ===")
-        for example in violation_examples[:5]:
-            logger.warning(f"· {example['描述']}")
-        if len(violation_examples) > 5:
-            logger.info(f"（共{len(violation_examples)}条违规记录，仅显示前5条示例）")

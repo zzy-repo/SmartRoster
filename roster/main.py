@@ -52,7 +52,7 @@ if __name__ == "__main__":
 
     # 分析并输出结果
     analyzer = ScheduleAnalyzer(best_schedule, employees)
-    analyzer.print_schedule()  # 现在会自动导出违规记录
+    analyzer.print_schedule()
 
     # 导出排班结果
     DataExporter.export_schedule(best_schedule)
