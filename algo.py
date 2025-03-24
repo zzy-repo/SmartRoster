@@ -3,6 +3,7 @@ import random
 import math
 import copy
 from datetime import datetime
+import matplotlib.pyplot as plt 
 
 # 模拟退火算法参数
 INITIAL_TEMP = 1000  # 初始温度
@@ -183,8 +184,14 @@ def generate_neighbor(current_schedule):
     return new_schedule
 
 # 模拟退火主算法（添加详细日志）
+import matplotlib.pyplot as plt  # 新增图表库导入
+
 def simulated_annealing(employees, shifts, cost_params=COST_PARAMS):
     logger.info("==== 开始模拟退火算法 ====")
+    # 新增数据收集变量
+    temperatures = []
+    current_costs = []
+    best_costs = []
     current_sol = generate_initial_solution(shifts, employees)
     current_cost = calculate_cost(current_sol, cost_params)
     best_sol = copy.deepcopy(current_sol)
@@ -217,13 +224,49 @@ def simulated_annealing(employees, shifts, cost_params=COST_PARAMS):
                     logger.info(f"发现新最佳解！温度：{temp:.2f} 成本：{best_cost}")
         
         # 温度更新日志
+        # 在温度更新后添加数据收集
+        temperatures.append(temp)
+        current_costs.append(current_cost)
+        best_costs.append(best_cost)
+        
         if iteration % 10 == 0:
             logger.info(f"迭代 [{iteration}] 温度：{temp:.2f} 当前成本：{current_cost} 最佳成本：{best_cost}")
         
         temp *= COOLING_RATE
     
+    # 新增可视化代码
+    plt.rcParams['font.family'] = 'Microsoft YaHei'  # 设置中文字体
+    plt.rcParams['axes.unicode_minus'] = False  # 解决负号显示问题
+    plt.figure(figsize=(12, 6))
+    
+    # 创建双Y轴
+    ax1 = plt.gca()
+    ax2 = ax1.twinx()
+    
+    # 绘制成本曲线
+    line1, = ax1.plot(range(len(temperatures)), current_costs, 'b-', label='当前成本', alpha=0.5)
+    line2, = ax1.plot(range(len(temperatures)), best_costs, 'r-', label='最佳成本')
+    
+    # 绘制温度曲线（对数坐标）
+    line3, = ax2.plot(range(len(temperatures)), temperatures, 'g--', label='温度')
+    ax2.set_yscale('log')
+    
+    # 设置图表属性
+    ax1.set_xlabel('迭代次数')
+    ax1.set_ylabel('成本值')
+    ax2.set_ylabel('温度（对数尺度）')
+    plt.title('模拟退火算法收敛过程')
+    
+    # 合并图例
+    lines = [line1, line2, line3]
+    labels = [l.get_label() for l in lines]
+    plt.legend(lines, labels, loc='upper right')
+    
+    # 保存图表
+    plt.savefig(r'e:\workplace\SmartRoster\convergence_plot.png')
+    logger.info("收敛图表已保存至 converage_plot.png")
+    
     logger.info("==== 算法结束 ====")
-    logger.info(f"最终最佳成本：{best_cost}")
     return best_sol, best_cost
 
 # 结果输出函数（新增）
