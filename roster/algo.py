@@ -192,7 +192,9 @@ class SchedulingAlgorithm:
         """计算排班方案成本"""
         logger.debug("开始计算方案成本...")
         cost = 0
-        employee_hours = {e.name: 0 for e in self.employees}
+        # 修改数据结构，按员工和日期分别统计工时
+        employee_weekly_hours = {e.name: 0 for e in self.employees}
+        employee_daily_hours = {e.name: {day: 0 for day in range(7)} for e in self.employees}
         violation_details = []
 
         for shift, assignment in schedule:
@@ -229,22 +231,26 @@ class SchedulingAlgorithm:
                         )
                         cost += self.cost_params["time_pref_violation"]
 
-                    # 更新工作时长
+                    # 更新工作时长 - 同时更新每日和每周工时
                     duration = calculate_shift_duration(shift)
-                    employee_hours[employee.name] += duration
+                    employee_weekly_hours[employee.name] += duration
+                    employee_daily_hours[employee.name][shift.day] += duration
 
-                    # 每日时长限制
-                    if duration > employee.max_daily_hours:
-                        violation_details.append(
-                            f"{employee.name} 单日超时（{duration}h > 限制{employee.max_daily_hours}h）"
-                        )
-                        cost += self.cost_params["daily_hours_violation"]
+        # 检查每日时长限制
+        for name, daily_hours in employee_daily_hours.items():
+            employee = next(e for e in self.employees if e.name == name)
+            for day, hours in daily_hours.items():
+                if hours > employee.max_daily_hours:
+                    violation_details.append(
+                        f"{name} 周{day+1}日工作{hours:.1f}小时（限制{employee.max_daily_hours}小时）"
+                    )
+                    cost += self.cost_params["daily_hours_violation"]
 
         # 检查每周时长限制
-        for name, hours in employee_hours.items():
+        for name, hours in employee_weekly_hours.items():
             max_hours = next(e.max_weekly_hours for e in self.employees if e.name == name)
             if hours > max_hours:
-                violation_details.append(f"{name} 周超时（{hours}h > 限制{max_hours}h）")
+                violation_details.append(f"{name} 周总工时{hours:.1f}小时（限制{max_hours}小时）")
                 cost += self.cost_params["weekly_hours_violation"]
 
         # 记录详细违规信息
@@ -277,16 +283,27 @@ class SchedulingAlgorithm:
             removed = current_workers.pop(remove_idx)
             logger.debug(f"移除员工：{removed.name}（{selected_pos}）")
 
-        # 只选择同一门店的员工
+        # 获取当前班次中所有已分配的员工（跨职位）
+        already_assigned = []
+        for pos, workers in assignment.items():
+            already_assigned.extend([w.name for w in workers])
+        
+        # 只选择同一门店的员工，且排除已分配到该班次的员工
         candidates = [
-            e for e in self.employees if e.position == selected_pos and e.store == shift.store
+            e for e in self.employees 
+            if e.position == selected_pos 
+            and e.store == shift.store
+            and e.name not in already_assigned
         ]
+        
         if candidates:
             new_worker = random.choice(candidates)
             current_workers.append(new_worker)
             logger.debug(
                 f"新增员工：{new_worker.name}（{selected_pos}）- 门店：{shift.store}"
             )
+        else:
+            logger.debug(f"没有可用的未分配员工，跳过添加")
 
         return new_schedule
 
@@ -404,7 +421,9 @@ class ScheduleAnalyzer:
             "daily_overhours": 0,
             "weekly_overhours": 0,
         }
-        employee_hours = {e.name: 0 for e in self.employees}
+        # 修改数据结构，按员工和日期分别统计工时
+        employee_weekly_hours = {e.name: 0 for e in self.employees}
+        employee_daily_hours = {e.name: {day: 0 for day in range(7)} for e in self.employees}
         examples = []
 
         # 第一遍遍历：收集工时数据
@@ -412,7 +431,8 @@ class ScheduleAnalyzer:
             for position, workers in assignment.items():
                 for employee in workers:
                     duration = calculate_shift_duration(shift)
-                    employee_hours[employee.name] += duration
+                    employee_weekly_hours[employee.name] += duration
+                    employee_daily_hours[employee.name][shift.day] += duration
 
         # 第二遍遍历：检测违规
         for shift, assignment in self.schedule:
@@ -456,21 +476,24 @@ class ScheduleAnalyzer:
                             f"{employee.name} 班次时间{shift.start_time}-{shift.end_time}超出偏好时段"
                         )
 
-                    # 每日时长检查
-                    duration = calculate_shift_duration(shift)
-                    if duration > employee.max_daily_hours:
-                        violation_stats["daily_overhours"] += 1
-                        examples.append(
-                            f"{employee.name} 单日工作{duration}小时（限制{employee.max_daily_hours}小时）"
-                        )
+            # 检查每日时长限制
+            for name, daily_hours in employee_daily_hours.items():
+                employee = next(e for e in self.employees if e.name == name)
+                for day, hours in daily_hours.items():
+                    if hours > 0:  # 只检查有排班的日期
+                        if hours > employee.max_daily_hours:
+                            violation_stats["daily_overhours"] += 1
+                            examples.append(
+                                f"{name} 周{day+1}日工作{hours:.1f}小时（限制{employee.max_daily_hours}小时）"
+                            )
 
-            # 每周时长检查
-            for name, hours in employee_hours.items():
+            # 检查每周时长限制
+            for name, hours in employee_weekly_hours.items():
                 employee = next(e for e in self.employees if e.name == name)
                 if hours > employee.max_weekly_hours:
                     violation_stats["weekly_overhours"] += 1
                     examples.append(
-                        f"{name} 周总工时{hours}小时（限制{employee.max_weekly_hours}小时）"
+                        f"{name} 周总工时{hours:.1f}小时（限制{employee.max_weekly_hours}小时）"
                     )
 
         # 输出统计结果
