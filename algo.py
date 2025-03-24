@@ -70,7 +70,22 @@ def generate_initial_solution(shifts, employees):
     return schedule
 
 # 成本计算（添加详细日志）
-def calculate_cost(schedule):
+# 在模拟退火算法参数区块添加成本参数
+# 模拟退火算法参数
+INITIAL_TEMP = 1000
+MIN_TEMP = 0.1
+COOLING_RATE = 0.95
+NUM_ITERATIONS = 50
+COST_PARAMS = {  # 新增成本参数配置
+    'understaff_penalty': 100,
+    'workday_violation': 10,
+    'time_pref_violation': 5,
+    'daily_hours_violation': 20,
+    'weekly_hours_violation': 50
+}
+
+# 修改calculate_cost函数签名和计算逻辑
+def calculate_cost(schedule, cost_params=COST_PARAMS):
     logger.debug("开始计算方案成本...")
     cost = 0
     employee_hours = {e.name: 0 for e in employees}
@@ -81,12 +96,12 @@ def calculate_cost(schedule):
         for position, count in shift.required_positions.items():
             assigned_count = len(assignment.get(position, []))
             if assigned_count < count:
-                penalty = 100 * (count - assigned_count)
+                penalty = cost_params['understaff_penalty'] * (count - assigned_count)
                 violation_details.append(
                     f"班次{shift.day} {position} 缺少{count - assigned_count}人（惩罚+{penalty}）"
                 )
                 cost += penalty
-
+    
         # 检查员工约束
         for position, workers in assignment.items():
             for employee in workers:
@@ -168,10 +183,10 @@ def generate_neighbor(current_schedule):
     return new_schedule
 
 # 模拟退火主算法（添加详细日志）
-def simulated_annealing(employees, shifts):
+def simulated_annealing(employees, shifts, cost_params=COST_PARAMS):
     logger.info("==== 开始模拟退火算法 ====")
     current_sol = generate_initial_solution(shifts, employees)
-    current_cost = calculate_cost(current_sol)
+    current_cost = calculate_cost(current_sol, cost_params)
     best_sol = copy.deepcopy(current_sol)
     best_cost = current_cost
     
@@ -186,7 +201,7 @@ def simulated_annealing(employees, shifts):
         
         for _ in range(NUM_ITERATIONS):
             neighbor = generate_neighbor(current_sol)
-            neighbor_cost = calculate_cost(neighbor)
+            neighbor_cost = calculate_cost(neighbor, cost_params)
             
             cost_diff = neighbor_cost - current_cost
             accept_prob = math.exp(-cost_diff/temp) if cost_diff > 0 else 1
