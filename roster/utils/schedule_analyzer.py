@@ -20,8 +20,8 @@ def calculate_shift_duration(shift):
     return (end - start) / 60
 
 
-# 结果分析与输出类
-class ScheduleAnalyzer:
+# 违规检测模块
+class ViolationDetector:
     def __init__(self, schedule, employees):
         self.schedule = schedule
         self.employees = employees
@@ -35,39 +35,15 @@ class ScheduleAnalyzer:
             "weekly_overhours": 0,
         }
         self.violation_examples = []
-
-    def print_schedule(self):
-        """打印排班结果和违规统计"""
-        logger.info("\n最终排班方案：")
         
-        # 初始化数据结构
-        self._initialize_hour_tracking()
-        
-        # 收集工时数据
-        self._collect_working_hours()
-        
-        # 检测违规
-        self._detect_violations()
-        
-        # 输出统计结果
-        self._print_violation_stats()
-        
-        # 导出违规记录到CSV
-        self.export_violations(self.violation_examples)
-        
-        # 导出违规统计到CSV
-        self.export_violation_stats(self.violation_stats)
-        
-        return self.violation_examples
-    
-    def _initialize_hour_tracking(self):
+    def initialize_hour_tracking(self):
         """初始化工时跟踪数据结构"""
         self.employee_weekly_hours = {e.name: 0 for e in self.employees}
         self.employee_daily_hours = {
             e.name: {day: 0 for day in range(7)} for e in self.employees
         }
     
-    def _collect_working_hours(self):
+    def collect_working_hours(self):
         """收集员工工时数据"""
         for shift, assignment in self.schedule:
             for position, workers in assignment.items():
@@ -76,7 +52,7 @@ class ScheduleAnalyzer:
                     self.employee_weekly_hours[employee.name] += duration
                     self.employee_daily_hours[employee.name][shift.day] += duration
     
-    def _detect_violations(self):
+    def detect_violations(self):
         """检测所有违规情况"""
         # 检测班次相关违规
         self._check_shift_violations()
@@ -86,6 +62,8 @@ class ScheduleAnalyzer:
         
         # 检测每周时长限制
         self._check_weekly_hour_limits()
+        
+        return self.violation_stats, self.violation_examples
     
     def _check_shift_violations(self):
         """检测与班次相关的违规"""
@@ -205,24 +183,12 @@ class ScheduleAnalyzer:
                         "员工": name,
                     }
                 )
-    
-    def _print_violation_stats(self):
-        """打印违规统计结果"""
-        logger.info("\n=== 违规统计 ===")
-        logger.info(f"1. 人手不足: {self.violation_stats['understaff']}次")
-        logger.info(f"2. 工作日冲突: {self.violation_stats['workday_conflict']}次")
-        logger.info(f"3. 时间偏好冲突: {self.violation_stats['time_pref_conflict']}次")
-        logger.info(f"4. 单日超时: {self.violation_stats['daily_overhours']}次")
-        logger.info(f"5. 周超时: {self.violation_stats['weekly_overhours']}次")
-        
-        # 输出示例（最多5条）
-        logger.info("\n=== 违规示例 ===")
-        for example in self.violation_examples[:5]:
-            logger.warning(f"· {example['描述']}")
-        if len(self.violation_examples) > 5:
-            logger.info(f"（共{len(self.violation_examples)}条违规记录，仅显示前5条示例）")
 
-    def export_violations(self, violations):
+
+# 数据导出模块
+class DataExporter:
+    @staticmethod
+    def export_violations(violations):
         """导出违规记录到CSV文件"""
         violations_path = os.path.join(DATA_DIR, "violations.csv")
         with open(violations_path, "w", newline="", encoding="utf-8") as f:
@@ -245,7 +211,8 @@ class ScheduleAnalyzer:
 
         logger.info(f"违规记录已导出至 {violations_path}")
 
-    def export_violation_stats(self, violation_stats):
+    @staticmethod
+    def export_violation_stats(violation_stats):
         """导出违规统计到CSV文件"""
         stats_path = os.path.join(DATA_DIR, "violation_stats.csv")
         with open(stats_path, "w", newline="", encoding="utf-8") as f:
@@ -259,3 +226,52 @@ class ScheduleAnalyzer:
             writer.writerow(["总计", sum(violation_stats.values())])
 
         logger.info(f"违规统计已导出至 {stats_path}")
+
+
+# 结果分析与输出类
+class ScheduleAnalyzer:
+    def __init__(self, schedule, employees):
+        self.schedule = schedule
+        self.employees = employees
+        self.detector = ViolationDetector(schedule, employees)
+        self.exporter = DataExporter()
+
+    def print_schedule(self):
+        """打印排班结果和违规统计"""
+        logger.info("\n最终排班方案：")
+        
+        # 初始化数据结构
+        self.detector.initialize_hour_tracking()
+        
+        # 收集工时数据
+        self.detector.collect_working_hours()
+        
+        # 检测违规
+        violation_stats, violation_examples = self.detector.detect_violations()
+        
+        # 输出统计结果
+        self._print_violation_stats(violation_stats, violation_examples)
+        
+        # 导出违规记录到CSV
+        self.exporter.export_violations(violation_examples)
+        
+        # 导出违规统计到CSV
+        self.exporter.export_violation_stats(violation_stats)
+        
+        return violation_examples
+    
+    def _print_violation_stats(self, violation_stats, violation_examples):
+        """打印违规统计结果"""
+        logger.info("\n=== 违规统计 ===")
+        logger.info(f"1. 人手不足: {violation_stats['understaff']}次")
+        logger.info(f"2. 工作日冲突: {violation_stats['workday_conflict']}次")
+        logger.info(f"3. 时间偏好冲突: {violation_stats['time_pref_conflict']}次")
+        logger.info(f"4. 单日超时: {violation_stats['daily_overhours']}次")
+        logger.info(f"5. 周超时: {violation_stats['weekly_overhours']}次")
+        
+        # 输出示例（最多5条）
+        logger.info("\n=== 违规示例 ===")
+        for example in violation_examples[:5]:
+            logger.warning(f"· {example['描述']}")
+        if len(violation_examples) > 5:
+            logger.info(f"（共{len(violation_examples)}条违规记录，仅显示前5条示例）")
