@@ -25,125 +25,176 @@ class ScheduleAnalyzer:
     def __init__(self, schedule, employees):
         self.schedule = schedule
         self.employees = employees
-
-    def print_schedule(self):
-        """打印排班结果和违规统计"""
-        logger.info("\n最终排班方案：")
-        violation_stats = {
+        self.employee_weekly_hours = {}
+        self.employee_daily_hours = {}
+        self.violation_stats = {
             "understaff": 0,
             "workday_conflict": 0,
             "time_pref_conflict": 0,
             "daily_overhours": 0,
             "weekly_overhours": 0,
         }
-        # 修改数据结构，按员工和日期分别统计工时
-        employee_weekly_hours = {e.name: 0 for e in self.employees}
-        employee_daily_hours = {
+        self.violation_examples = []
+
+    def print_schedule(self):
+        """打印排班结果和违规统计"""
+        logger.info("\n最终排班方案：")
+        
+        # 初始化数据结构
+        self._initialize_hour_tracking()
+        
+        # 收集工时数据
+        self._collect_working_hours()
+        
+        # 检测违规
+        self._detect_violations()
+        
+        # 输出统计结果
+        self._print_violation_stats()
+        
+        # 导出违规记录到CSV
+        self.export_violations(self.violation_examples)
+        
+        # 导出违规统计到CSV
+        self.export_violation_stats(self.violation_stats)
+        
+        return self.violation_examples
+    
+    def _initialize_hour_tracking(self):
+        """初始化工时跟踪数据结构"""
+        self.employee_weekly_hours = {e.name: 0 for e in self.employees}
+        self.employee_daily_hours = {
             e.name: {day: 0 for day in range(7)} for e in self.employees
         }
-        examples = []
-
-        # 第一遍遍历：收集工时数据
+    
+    def _collect_working_hours(self):
+        """收集员工工时数据"""
         for shift, assignment in self.schedule:
             for position, workers in assignment.items():
                 for employee in workers:
                     duration = calculate_shift_duration(shift)
-                    employee_weekly_hours[employee.name] += duration
-                    employee_daily_hours[employee.name][shift.day] += duration
-
-        # 第二遍遍历：检测违规
+                    self.employee_weekly_hours[employee.name] += duration
+                    self.employee_daily_hours[employee.name][shift.day] += duration
+    
+    def _detect_violations(self):
+        """检测所有违规情况"""
+        # 检测班次相关违规
+        self._check_shift_violations()
+        
+        # 检测每日时长限制
+        self._check_daily_hour_limits()
+        
+        # 检测每周时长限制
+        self._check_weekly_hour_limits()
+    
+    def _check_shift_violations(self):
+        """检测与班次相关的违规"""
         for shift, assignment in self.schedule:
             logger.info(
                 f"\n班次 {shift.day+1}（周{shift.day+1}）{shift.start_time}-{shift.end_time}:"
             )
-
+            
             # 检查人手不足
-            for position, count in shift.required_positions.items():
-                assigned = len(assignment.get(position, []))
-                if assigned < count:
-                    violation_stats["understaff"] += 1
-                    examples.append(
-                        {
-                            "类型": "人手不足",
-                            "描述": f"班次{shift.day+1} {position} 需要{count}人，实际{assigned}人",
-                            "班次日期": f"周{shift.day+1}",
-                            "班次时间": f"{shift.start_time}-{shift.end_time}",
-                            "门店": shift.store,
-                            "职位": position,
-                            "员工": "N/A",
-                        }
-                    )
-                    logger.warning(
-                        f"  ! {position}人手不足：需要{count}人，实际{assigned}人"
-                    )
-
+            self._check_understaffing(shift, assignment)
+            
             # 检查员工约束
-            for position, workers in assignment.items():
-                logger.info(f"  {position}: {', '.join([w.name for w in workers])}")
-                for employee in workers:
-                    # 工作日冲突
-                    if not (
-                        employee.workday_pref[0]
-                        <= shift.day
-                        <= employee.workday_pref[1]
-                    ):
-                        violation_stats["workday_conflict"] += 1
-                        examples.append(
-                            {
-                                "类型": "工作日偏好冲突",
-                                "描述": f"{employee.name} 周{shift.day+1}班次与偏好周{employee.workday_pref[0]+1}-周{employee.workday_pref[1]+1}冲突",
-                                "班次日期": f"周{shift.day+1}",
-                                "班次时间": f"{shift.start_time}-{shift.end_time}",
-                                "门店": shift.store,
-                                "职位": position,
-                                "员工": employee.name,
-                            }
-                        )
-
-                    # 时间偏好冲突
-                    shift_start = time_to_minutes(shift.start_time)
-                    shift_end = time_to_minutes(shift.end_time)
-                    pref_start = time_to_minutes(employee.time_pref[0])
-                    pref_end = time_to_minutes(employee.time_pref[1])
-                    if shift_start < pref_start or shift_end > pref_end:
-                        violation_stats["time_pref_conflict"] += 1
-                        examples.append(
-                            {
-                                "类型": "时间偏好冲突",
-                                "描述": f"{employee.name} 班次时间{shift.start_time}-{shift.end_time}超出偏好时段{employee.time_pref[0]}-{employee.time_pref[1]}",
-                                "班次日期": f"周{shift.day+1}",
-                                "班次时间": f"{shift.start_time}-{shift.end_time}",
-                                "门店": shift.store,
-                                "职位": position,
-                                "员工": employee.name,
-                            }
-                        )
-
-        # 检查每日时长限制
-        for name, daily_hours in employee_daily_hours.items():
+            self._check_employee_constraints(shift, assignment)
+    
+    def _check_understaffing(self, shift, assignment):
+        """检查人手不足情况"""
+        for position, count in shift.required_positions.items():
+            assigned = len(assignment.get(position, []))
+            if assigned < count:
+                self.violation_stats["understaff"] += 1
+                self.violation_examples.append(
+                    {
+                        "类型": "人手不足",
+                        "描述": f"班次{shift.day+1} {position} 需要{count}人，实际{assigned}人",
+                        "班次日期": f"周{shift.day+1}",
+                        "班次时间": f"{shift.start_time}-{shift.end_time}",
+                        "门店": shift.store,
+                        "职位": position,
+                        "员工": "N/A",
+                    }
+                )
+                logger.warning(
+                    f"  ! {position}人手不足：需要{count}人，实际{assigned}人"
+                )
+    
+    def _check_employee_constraints(self, shift, assignment):
+        """检查员工约束违规"""
+        for position, workers in assignment.items():
+            logger.info(f"  {position}: {', '.join([w.name for w in workers])}")
+            for employee in workers:
+                # 工作日冲突
+                self._check_workday_conflict(employee, shift, position)
+                
+                # 时间偏好冲突
+                self._check_time_preference_conflict(employee, shift, position)
+    
+    def _check_workday_conflict(self, employee, shift, position):
+        """检查工作日偏好冲突"""
+        if not (employee.workday_pref[0] <= shift.day <= employee.workday_pref[1]):
+            self.violation_stats["workday_conflict"] += 1
+            self.violation_examples.append(
+                {
+                    "类型": "工作日偏好冲突",
+                    "描述": f"{employee.name} 周{shift.day+1}班次与偏好周{employee.workday_pref[0]+1}-周{employee.workday_pref[1]+1}冲突",
+                    "班次日期": f"周{shift.day+1}",
+                    "班次时间": f"{shift.start_time}-{shift.end_time}",
+                    "门店": shift.store,
+                    "职位": position,
+                    "员工": employee.name,
+                }
+            )
+    
+    def _check_time_preference_conflict(self, employee, shift, position):
+        """检查时间偏好冲突"""
+        shift_start = time_to_minutes(shift.start_time)
+        shift_end = time_to_minutes(shift.end_time)
+        pref_start = time_to_minutes(employee.time_pref[0])
+        pref_end = time_to_minutes(employee.time_pref[1])
+        
+        if shift_start < pref_start or shift_end > pref_end:
+            self.violation_stats["time_pref_conflict"] += 1
+            self.violation_examples.append(
+                {
+                    "类型": "时间偏好冲突",
+                    "描述": f"{employee.name} 班次时间{shift.start_time}-{shift.end_time}超出偏好时段{employee.time_pref[0]}-{employee.time_pref[1]}",
+                    "班次日期": f"周{shift.day+1}",
+                    "班次时间": f"{shift.start_time}-{shift.end_time}",
+                    "门店": shift.store,
+                    "职位": position,
+                    "员工": employee.name,
+                }
+            )
+    
+    def _check_daily_hour_limits(self):
+        """检查每日工时限制"""
+        for name, daily_hours in self.employee_daily_hours.items():
             employee = next(e for e in self.employees if e.name == name)
             for day, hours in daily_hours.items():
-                if hours > 0:  # 只检查有排班的日期
-                    if hours > employee.max_daily_hours:
-                        violation_stats["daily_overhours"] += 1
-                        examples.append(
-                            {
-                                "类型": "单日超时",
-                                "描述": f"{name} 周{day+1}日工作{hours:.1f}小时（限制{employee.max_daily_hours}小时）",
-                                "班次日期": f"周{day+1}",
-                                "班次时间": "全天",
-                                "门店": employee.store,
-                                "职位": employee.position,
-                                "员工": name,
-                            }
-                        )
-
-        # 检查每周时长限制
-        for name, hours in employee_weekly_hours.items():
+                if hours > 0 and hours > employee.max_daily_hours:  # 只检查有排班的日期
+                    self.violation_stats["daily_overhours"] += 1
+                    self.violation_examples.append(
+                        {
+                            "类型": "单日超时",
+                            "描述": f"{name} 周{day+1}日工作{hours:.1f}小时（限制{employee.max_daily_hours}小时）",
+                            "班次日期": f"周{day+1}",
+                            "班次时间": "全天",
+                            "门店": employee.store,
+                            "职位": employee.position,
+                            "员工": name,
+                        }
+                    )
+    
+    def _check_weekly_hour_limits(self):
+        """检查每周工时限制"""
+        for name, hours in self.employee_weekly_hours.items():
             employee = next(e for e in self.employees if e.name == name)
             if hours > employee.max_weekly_hours:
-                violation_stats["weekly_overhours"] += 1
-                examples.append(
+                self.violation_stats["weekly_overhours"] += 1
+                self.violation_examples.append(
                     {
                         "类型": "周超时",
                         "描述": f"{name} 周总工时{hours:.1f}小时（限制{employee.max_weekly_hours}小时）",
@@ -154,29 +205,22 @@ class ScheduleAnalyzer:
                         "员工": name,
                     }
                 )
-
-        # 输出统计结果
+    
+    def _print_violation_stats(self):
+        """打印违规统计结果"""
         logger.info("\n=== 违规统计 ===")
-        logger.info(f"1. 人手不足: {violation_stats['understaff']}次")
-        logger.info(f"2. 工作日冲突: {violation_stats['workday_conflict']}次")
-        logger.info(f"3. 时间偏好冲突: {violation_stats['time_pref_conflict']}次")
-        logger.info(f"4. 单日超时: {violation_stats['daily_overhours']}次")
-        logger.info(f"5. 周超时: {violation_stats['weekly_overhours']}次")
-
+        logger.info(f"1. 人手不足: {self.violation_stats['understaff']}次")
+        logger.info(f"2. 工作日冲突: {self.violation_stats['workday_conflict']}次")
+        logger.info(f"3. 时间偏好冲突: {self.violation_stats['time_pref_conflict']}次")
+        logger.info(f"4. 单日超时: {self.violation_stats['daily_overhours']}次")
+        logger.info(f"5. 周超时: {self.violation_stats['weekly_overhours']}次")
+        
         # 输出示例（最多5条）
         logger.info("\n=== 违规示例 ===")
-        for example in examples[:5]:
+        for example in self.violation_examples[:5]:
             logger.warning(f"· {example['描述']}")
-        if len(examples) > 5:
-            logger.info(f"（共{len(examples)}条违规记录，仅显示前5条示例）")
-
-        # 导出违规记录到CSV
-        self.export_violations(examples)
-
-        # 导出违规统计到CSV
-        self.export_violation_stats(violation_stats)
-
-        return examples
+        if len(self.violation_examples) > 5:
+            logger.info(f"（共{len(self.violation_examples)}条违规记录，仅显示前5条示例）")
 
     def export_violations(self, violations):
         """导出违规记录到CSV文件"""
