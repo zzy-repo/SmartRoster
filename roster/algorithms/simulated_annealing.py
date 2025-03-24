@@ -36,26 +36,115 @@ class SchedulingAlgorithm:
 
         # 确保数据目录存在
         os.makedirs(DATA_DIR, exist_ok=True)
+        
+        # 预处理员工数据：按门店和职位分类
+        self.employee_store_position_map = {}
+        for e in self.employees:
+            key = (e.store, e.position)
+            if key not in self.employee_store_position_map:
+                self.employee_store_position_map[key] = []
+            self.employee_store_position_map[key].append(e)
+        
+        # 记录日志
+        logger.debug(f"员工数据预处理完成，共有{len(self.employee_store_position_map)}种门店-职位组合")
 
     def generate_initial_solution(self):
         """生成初始解"""
         logger.info("开始生成初始解...")
         schedule = []
+        
+        # 预处理：计算每个职位的稀缺度（员工数量/需求总量）
+        position_scarcity = {}
+        position_demand = {}
         for shift in self.shifts:
-            assignment = {}
             for position, count in shift.required_positions.items():
-                # 只选择同一门店的员工
-                candidates = [
-                    e
-                    for e in self.employees
-                    if e.position == position and e.store == shift.store
-                ]
-                selected = random.sample(candidates, min(count, len(candidates)))
+                if position not in position_demand:
+                    position_demand[position] = 0
+                position_demand[position] += count
+        
+        # 计算每个职位的员工数量
+        position_supply = {}
+        for employee in self.employees:
+            if employee.position not in position_supply:
+                position_supply[employee.position] = 0
+            position_supply[employee.position] += 1
+        
+        # 计算稀缺度
+        for position in position_demand:
+            if position in position_supply and position_supply[position] > 0:
+                position_scarcity[position] = position_supply[position] / position_demand[position]
+            else:
+                position_scarcity[position] = 0  # 极度稀缺
+        
+        logger.debug(f"职位稀缺度: {position_scarcity}")
+        
+        # 跟踪每个员工的已分配工时
+        employee_assigned_hours = {e.name: 0 for e in self.employees}
+        employee_assigned_days = {e.name: set() for e in self.employees}
+        
+        # 按稀缺度对班次进行排序（先处理包含稀缺职位的班次）
+        sorted_shifts = sorted(
+            self.shifts,
+            key=lambda s: min([position_scarcity.get(p, float('inf')) for p in s.required_positions.keys()], default=float('inf'))
+        )
+        
+        for shift in sorted_shifts:
+            assignment = {}
+            
+            # 按稀缺度对职位进行排序（先分配稀缺职位）
+            sorted_positions = sorted(
+                shift.required_positions.items(),
+                key=lambda x: position_scarcity.get(x[0], 0)
+            )
+            
+            for position, count in sorted_positions:
+                # 使用预处理的数据结构获取候选员工
+                candidates = self.employee_store_position_map.get((shift.store, position), [])
+                
+                # 根据员工偏好和已分配工作量进行排序
+                scored_candidates = []
+                for e in candidates:
+                    # 如果员工已经在这一天被分配了，降低其优先级
+                    day_penalty = 5 if shift.day in employee_assigned_days[e.name] else 0
+                    
+                    # 计算工作日偏好匹配度
+                    day_pref_match = 1 if e.workday_pref[0] <= shift.day <= e.workday_pref[1] else 0
+                    
+                    # 计算时间偏好匹配度
+                    shift_start = time_to_minutes(shift.start_time)
+                    shift_end = time_to_minutes(shift.end_time)
+                    pref_start = time_to_minutes(e.time_pref[0])
+                    pref_end = time_to_minutes(e.time_pref[1])
+                    time_pref_match = 1 if (shift_start >= pref_start and shift_end <= pref_end) else 0
+                    
+                    # 考虑已分配工时，优先分配工时少的员工
+                    hours_score = 1 / (1 + employee_assigned_hours[e.name])
+                    
+                    # 综合评分
+                    score = (3 * day_pref_match + 2 * time_pref_match + hours_score - day_penalty)
+                    scored_candidates.append((e, score))
+                
+                # 按评分排序
+                scored_candidates.sort(key=lambda x: x[1], reverse=True)
+                
+                # 选择评分最高的员工
+                selected = []
+                for i in range(min(count, len(scored_candidates))):
+                    selected.append(scored_candidates[i][0])
+                
+                # 更新员工工时和工作日记录
+                for employee in selected:
+                    duration = calculate_shift_duration(shift)
+                    employee_assigned_hours[employee.name] += duration
+                    employee_assigned_days[employee.name].add(shift.day)
+                
                 assignment[position] = selected
                 logger.debug(
                     f"班次{shift.day} {shift.start_time}-{shift.end_time} - 门店{shift.store} - 分配{position} {len(selected)}人"
                 )
+            
             schedule.append((shift, assignment))
+        
         logger.info(f"初始解生成完成，共安排{len(self.shifts)}个班次")
         return schedule
 
@@ -257,13 +346,11 @@ class SchedulingAlgorithm:
         for pos, workers in assignment.items():
             already_assigned.extend([w.name for w in workers])
         
-        # 只选择同一门店的员工，且排除已分配到该班次的员工
+        # 使用预处理的数据结构获取候选员工
         candidates = [
             e
-            for e in self.employees
-            if e.position == selected_pos
-            and e.store == shift.store
-            and e.name not in already_assigned
+            for e in self.employee_store_position_map.get((shift.store, selected_pos), [])
+            if e.name not in already_assigned
         ]
         
         if candidates:
