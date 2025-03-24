@@ -263,7 +263,7 @@ def simulated_annealing(employees, shifts, cost_params=COST_PARAMS):
     plt.legend(lines, labels, loc='upper right')
     
     # 保存图表
-    plt.savefig(r'e:\workplace\SmartRoster\convergence_plot.png')
+    plt.savefig(r'e:\workplace\SmartRoster\roster\data\convergence_plot.png')
     logger.info("收敛图表已保存至 converage_plot.png")
     
     logger.info("==== 算法结束 ====")
