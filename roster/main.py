@@ -43,10 +43,15 @@ if __name__ == "__main__":
 
     # 新增成本参数配置
     COST_PARAMS = {
+        # 人员不足惩罚成本
         "understaff_penalty": 100,
+        # 工作日违规惩罚成本
         "workday_violation": 10,
+        # 时间偏好违规惩罚成本
         "time_pref_violation": 5,
+        # 每日工时违规惩罚成本
         "daily_hours_violation": 20,
+        # 每周工时违规惩罚成本
         "weekly_hours_violation": 50,
     }
 
