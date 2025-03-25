@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 # 导入配置
-from config.settings import DATA_DIR, SA_CONFIG, COST_PARAMS
+from config.settings import DATA_DIR, SA_CONFIG  # 移除COST_PARAMS
 
 # 导入日志配置
 from utils.logger import get_logger
@@ -32,7 +32,7 @@ class SchedulingAlgorithm:
         self.employees = employees
         self.shifts = shifts
         self.sa_config = sa_config if sa_config is not None else SA_CONFIG
-        self.cost_params = cost_params if cost_params is not None else COST_PARAMS
+        self.cost_params = cost_params  # 不再使用默认值，强制要求显式传递
 
         # 确保数据目录存在
         os.makedirs(DATA_DIR, exist_ok=True)

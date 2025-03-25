@@ -10,7 +10,7 @@ import os
 from model.entities import Employee, Shift
 
 # 导入配置
-from config.settings import DATA_DIR, SA_CONFIG, COST_PARAMS
+from config.settings import DATA_DIR, SA_CONFIG
 
 # 导入数据IO模块
 from utils.data_io import DataGenerator, DataExporter
@@ -41,6 +41,15 @@ if __name__ == "__main__":
         "店员（库房）": 6,
     }
 
+    # 新增成本参数配置
+    COST_PARAMS = {
+        "understaff_penalty": 100,
+        "workday_violation": 10,
+        "time_pref_violation": 5,
+        "daily_hours_violation": 20,
+        "weekly_hours_violation": 50,
+    }
+
     # 生成测试数据
     employees = DataGenerator.generate_employees(stores, positions)
     shifts = DataGenerator.generate_shifts(stores)
@@ -49,7 +58,12 @@ if __name__ == "__main__":
     DataExporter.export_input_data(employees, shifts)
 
     # 运行排班算法
-    scheduler = SchedulingAlgorithm(employees, shifts)
+    scheduler = SchedulingAlgorithm(
+        employees, 
+        shifts,
+        sa_config=SA_CONFIG,
+        cost_params=COST_PARAMS  # 新增显式传递成本参数
+    )
     best_schedule, cost, convergence_data = scheduler.simulated_annealing()
 
     # 导出收敛数据
