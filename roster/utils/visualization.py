@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import platform 
 import numpy as np
 import os
 import csv
@@ -11,7 +12,13 @@ from utils.logger import get_logger
 logger = get_logger(__name__)
 
 # 设置中文字体
-plt.rcParams["font.family"] = "Microsoft YaHei"  # 设置中文字体
+if platform.system() == 'Darwin':  # macOS
+    plt.rcParams["font.family"] = "Hiragino Sans GB"
+elif platform.system() == 'Windows':
+    plt.rcParams["font.family"] = "Microsoft YaHei"
+else:
+    # 可以根据需要添加其他操作系统的字体设置
+    pass
 plt.rcParams["axes.unicode_minus"] = False  # 解决负号显示问题
 
 def plot_convergence_from_csv():
