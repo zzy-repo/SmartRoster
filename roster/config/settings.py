@@ -1,7 +1,10 @@
 # 排班系统配置文件
 
+import os
+
 # 常量配置
-DATA_DIR = r"e:\workplace\SmartRoster\roster\data"
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
+DATA_DIR = os.path.join(BASE_DIR, "roster", "data")
 
 # 模拟退火算法参数
 SA_CONFIG = {
