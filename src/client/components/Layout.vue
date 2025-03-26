@@ -43,7 +43,10 @@ const menuItems = [
     <el-container style="height: 100vh;">
       <el-header style="background-color: #409EFF; color: white; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;">
         <h1 style="font-size: 24px; margin: 0;">SmartRoster</h1>
-        <router-link to="/login" style="color: white; text-decoration: none;">登录</router-link>
+        <div class="header-right">
+          <router-link to="/profile" style="color: white; text-decoration: none; margin-right: 20px;">个人信息</router-link>
+          <router-link to="/login" style="color: white; text-decoration: none;">登录</router-link>
+        </div>
       </el-header>
       <el-container>
         <el-aside width="200px" style="background-color: #f4f4f4; box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);">
@@ -59,5 +62,8 @@ const menuItems = [
 </template>
 
 <style scoped>
-/* 可以在这里添加更多自定义样式 */
+.header-right {
+  display: flex;
+  align-items: center;
+}
 </style>

@@ -31,6 +31,11 @@ const routes = [
       },
     ],
   },
+
+  {
+    path: '/profile',
+    component: () => import('../views/Profile.vue'),
+  },
   {
     path: '/login',
     component: () => import('../components/Login.vue'),
