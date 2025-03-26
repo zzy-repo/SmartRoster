@@ -1,33 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue';
-import { useRouter } from 'vue-router';
-
-const router = useRouter();
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 
 const props = defineProps<{
   menuItems: Array<{
-    id: string;
-    label: string;
-    path: string;
+    id: string
+    label: string
+    path: string
     children?: Array<{
-      id: string;
-      label: string;
-      path: string;
-    }>;
-  }>;
-  defaultActive: string;
-}>();
+      id: string
+      label: string
+      path: string
+    }>
+  }>
+  defaultActive: string
+}>()
 
-const activeMenu = ref(props.defaultActive);
+const router = useRouter()
 
-const handleSelect = (index: string) => {
-  const item = props.menuItems.find(item => item.id === index) 
-    || props.menuItems.flatMap(item => item.children || []).find(child => child.id === index);
-  
+const activeMenu = ref(props.defaultActive)
+
+function handleSelect(index: string) {
+  const item = props.menuItems.find(item => item.id === index)
+    || props.menuItems.flatMap(item => item.children || []).find(child => child.id === index)
+
   if (item?.path) {
-    router.push(item.path);
+    router.push(item.path)
   }
-};
+}
 </script>
 
 <template>
@@ -46,7 +46,7 @@ const handleSelect = (index: string) => {
           {{ child.label }}
         </el-menu-item>
       </el-sub-menu>
-      
+
       <el-menu-item v-else :index="item.id">
         <span>{{ item.label }}</span>
       </el-menu-item>

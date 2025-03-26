@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref } from 'vue'
 
 const userInfo = ref({
   name: '张三',
   department: '内科',
   position: '主治医师',
   email: 'zhangsan@example.com',
-  phone: '13800138000'
-});
+  phone: '13800138000',
+})
 </script>
 
 <template>
@@ -18,7 +18,7 @@ const userInfo = ref({
           <h2>个人信息</h2>
         </div>
       </template>
-      
+
       <el-form label-width="100px">
         <el-form-item label="姓名">
           <el-input v-model="userInfo.name" disabled />
@@ -35,9 +35,11 @@ const userInfo = ref({
         <el-form-item label="电话">
           <el-input v-model="userInfo.phone" />
         </el-form-item>
-        
+
         <el-form-item>
-          <el-button type="primary">保存修改</el-button>
+          <el-button type="primary">
+            保存修改
+          </el-button>
         </el-form-item>
       </el-form>
     </el-card>
