@@ -8,7 +8,6 @@ const form = ref({
   username: '',
   password: '',
   confirmPassword: '',
-  email: '',
 })
 
 const formRef = ref<InstanceType<typeof ElForm>>()
@@ -36,10 +35,6 @@ const rules = ref({
       trigger: 'blur',
     },
   ],
-  email: [
-    { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' },
-  ],
 })
 
 async function register() {
@@ -47,18 +42,23 @@ async function register() {
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
-      const success = await userStore.register(
-        form.value.username,
-        form.value.password,
-        form.value.email,
-      )
+      try {
+        const success = await userStore.register(
+          form.value.username,
+          form.value.password,
+        )
 
-      if (success) {
-        ElMessage.success('注册成功！')
-        router.push('/login')
+        if (success) {
+          ElMessage.success('注册成功！')
+          router.push('/login')
+        }
+        else {
+          ElMessage.error('注册失败：用户名可能已存在')
+        }
       }
-      else {
-        ElMessage.error('注册失败，请重试')
+      catch (error) {
+        console.error('注册错误:', error)
+        ElMessage.error(`注册失败：${error instanceof Error ? error.message : '未知错误'}`)
       }
     }
   })
@@ -90,9 +90,6 @@ async function register() {
             placeholder="请确认密码"
             show-password
           />
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="form.email" placeholder="请输入邮箱地址" />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="w-full" @click="register">

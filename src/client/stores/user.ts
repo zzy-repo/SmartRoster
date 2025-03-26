@@ -22,8 +22,7 @@ export const useUserStore = defineStore('user', {
     actions: {
         async login(username: string, password: string) {
             try {
-                // TODO: 替换为实际的 API 调用
-                const response = await fetch('/api/auth/login', {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -31,41 +30,57 @@ export const useUserStore = defineStore('user', {
                     body: JSON.stringify({ username, password }),
                 })
 
-                if (!response.ok) {
-                    throw new Error('登录失败')
+                // 尝试解析响应
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('解析响应失败:', e);
+                    return false;
                 }
 
-                const data = await response.json()
-                this.token = data.token
-                this.userInfo = data.user
-                localStorage.setItem('token', data.token)
-                return true
+                if (!response.ok) {
+                    throw new Error(data.message || '登录失败');
+                }
+
+                this.token = data.token;
+                this.userInfo = data.user;
+                localStorage.setItem('token', data.token);
+                return true;
             }
             catch (error) {
-                console.error('登录错误:', error)
-                return false
+                console.error('登录错误:', error);
+                return false;
             }
         },
 
         async register(username: string, password: string) {
             try {
-                const response = await fetch('/api/auth/register', {
+                const response = await fetch('http://localhost:3000/api/auth/register', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
                     body: JSON.stringify({ username, password }),
-                })
+                });
 
-                if (!response.ok) {
-                    throw new Error('注册失败')
+                // 尝试解析响应
+                let data;
+                try {
+                    data = await response.json();
+                } catch (e) {
+                    console.error('解析响应失败:', e);
+                    return false;
                 }
 
-                return true
+                if (!response.ok) {
+                    throw new Error(data.message || '注册失败');
+                }
+                return true;
             }
             catch (error) {
-                console.error('注册错误:', error)
-                return false
+                console.error('注册错误:', error);
+                return false;
             }
         },
 

@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useUserStore } from '../stores/user'
 
+const userStore = useUserStore()
 const userInfo = ref({
-  name: '张三',
-  department: '内科',
-  position: '主治医师',
-  email: 'zhangsan@example.com',
-  phone: '13800138000',
+  username: userStore.userInfo?.username || '',
+  role: userStore.userInfo?.role || '',
 })
 </script>
 
@@ -18,28 +17,13 @@ const userInfo = ref({
           <h2>个人信息</h2>
         </div>
       </template>
-
+      
       <el-form label-width="100px">
-        <el-form-item label="姓名">
-          <el-input v-model="userInfo.name" disabled />
+        <el-form-item label="用户名">
+          <el-input v-model="userInfo.username" disabled />
         </el-form-item>
-        <el-form-item label="科室">
-          <el-input v-model="userInfo.department" disabled />
-        </el-form-item>
-        <el-form-item label="职位">
-          <el-input v-model="userInfo.position" disabled />
-        </el-form-item>
-        <el-form-item label="邮箱">
-          <el-input v-model="userInfo.email" />
-        </el-form-item>
-        <el-form-item label="电话">
-          <el-input v-model="userInfo.phone" />
-        </el-form-item>
-
-        <el-form-item>
-          <el-button type="primary">
-            保存修改
-          </el-button>
+        <el-form-item label="角色">
+          <el-input v-model="userInfo.role" disabled />
         </el-form-item>
       </el-form>
     </el-card>

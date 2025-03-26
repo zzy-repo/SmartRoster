@@ -1,16 +1,25 @@
-import cors from 'cors'
 import express from 'express'
+import cors from 'cors'
+import dotenv from 'dotenv'
+import authRoutes from './routes/auth.js'
+import { verifyToken } from './middleware/auth.js'
+
+dotenv.config()
 
 const app = express()
-const port = 3000
+const port = process.env.PORT || 3000
 
 app.use(cors())
 app.use(express.json())
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello from SmartRoster API!' })
+// 认证路由
+app.use('/api/auth', authRoutes)
+
+// 受保护的路由示例
+app.get('/api/protected', verifyToken, (req, res) => {
+  res.json({ message: '这是受保护的路由', user: req.user })
 })
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`)
+  console.log(`服务器运行在 http://localhost:${port}`)
 })

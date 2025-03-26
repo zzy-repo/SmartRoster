@@ -49,3 +49,5 @@ var/
 
 /roster/data/
 /roster/data/*
+
+*.env
