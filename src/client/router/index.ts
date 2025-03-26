@@ -1,21 +1,45 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import Layout from '../components/Layout.vue';
-import Login from '../components/Login.vue'; // 引入登录组件
 
 const routes = [
   {
     path: '/',
-    component: Layout,
+    component: () => import('../components/Layout.vue'),
+    children: [
+      {
+        path: '',
+        component: () => import('../views/Home.vue'),
+      },
+      {
+        path: 'schedule/preference',
+        component: () => import('../views/schedule/Preference.vue'),
+      },
+      {
+        path: 'schedule/calendar',
+        component: () => import('../views/schedule/Calendar.vue'),
+      },
+      {
+        path: 'management/process',
+        component: () => import('../views/management/Process.vue'),
+      },
+      {
+        path: 'management/group',
+        component: () => import('../views/management/Group.vue'),
+      },
+      {
+        path: 'settings',
+        component: () => import('../views/Settings.vue'),
+      },
+    ],
   },
   {
     path: '/login',
-    component: Login, // 添加登录路由
+    component: () => import('../components/Login.vue'),
   },
 ];
 
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 });
 
 export default router;

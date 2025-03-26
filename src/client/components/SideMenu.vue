@@ -1,19 +1,33 @@
 <script setup lang="ts">
 import { ref } from 'vue';
+import { useRouter } from 'vue-router';
 
-// Removed the import of defineProps
+const router = useRouter();
 
-// Define props to receive menu data and default active item
 const props = defineProps<{
   menuItems: Array<{
     id: string;
     label: string;
-    children?: Array<{ id: string; label: string }>;
+    path: string;
+    children?: Array<{
+      id: string;
+      label: string;
+      path: string;
+    }>;
   }>;
   defaultActive: string;
 }>();
 
 const activeMenu = ref(props.defaultActive);
+
+const handleSelect = (index: string) => {
+  const item = props.menuItems.find(item => item.id === index) 
+    || props.menuItems.flatMap(item => item.children || []).find(child => child.id === index);
+  
+  if (item?.path) {
+    router.push(item.path);
+  }
+};
 </script>
 
 <template>
@@ -21,9 +35,9 @@ const activeMenu = ref(props.defaultActive);
     :default-active="activeMenu"
     class="bg-gray-100 text-gray-700"
     mode="vertical"
+    @select="handleSelect"
   >
     <template v-for="item in menuItems" :key="item.id">
-      <!-- 有子菜单时渲染 el-sub-menu -->
       <el-sub-menu v-if="item.children?.length" :index="item.id">
         <template #title>
           <span>{{ item.label }}</span>
@@ -33,7 +47,6 @@ const activeMenu = ref(props.defaultActive);
         </el-menu-item>
       </el-sub-menu>
       
-      <!-- 没有子菜单时直接渲染可点击的菜单项 -->
       <el-menu-item v-else :index="item.id">
         <span>{{ item.label }}</span>
       </el-menu-item>

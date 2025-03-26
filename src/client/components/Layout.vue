@@ -8,27 +8,31 @@ const menuItems = [
   {
     id: '1',
     label: '主页',
+    path: '/',
     children: []
   },
   {
     id: '2',
     label: '我的排班',
+    path: '/schedule',
     children: [
-      { id: '2-1', label: '意向申报' },
-      { id: '2-2', label: '排班日历' }
+      { id: '2-1', label: '意向申报', path: '/schedule/preference' },
+      { id: '2-2', label: '排班日历', path: '/schedule/calendar' }
     ]
   },
   {
     id: '3',
     label: '排班管理',
+    path: '/management',
     children: [
-      { id: '3-1', label: '流程管理' },
-      { id: '3-2', label: '分组管理' }
+      { id: '3-1', label: '流程管理', path: '/management/process' },
+      { id: '3-2', label: '分组管理', path: '/management/group' }
     ]
   },
   {
     id: '4',
     label: '系统设置',
+    path: '/settings',
     children: []
   }
 ];
