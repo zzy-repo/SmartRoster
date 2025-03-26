@@ -1,11 +1,11 @@
-import pool from '../config/database.js'
 import bcrypt from 'bcryptjs'
+import pool from '../config/database.js'
 
 export default {
   async findByUsername(username) {
     const [rows] = await pool.execute(
       'SELECT * FROM users WHERE username = ?',
-      [username]
+      [username],
     )
     return rows[0]
   },
@@ -14,8 +14,8 @@ export default {
     const hashedPassword = await bcrypt.hash(password, 10)
     const [result] = await pool.execute(
       'INSERT INTO users (username, password) VALUES (?, ?)',
-      [username, hashedPassword]
+      [username, hashedPassword],
     )
     return result.insertId
-  }
+  },
 }

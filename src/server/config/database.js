@@ -1,8 +1,8 @@
-import mysql from 'mysql2/promise'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import dotenv from 'dotenv'
-import path from 'path'
-import { fileURLToPath } from 'url'
-import fs from 'fs'
+import mysql from 'mysql2/promise'
 
 // 获取当前文件的目录
 const __filename = fileURLToPath(import.meta.url)
@@ -17,7 +17,8 @@ if (fs.existsSync(envPath)) {
   console.log(`找到 .env 文件: ${envPath}`)
   // 使用绝对路径加载 .env 文件
   dotenv.config({ path: envPath })
-} else {
+}
+else {
   console.error(`错误: .env 文件不存在: ${envPath}`)
 }
 
@@ -38,22 +39,22 @@ const pool = mysql.createPool({
   database: process.env.DB_NAME,
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
 })
 
 // 验证所有必需的环境变量是否都已设置
-if (!process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_USER || 
-    !process.env.DB_PASSWORD || !process.env.DB_NAME) {
+if (!process.env.DB_HOST || !process.env.DB_PORT || !process.env.DB_USER
+  || !process.env.DB_PASSWORD || !process.env.DB_NAME) {
   throw new Error('缺少必需的数据库配置环境变量')
 }
 
 // 测试连接
 pool.getConnection()
-  .then(connection => {
+  .then((connection) => {
     console.log('数据库连接成功!')
     connection.release()
   })
-  .catch(err => {
+  .catch((err) => {
     console.error('数据库连接失败:', err.message)
     console.error('错误详情:', err)
   })

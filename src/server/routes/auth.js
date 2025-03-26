@@ -1,6 +1,6 @@
+import bcrypt from 'bcryptjs'
 import express from 'express'
 import jwt from 'jsonwebtoken'
-import bcrypt from 'bcryptjs'
 import User from '../models/user.js'
 
 const router = express.Router()
@@ -22,7 +22,7 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(
       { id: user.id, username: user.username, role: user.role },
       process.env.JWT_SECRET,
-      { expiresIn: '24h' }
+      { expiresIn: '24h' },
     )
 
     res.json({
@@ -30,10 +30,11 @@ router.post('/login', async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        role: user.role
-      }
+        role: user.role,
+      },
     })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('登录错误:', error)
     res.status(500).json({ message: '服务器错误' })
   }
@@ -50,7 +51,8 @@ router.post('/register', async (req, res) => {
 
     const userId = await User.create(username, password)
     res.status(201).json({ message: '注册成功', userId })
-  } catch (error) {
+  }
+  catch (error) {
     console.error('注册错误:', error)
     res.status(500).json({ message: '服务器错误' })
   }

@@ -58,7 +58,7 @@ const router = createRouter({
 // 路由守卫
 router.beforeEach((to, from, next) => {
   const userStore = useUserStore()
-  
+
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     // 需要登录但未登录，重定向到登录页
     next('/login')

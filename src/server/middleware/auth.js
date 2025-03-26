@@ -1,9 +1,9 @@
-import jwt from 'jsonwebtoken'
 import dotenv from 'dotenv'
+import jwt from 'jsonwebtoken'
 
 dotenv.config()
 
-export const verifyToken = (req, res, next) => {
+export function verifyToken(req, res, next) {
   const token = req.headers.authorization?.split(' ')[1]
 
   if (!token) {
@@ -14,7 +14,8 @@ export const verifyToken = (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET)
     req.user = decoded
     next()
-  } catch (error) {
+  }
+  catch (error) {
     return res.status(401).json({ message: '无效的认证令牌' })
   }
 }

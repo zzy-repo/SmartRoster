@@ -38,7 +38,8 @@ const rules = ref({
 })
 
 async function register() {
-  if (!formRef.value) return
+  if (!formRef.value)
+    return
 
   await formRef.value.validate(async (valid) => {
     if (valid) {
@@ -71,9 +72,9 @@ async function register() {
       <h1 class="text-2xl font-bold text-center mb-6">
         注册
       </h1>
-      <el-form ref="formRef" :model="form" :rules="rules" label-width="80px">
+      <ElForm ref="formRef" :model="form" :rules="rules" label-width="80px">
         <el-form-item label="用户名" prop="username">
-          <el-input v-model="form.username" placeholder="请输入用户名" />
+          <el-input v-model="form.username" placeholder="请输入用户名" @keyup.enter="register" />
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input
@@ -81,6 +82,7 @@ async function register() {
             type="password"
             placeholder="请输入密码"
             show-password
+            @keyup.enter="register"
           />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirmPassword">
@@ -89,6 +91,7 @@ async function register() {
             type="password"
             placeholder="请确认密码"
             show-password
+            @keyup.enter="register"
           />
         </el-form-item>
         <el-form-item>
@@ -101,7 +104,7 @@ async function register() {
             已有账号？立即登录
           </router-link>
         </div>
-      </el-form>
+      </ElForm>
     </div>
   </div>
 </template>
