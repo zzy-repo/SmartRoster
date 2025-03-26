@@ -1,3 +1,4 @@
+import process from 'node:process'
 import dotenv from 'dotenv'
 import jwt from 'jsonwebtoken'
 
@@ -16,6 +17,7 @@ export function verifyToken(req, res, next) {
     next()
   }
   catch (error) {
+    console.error('Token 验证失败:', error)
     return res.status(401).json({ message: '无效的认证令牌' })
   }
 }

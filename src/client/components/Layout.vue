@@ -1,12 +1,10 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import SideMenu from './SideMenu.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
-const activeMenu = ref('1')
 
 const menuItems = [
   {
