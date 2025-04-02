@@ -2,7 +2,8 @@
 import { ElForm, ElMessage } from 'element-plus'
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useUserStore } from '../stores/user'
+// 修改导入路径，因为当前文件在 auth 子目录中
+import { useUserStore } from '../../stores/user'
 
 const form = ref({
   username: '',
