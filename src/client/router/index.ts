@@ -4,7 +4,7 @@ import { useUserStore } from '../stores/user'
 const routes = [
   {
     path: '/login',
-    component: () => import('../components/Login.vue'),
+    component: () => import('../views/auth/Login.vue'),
     meta: { requiresAuth: false },
   },
   {

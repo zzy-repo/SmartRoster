@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useUserStore } from '../stores/user'
+import { useRouter } from 'vue-router'
 
 const userStore = useUserStore()
+const router = useRouter()
 const userInfo = ref({
   username: userStore.userInfo?.username || '',
   role: userStore.userInfo?.role || '',
 })
+
+const goBack = () => {
+  router.back()
+}
 </script>
 
 <template>
@@ -15,6 +21,7 @@ const userInfo = ref({
       <template #header>
         <div class="card-header">
           <h2>个人信息</h2>
+          <el-button type="primary" size="small" @click="goBack">返回</el-button>
         </div>
       </template>
 
