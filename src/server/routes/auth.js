@@ -43,14 +43,22 @@ router.post('/login', async (req, res) => {
 
 router.post('/register', async (req, res) => {
   try {
-    const { username, password } = req.body
+    const { username, password, role } = req.body
+
+    // 验证角色是否有效
+    const validRoles = ['employee', 'scheduler']
+    if (role && !validRoles.includes(role)) {
+      return res.status(400).json({ message: '无效的角色' })
+    }
 
     const existingUser = await User.findByUsername(username)
     if (existingUser) {
       return res.status(400).json({ message: '用户名已存在' })
     }
 
-    const userId = await User.create(username, password)
+    // 使用默认角色 'employee' 如果未提供
+    const userRole = role || 'employee'
+    const userId = await User.create(username, password, userRole)
     res.status(201).json({ message: '注册成功', userId })
   }
   catch (error) {

@@ -9,7 +9,7 @@ const routes = [
   },
   {
     path: '/register',
-    component: () => import('../components/Register.vue'),
+    component: () => import('../views/auth/Register.vue'),
     meta: { requiresAuth: false },
   },
   {

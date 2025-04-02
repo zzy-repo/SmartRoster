@@ -31,7 +31,7 @@ console.log('用户名:', process.env.DB_USER || '未设置')
 console.log('数据库名:', process.env.DB_NAME || '未设置')
 console.log('正在尝试连接数据库...')
 
-// 创建数据库连接池，必须提供所有必需的环境变量
+// 创建数据库连接池
 const pool = mysql.createPool({
   host: process.env.DB_HOST,
   port: process.env.DB_PORT,

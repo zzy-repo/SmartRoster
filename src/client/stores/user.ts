@@ -55,14 +55,14 @@ export const useUserStore = defineStore('user', {
       }
     },
 
-    async register(username: string, password: string) {
+    async register(username: string, password: string, role: string = 'employee') {
       try {
         const response = await fetch('http://localhost:3000/api/auth/register', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({ username, password, role }),
         })
 
         // 尝试解析响应
