@@ -3,13 +3,16 @@ import dotenv from 'dotenv'
 import { spawn } from 'child_process';
 import { config } from './config/index.mjs';
 import { testConnection } from './shared/database/index.mjs';
+import { setupDatabase } from './shared/database/init.mjs';
 
 // 加载环境变量
 dotenv.config();
 
-// 测试数据库连接
+// 测试数据库连接并初始化
 console.log('正在测试数据库连接...');
 await testConnection();
+console.log('正在初始化数据库...');
+await setupDatabase();
 
 // 启动API网关
 console.log('正在启动API网关...');

@@ -1,18 +1,271 @@
 import express from 'express';
+import { pool } from '../../shared/database/index.mjs';
 import { config } from '../../config/index.mjs';
 
 const app = express();
-const PORT = process.env.FORECAST_SERVICE_PORT || 3005;
+const PORT = config.services.forecast.port;
 
-// 中间件
 app.use(express.json());
 
-// 简单路由
-app.get('/', (req, res) => {
-  res.json({ message: '预测服务运行正常' });
+// 获取门店历史数据
+app.get('/historical/:storeId', async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: '开始日期和结束日期不能为空' });
+    }
+    
+    // 这里应该从数据库获取历史数据
+    // 简化示例，实际应用中需要更复杂的查询
+    const [data] = await pool.query(`
+      SELECT * FROM store_traffic 
+      WHERE store_id = ? AND date BETWEEN ? AND ?
+      ORDER BY date, hour
+    `, [storeId, startDate, endDate]);
+    
+    res.json(data);
+  } catch (error) {
+    console.error('获取历史数据失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
 });
 
-// 启动服务
+// 生成预测数据
+app.post('/predict', async (req, res) => {
+  try {
+    const { storeId, startDate, endDate, method } = req.body;
+    
+    if (!storeId || !startDate || !endDate) {
+      return res.status(400).json({ error: '缺少必要参数' });
+    }
+    
+    // 这里应该实现预测算法
+    // 简化示例，实际应用中需要更复杂的算法
+    
+    // 获取历史数据作为预测基础
+    const [historicalData] = await pool.query(`
+      SELECT date, hour, customer_count, sales_amount
+      FROM store_traffic 
+      WHERE store_id = ? 
+      AND date BETWEEN DATE_SUB(?, INTERVAL 4 WEEK) AND DATE_SUB(?, INTERVAL 1 DAY)
+      ORDER BY date, hour
+    `, [storeId, startDate, startDate]);
+    
+    // 简单的预测算法：使用过去4周同一天同一时段的平均值
+    const predictions = [];
+    
+    // 生成日期范围
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    const dateRange = [];
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      dateRange.push(new Date(d));
+    }
+    
+    // 为每一天的每个小时生成预测
+    for (const date of dateRange) {
+      const dayOfWeek = date.getDay(); // 0-6, 0是周日
+      
+      for (let hour = 8; hour < 22; hour++) { // 假设营业时间是8点到22点
+        // 找出历史数据中同一天同一时段的记录
+        const relevantData = historicalData.filter(record => {
+          const recordDate = new Date(record.date);
+          return recordDate.getDay() === dayOfWeek && record.hour === hour;
+        });
+        
+        // 计算平均客流量和销售额
+        let avgCustomerCount = 0;
+        let avgSalesAmount = 0;
+        
+        if (relevantData.length > 0) {
+          avgCustomerCount = relevantData.reduce((sum, record) => sum + record.customer_count, 0) / relevantData.length;
+          avgSalesAmount = relevantData.reduce((sum, record) => sum + record.sales_amount, 0) / relevantData.length;
+        }
+        
+        // 添加预测结果
+        predictions.push({
+          date: date.toISOString().split('T')[0],
+          hour,
+          customer_count: Math.round(avgCustomerCount),
+          sales_amount: Math.round(avgSalesAmount * 100) / 100,
+          required_staff: Math.ceil(avgCustomerCount / 10) // 简单假设：每10个客人需要1名员工
+        });
+      }
+    }
+    
+    // 保存预测结果到数据库
+    // 这里应该有保存逻辑
+    
+    res.json({
+      storeId,
+      startDate,
+      endDate,
+      method: method || 'average',
+      predictions
+    });
+  } catch (error) {
+    console.error('生成预测数据失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 获取预测数据
+app.get('/predict/:storeId', async (req, res) => {
+  try {
+    const { storeId } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: '开始日期和结束日期不能为空' });
+    }
+    
+    // 从数据库获取预测数据
+    // 这里应该有获取逻辑
+    
+    // 简化示例，返回模拟数据
+    const predictions = [];
+    
+    // 生成日期范围
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const date = d.toISOString().split('T')[0];
+      
+      for (let hour = 8; hour < 22; hour++) {
+        const customerCount = Math.floor(Math.random() * 50) + 10; // 10-60的随机数
+        
+        predictions.push({
+          date,
+          hour,
+          customer_count: customerCount,
+          sales_amount: Math.round(customerCount * 50 * 100) / 100, // 假设每个客人平均消费50元
+          required_staff: Math.ceil(customerCount / 10) // 每10个客人需要1名员工
+        });
+      }
+    }
+    
+    res.json({
+      storeId,
+      startDate,
+      endDate,
+      predictions
+    });
+  } catch (error) {
+    console.error('获取预测数据失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 根据预测生成班次需求
+app.post('/shifts/generate', async (req, res) => {
+  try {
+    const { storeId, startDate, endDate, staffingRules } = req.body;
+    
+    if (!storeId || !startDate || !endDate) {
+      return res.status(400).json({ error: '缺少必要参数' });
+    }
+    
+    // 获取预测数据
+    const [predictions] = await pool.query(`
+      SELECT date, hour, customer_count, required_staff
+      FROM traffic_predictions
+      WHERE store_id = ? AND date BETWEEN ? AND ?
+      ORDER BY date, hour
+    `, [storeId, startDate, endDate]);
+    
+    // 获取门店的职位配置
+    const [positions] = await pool.query(`
+      SELECT position, ratio
+      FROM store_positions
+      WHERE store_id = ?
+    `, [storeId]);
+    
+    // 生成班次需求
+    const shifts = [];
+    const dateMap = new Map();
+    
+    // 按日期分组预测数据
+    for (const prediction of predictions) {
+      const date = prediction.date;
+      if (!dateMap.has(date)) {
+        dateMap.set(date, []);
+      }
+      dateMap.get(date).push(prediction);
+    }
+    
+    // 为每一天生成班次
+    for (const [date, dayPredictions] of dateMap.entries()) {
+      // 按时段合并预测数据
+      const timeSlots = [];
+      let currentSlot = null;
+      
+      for (const prediction of dayPredictions) {
+        if (!currentSlot) {
+          currentSlot = {
+            start_hour: prediction.hour,
+            end_hour: prediction.hour + 1,
+            total_staff: prediction.required_staff
+          };
+        } else if (prediction.required_staff === currentSlot.total_staff) {
+          // 如果人员需求相同，扩展当前时段
+          currentSlot.end_hour = prediction.hour + 1;
+        } else {
+          // 如果人员需求不同，结束当前时段并开始新时段
+          timeSlots.push(currentSlot);
+          currentSlot = {
+            start_hour: prediction.hour,
+            end_hour: prediction.hour + 1,
+            total_staff: prediction.required_staff
+          };
+        }
+      }
+      
+      if (currentSlot) {
+        timeSlots.push(currentSlot);
+      }
+      
+      // 根据时段生成班次
+      for (const slot of timeSlots) {
+        // 根据职位比例分配人员
+        const requiredPositions = {};
+        
+        for (const position of positions) {
+          const count = Math.ceil(slot.total_staff * position.ratio);
+          requiredPositions[position.position] = count;
+        }
+        
+        // 创建班次
+        shifts.push({
+          day: new Date(date).getDay(), // 0-6, 0是周日
+          date,
+          start_time: `${slot.start_hour.toString().padStart(2, '0')}:00`,
+          end_time: `${slot.end_hour.toString().padStart(2, '0')}:00`,
+          required_positions: requiredPositions,
+          store: storeId
+        });
+      }
+    }
+    
+    // 保存班次需求到数据库
+    // 这里应该有保存逻辑
+    
+    res.json({
+      storeId,
+      startDate,
+      endDate,
+      shifts
+    });
+  } catch (error) {
+    console.error('生成班次需求失败:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 启动服务器
 app.listen(PORT, () => {
   console.log(`预测服务运行在端口 ${PORT}`);
 });
