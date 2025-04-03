@@ -1,34 +1,38 @@
 <template>
-  <div class="register-container">
-    <h2>用户注册</h2>
-    <el-form :model="form" :rules="rules" ref="registerForm" label-width="100px" @keyup.enter="submitForm">
-      <el-form-item label="用户名" prop="username">
-        <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
-      </el-form-item>
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1 class="auth-title">用户注册</h1>
+      <el-form :model="form" :rules="rules" ref="registerForm" label-width="100px" @keyup.enter="submitForm">
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="form.username" placeholder="请输入用户名"></el-input>
+        </el-form-item>
+        
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="form.password" type="password" placeholder="请输入密码" show-password></el-input>
+        </el-form-item>
+        
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码" show-password></el-input>
+        </el-form-item>
+        
+        <el-form-item label="角色" prop="role">
+          <el-radio-group v-model="form.role">
+            <el-radio label="employee">员工</el-radio>
+            <el-radio label="scheduler">排班管理员</el-radio>
+          </el-radio-group>
+        </el-form-item>
+        
+        <el-form-item>
+          <div class="button-group">
+            <el-button type="primary" class="action-btn" @click="submitForm" :loading="loading">注册</el-button>
+            <el-button class="action-btn" @click="resetForm">重置</el-button>
+          </div>
+        </el-form-item>
+      </el-form>
       
-      <el-form-item label="密码" prop="password">
-        <el-input v-model="form.password" type="password" placeholder="请输入密码"></el-input>
-      </el-form-item>
-      
-      <el-form-item label="确认密码" prop="confirmPassword">
-        <el-input v-model="form.confirmPassword" type="password" placeholder="请再次输入密码"></el-input>
-      </el-form-item>
-      
-      <el-form-item label="角色" prop="role">
-        <el-radio-group v-model="form.role">
-          <el-radio label="employee">员工</el-radio>
-          <el-radio label="scheduler">排班管理员</el-radio>
-        </el-radio-group>
-      </el-form-item>
-      
-      <el-form-item>
-        <el-button type="primary" @click="submitForm" :loading="loading">注册</el-button>
-        <el-button @click="resetForm">重置</el-button>
-      </el-form-item>
-    </el-form>
-    
-    <div class="login-link">
-      已有账号？<router-link to="/login">立即登录</router-link>
+      <div class="auth-link">
+        已有账号？<router-link to="/login">立即登录</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -116,16 +120,59 @@ const resetForm = () => {
 </script>
 
 <style scoped>
-.register-container {
-  max-width: 500px;
-  margin: 50px auto;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f7fa;
 }
 
-.login-link {
+.auth-card {
+  width: 500px;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #409EFF;
+}
+
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+}
+
+.action-btn {
+  flex: 1;
+}
+
+.full-width-btn {
+  width: 100%;
+}
+
+.mt-10 {
+  margin-top: 10px;
+}
+
+.auth-link {
   margin-top: 20px;
   text-align: center;
+}
+
+.auth-link a {
+  color: #409EFF;
+  text-decoration: none;
+}
+
+.auth-link a:hover {
+  color: #66b1ff;
 }
 </style>

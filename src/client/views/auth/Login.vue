@@ -43,9 +43,9 @@ async function login() {
 </script>
 
 <template>
-  <div class="flex justify-center items-center h-screen bg-gray-100">
-    <div class="bg-white p-8 rounded shadow-md w-96">
-      <h1 class="text-2xl font-bold text-center mb-6">
+  <div class="auth-container">
+    <div class="auth-card">
+      <h1 class="auth-title">
         登录
       </h1>
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="80px">
@@ -62,12 +62,12 @@ async function login() {
           />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="w-full" @click="login">
+          <el-button type="primary" class="full-width-btn" @click="login">
             登录
           </el-button>
         </el-form-item>
-        <div class="text-center mt-4">
-          <router-link to="/register" class="text-blue-500 hover:text-blue-700">
+        <div class="auth-link">
+          <router-link to="/register">
             没有账号？立即注册
           </router-link>
         </div>
@@ -75,3 +75,47 @@ async function login() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.auth-card {
+  width: 500px;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  background-color: white;
+}
+
+.auth-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 30px;
+  color: #409EFF;
+}
+
+.full-width-btn {
+  width: 100%;
+}
+
+.auth-link {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.auth-link a {
+  color: #409EFF;
+  text-decoration: none;
+}
+
+.auth-link a:hover {
+  color: #66b1ff;
+}
+</style>
