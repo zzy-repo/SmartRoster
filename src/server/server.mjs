@@ -1,26 +1,46 @@
 import process from 'node:process'
-import cors from 'cors'
 import dotenv from 'dotenv'
-import express from 'express'
-import { verifyToken } from './middleware/auth.js'
-import authRoutes from './routes/auth.js'
+import { spawn } from 'child_process';
+import { config } from './config/index.mjs';
+import { testConnection } from './shared/database/index.mjs';
 
-dotenv.config()
+// 加载环境变量
+dotenv.config();
 
-const app = express()
-const port = process.env.PORT || 3000
+// 测试数据库连接
+console.log('正在测试数据库连接...');
+await testConnection();
 
-app.use(cors())
-app.use(express.json())
+// 启动API网关
+console.log('正在启动API网关...');
+const gatewayProcess = spawn('node', ['./api-gateway/index.mjs'], {
+  stdio: 'inherit',
+  cwd: import.meta.url.replace('file://', '').replace('server.mjs', '')
+});
 
-// 认证路由
-app.use('/api/auth', authRoutes)
+// 启动各个微服务
+const services = Object.values(config.services);
+console.log(`准备启动 ${services.length} 个微服务...`);
 
-// 受保护的路由示例
-app.get('/api/protected', verifyToken, (req, res) => {
-  res.json({ message: '这是受保护的路由', user: req.user })
-})
+const serviceProcesses = services.map(service => {
+  console.log(`启动服务: ${service.name} 在端口 ${service.port}`);
+  
+  const process = spawn('node', [`./services/${service.name}/index.mjs`], {
+    stdio: 'inherit',
+    cwd: import.meta.url.replace('file://', '').replace('server.mjs', '')
+  });
+  
+  return process;
+});
 
-app.listen(port, () => {
-  console.log(`服务器运行在 http://localhost:${port}`)
-})
+// 处理进程退出
+process.on('SIGINT', () => {
+  console.log('正在关闭所有服务...');
+  
+  gatewayProcess.kill();
+  serviceProcesses.forEach(process => process.kill());
+  
+  process.exit(0);
+});
+
+console.log('所有服务已启动，按 Ctrl+C 停止');
