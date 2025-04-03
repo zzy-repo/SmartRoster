@@ -51,3 +51,7 @@ var/
 /roster/data/*
 
 *.env
+
+# Test
+coverage
+.env.test
