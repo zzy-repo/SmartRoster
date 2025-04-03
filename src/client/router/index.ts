@@ -55,9 +55,14 @@ const router = createRouter({
   routes,
 })
 
-// 路由守卫
-router.beforeEach((to, from, next) => {
+// 修改路由守卫
+router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+
+  // 如果有token但没有用户信息，尝试验证token并获取用户信息
+  if (userStore.token && !userStore.userInfo) {
+    await userStore.verifyToken()
+  }
 
   if (to.meta.requiresAuth && !userStore.isLoggedIn) {
     // 需要登录但未登录，重定向到登录页

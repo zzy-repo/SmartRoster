@@ -20,6 +20,47 @@ export const useUserStore = defineStore('user', {
   },
 
   actions: {
+    // 添加验证token并获取用户信息的方法
+    async verifyToken() {
+      const token = this.token
+      if (!token) {
+        return false
+      }
+
+      try {
+        const response = await fetch('http://localhost:3000/api/auth/verify-token', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ token }),
+        })
+
+        // 尝试解析响应
+        let data
+        try {
+          data = await response.json()
+        } catch (e) {
+          console.error('解析响应失败:', e)
+          return false
+        }
+
+        if (!response.ok || !data.valid) {
+          // token无效，清除登录状态
+          this.logout()
+          return false
+        }
+
+        // 设置用户信息
+        this.userInfo = data.user
+        return true
+      } catch (error) {
+        console.error('验证token失败:', error)
+        this.logout()
+        return false
+      }
+    },
+
     async login(username: string, password: string) {
       try {
         const response = await fetch('http://localhost:3000/api/auth/login', {

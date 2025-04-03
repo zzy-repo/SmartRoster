@@ -67,4 +67,36 @@ router.post('/register', async (req, res) => {
   }
 })
 
+// 添加验证token的路由
+router.post('/verify-token', async (req, res) => {
+  try {
+    const { token } = req.body
+    
+    if (!token) {
+      return res.status(400).json({ message: 'Token不能为空' })
+    }
+    
+    // 验证token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET)
+    
+    // 返回解析后的用户信息
+    res.json({
+      valid: true,
+      user: {
+        id: decoded.id,
+        username: decoded.username,
+        role: decoded.role
+      }
+    })
+  }
+  catch (error) {
+    console.error('Token验证错误:', error)
+    // 如果token无效或过期
+    if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({ valid: false, message: 'Token无效或已过期' })
+    }
+    res.status(500).json({ valid: false, message: '服务器错误' })
+  }
+})
+
 export default router
