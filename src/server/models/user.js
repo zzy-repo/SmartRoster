@@ -10,11 +10,11 @@ export default {
     return rows[0]
   },
 
-  async create(username, password) {
+  async create(username, password, role = 'employee') {
     const hashedPassword = await bcrypt.hash(password, 10)
     const [result] = await pool.execute(
-      'INSERT INTO users (username, password) VALUES (?, ?)',
-      [username, hashedPassword],
+      'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+      [username, hashedPassword, role],
     )
     return result.insertId
   },
