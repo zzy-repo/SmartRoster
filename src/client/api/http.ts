@@ -31,15 +31,14 @@ http.interceptors.response.use(
     return response
   },
   (error) => {
-    // 统一处理错误
     const { response } = error
     if (response) {
-      // 根据状态码处理不同错误
       switch (response.status) {
         case 401:
-          // 未授权，可以跳转到登录页
-          console.error('未授权，请重新登录')
-          // 可以在这里清除token并跳转到登录页
+          // 清除本地存储的 token
+          localStorage.removeItem('token')
+          // 跳转到登录页
+          window.location.href = '/login'
           break
         case 403:
           console.error('没有权限访问该资源')
@@ -53,10 +52,6 @@ http.interceptors.response.use(
         default:
           console.error(`未知错误: ${response.status}`)
       }
-    }
-    else {
-      // 网络错误或请求被取消
-      console.error('网络错误或请求被取消')
     }
     return Promise.reject(error)
   },
