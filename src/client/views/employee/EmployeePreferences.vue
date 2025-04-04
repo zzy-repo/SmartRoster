@@ -25,7 +25,7 @@ const form = reactive<EmployeePreference>({
   workday_pref: ['09:00', '18:00'],
   time_pref: ['09:00', '18:00'],
   max_daily_hours: 8,
-  max_weekly_hours: 40
+  max_weekly_hours: 40,
 })
 
 // 加载员工数据
@@ -41,7 +41,7 @@ onMounted(async () => {
         workday_pref: ['08:00', '17:00'],
         time_pref: ['08:00', '17:00'],
         max_daily_hours: 8,
-        max_weekly_hours: 40
+        max_weekly_hours: 40,
       } as EmployeePreference)
       loading.value = false
     }, 1000)

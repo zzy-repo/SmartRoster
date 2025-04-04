@@ -24,7 +24,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/employees/:id/preferences',
     component: () => import('@/views/EmployeePreferences.vue'),
-    meta: { requiresAuth: true }
+    meta: { requiresAuth: true },
   },
   {
     path: '/rules',

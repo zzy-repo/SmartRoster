@@ -1,54 +1,9 @@
-<template>
-  <div class="preferences-container">
-    <h2>{{ employeeName }}的偏好设置</h2>
-    
-    <el-form :model="preferences" label-width="120px">
-      <!-- 可用时间设置 -->
-      <el-form-item label="可用工作日">
-        <el-checkbox-group v-model="preferences.availableDays">
-          <el-checkbox v-for="day in weekDays" :key="day.value" :label="day.value">
-            {{ day.label }}
-          </el-checkbox>
-        </el-checkbox-group>
-      </el-form-item>
-
-      <!-- 班次类型偏好 -->
-      <el-form-item label="偏好班次类型">
-        <el-select v-model="preferences.preferredShiftTypes" multiple>
-          <el-option
-            v-for="shift in shiftTypes"
-            :key="shift.value"
-            :label="shift.label"
-            :value="shift.value"
-          />
-        </el-select>
-      </el-form-item>
-
-      <!-- 时间区间选择 -->
-      <el-form-item label="可用时间范围">
-        <el-time-select
-          v-model="preferences.startTime"
-          placeholder="开始时间"
-          :max-time="preferences.endTime"
-        />
-        <el-time-select
-          v-model="preferences.endTime"
-          placeholder="结束时间"
-          :min-time="preferences.startTime"
-        />
-      </el-form-item>
-
-      <el-button type="primary" @click="handleSubmit">保存设置</el-button>
-    </el-form>
-  </div>
-</template>
-
 <script setup lang="ts">
+import type { AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { employeeApi } from '../api/employeeApi'
-import type { AxiosResponse } from 'axios'
 
 // 定义员工偏好类型
 // 修改类型定义
@@ -57,7 +12,7 @@ interface EmployeePreference {
   preferredShiftTypes: string[]
   startTime: string
   endTime: string
-  workday_pref: [number, number]  // 改回 number 类型
+  workday_pref: [number, number] // 改回 number 类型
   time_pref: [string, string]
   max_daily_hours: number
   max_weekly_hours: number
@@ -98,10 +53,10 @@ const preferences = ref<EmployeePreference>({
   preferredShiftTypes: [],
   startTime: '09:00',
   endTime: '18:00',
-  workday_pref: [9, 17],  // 使用数字
+  workday_pref: [9, 17], // 使用数字
   time_pref: ['09:00', '17:00'],
   max_daily_hours: 8,
-  max_weekly_hours: 40
+  max_weekly_hours: 40,
 })
 
 const employeeName = ref('')
@@ -114,7 +69,7 @@ onMounted(async () => {
 
     // 获取现有偏好设置
     const prefRes = await employeeApi.getEmployeePreferences(employeeId.value) as unknown as AxiosResponse<ApiResponse<EmployeePreference>>
-    
+
     // 创建一个完整的偏好设置对象
     preferences.value = {
       availableDays: prefRes.data.data.availableDays || [],
@@ -124,22 +79,71 @@ onMounted(async () => {
       workday_pref: prefRes.data.data.workday_pref || [9, 17], // 使用数字类型的默认值
       time_pref: prefRes.data.data.time_pref || ['09:00', '17:00'],
       max_daily_hours: prefRes.data.data.max_daily_hours || 8,
-      max_weekly_hours: prefRes.data.data.max_weekly_hours || 40
+      max_weekly_hours: prefRes.data.data.max_weekly_hours || 40,
     }
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载数据失败')
   }
 })
 
-const handleSubmit = async () => {
+async function handleSubmit() {
   try {
     await employeeApi.updateEmployeePreferences(employeeId.value, preferences.value)
     ElMessage.success('偏好设置已保存')
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('保存失败')
   }
 }
 </script>
+
+<template>
+  <div class="preferences-container">
+    <h2>{{ employeeName }}的偏好设置</h2>
+
+    <el-form :model="preferences" label-width="120px">
+      <!-- 可用时间设置 -->
+      <el-form-item label="可用工作日">
+        <el-checkbox-group v-model="preferences.availableDays">
+          <el-checkbox v-for="day in weekDays" :key="day.value" :label="day.value">
+            {{ day.label }}
+          </el-checkbox>
+        </el-checkbox-group>
+      </el-form-item>
+
+      <!-- 班次类型偏好 -->
+      <el-form-item label="偏好班次类型">
+        <el-select v-model="preferences.preferredShiftTypes" multiple>
+          <el-option
+            v-for="shift in shiftTypes"
+            :key="shift.value"
+            :label="shift.label"
+            :value="shift.value"
+          />
+        </el-select>
+      </el-form-item>
+
+      <!-- 时间区间选择 -->
+      <el-form-item label="可用时间范围">
+        <el-time-select
+          v-model="preferences.startTime"
+          placeholder="开始时间"
+          :max-time="preferences.endTime"
+        />
+        <el-time-select
+          v-model="preferences.endTime"
+          placeholder="结束时间"
+          :min-time="preferences.startTime"
+        />
+      </el-form-item>
+
+      <el-button type="primary" @click="handleSubmit">
+        保存设置
+      </el-button>
+    </el-form>
+  </div>
+</template>
 
 <style scoped>
 .preferences-container {
