@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useStoreStore } from '@/stores/storeStore'
 
 // 定义门店类型
 interface Store {
   id: string
   name: string
   address: string
-  phone: string
-  businessHours: string
-  employeeCount: number
+  area: number
+  phone?: string
+  businessHours?: string
+  employeeCount?: number
 }
+
+// 获取 store 实例
+const storeStore = useStoreStore()
 
 // 状态
 const stores = ref<Store[]>([])
@@ -39,65 +44,31 @@ const editingStore = reactive({
 // 加载门店数据
 onMounted(async () => {
   try {
-    // 这里应该调用API获取门店数据
-    // 模拟数据
-    setTimeout(() => {
-      stores.value = [
-        {
-          id: '1',
-          name: '中关村店',
-          address: '北京市海淀区中关村大街1号',
-          phone: '010-12345678',
-          businessHours: '09:00-22:00',
-          employeeCount: 15,
-        },
-        {
-          id: '2',
-          name: '望京店',
-          address: '北京市朝阳区望京西园四区',
-          phone: '010-87654321',
-          businessHours: '10:00-21:00',
-          employeeCount: 12,
-        },
-        {
-          id: '3',
-          name: '五道口店',
-          address: '北京市海淀区五道口华清嘉园',
-          phone: '010-56781234',
-          businessHours: '09:30-21:30',
-          employeeCount: 10,
-        },
-      ]
-      loading.value = false
-    }, 1000)
+    loading.value = true
+    await storeStore.fetchStores()
+    stores.value = storeStore.stores // 直接使用 stores，不需要 .value
   }
   catch (error) {
     console.error('加载门店数据失败', error)
+  }
+  finally {
     loading.value = false
   }
 })
 
-// 选择门店
-function selectStore(store: Store) {
-  selectedStore.value = store
-}
-
 // 添加门店
 async function addStore() {
   try {
-    // 这里应该调用API添加门店
-    // 模拟添加
-    const newId = String(stores.value.length + 1)
-    const storeToAdd: Store = {
-      id: newId,
+    const storeToAdd = {
       name: newStore.name,
       address: newStore.address,
+      area: 0,
       phone: newStore.phone,
       businessHours: newStore.businessHours,
-      employeeCount: 0,
     }
 
-    stores.value.push(storeToAdd)
+    const response = await storeStore.createStore(storeToAdd)
+    stores.value.push(response.data)
     showAddStoreForm.value = false
 
     // 重置表单
@@ -113,38 +84,41 @@ async function addStore() {
   }
 }
 
+// 选择门店
+function selectStore(store: Store) {
+  selectedStore.value = store
+}
+
 // 准备编辑门店
-// 准备编辑门店
-// const prepareEditStore = () => {
-//   if (selectedStore.value) {
-//     Object.assign(editingStore, {
-//       id: selectedStore.value.id,
-//       name: selectedStore.value.name,
-//       address: selectedStore.value.address,
-//       phone: selectedStore.value.phone,
-//       businessHours: selectedStore.value.businessHours
-//     })
-//     showEditStoreForm.value = true
-//   }
-// }
+function prepareEditStore() {
+  if (selectedStore.value) {
+    Object.assign(editingStore, {
+      id: selectedStore.value.id,
+      name: selectedStore.value.name,
+      address: selectedStore.value.address,
+      area: selectedStore.value.area,
+      phone: selectedStore.value.phone,
+      businessHours: selectedStore.value.businessHours,
+    })
+    showEditStoreForm.value = true
+  }
+}
 
 // 更新门店
 async function updateStore() {
   try {
-    // 这里应该调用API更新门店
-    // 模拟更新
+    const response = await storeStore.updateStore(editingStore.id, {
+      name: editingStore.name,
+      address: editingStore.address,
+      area: selectedStore.value?.area || 0,
+      phone: editingStore.phone,
+      businessHours: editingStore.businessHours,
+    } as Store)
+
     const index = stores.value.findIndex(s => s.id === editingStore.id)
     if (index !== -1) {
-      const updatedStore = {
-        ...stores.value[index],
-        name: editingStore.name,
-        address: editingStore.address,
-        phone: editingStore.phone,
-        businessHours: editingStore.businessHours,
-      }
-
-      stores.value[index] = updatedStore
-      selectedStore.value = updatedStore
+      stores.value[index] = response.data
+      selectedStore.value = response.data
       showEditStoreForm.value = false
     }
   }
@@ -156,9 +130,8 @@ async function updateStore() {
 // 删除门店
 async function deleteStore() {
   try {
-    // 这里应该调用API删除门店
-    // 模拟删除
     if (selectedStore.value) {
+      await storeStore.deleteStore(selectedStore.value.id)
       stores.value = stores.value.filter(s => s.id !== selectedStore.value?.id)
       selectedStore.value = null
       confirmDelete.value = false
@@ -240,7 +213,8 @@ async function deleteStore() {
             <span>{{ selectedStore.employeeCount }}</span>
           </div>
           <div class="actions">
-            <button class="edit-btn" @click="showEditStoreForm = true">
+            <!-- 在模板中修改编辑按钮 -->
+            <button class="edit-btn" @click="prepareEditStore">
               编辑
             </button>
             <button class="delete-btn" @click="confirmDelete = true">
