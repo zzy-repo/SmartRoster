@@ -20,6 +20,7 @@
     "@element-plus/icons-vue": "^2.3.1",
     "@icon-park/vue-next": "^1.4.2",
     "@iconify-json/ic": "^1.2.2",
+    "@types/node": "^22.14.0",
     "animate.css": "^4.1.1",
     "axios": "^1.8.2",
     "bcryptjs": "^3.0.2",

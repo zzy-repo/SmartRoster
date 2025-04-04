@@ -70,7 +70,7 @@ async function loadForecastData() {
       loading.value = false
     }, 500)
   }
-  catch (error) {
+  catch {
     ElMessage.error('加载预测数据失败')
     loading.value = false
   }

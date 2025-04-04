@@ -17,6 +17,9 @@ importers:
       '@iconify-json/ic':
         specifier: ^1.2.2
         version: 1.2.2
+      '@types/node':
+        specifier: ^22.14.0
+        version: 22.14.0
       animate.css:
         specifier: ^4.1.1
         version: 4.1.1
