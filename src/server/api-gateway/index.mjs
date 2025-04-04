@@ -25,6 +25,13 @@ app.use((req, res, next) => {
   // 不需要验证token的路径
   const publicPaths = ['/api/auth/login', '/api/auth/register']
 
+// 路由权限配置
+const rolePermissions = {
+  '/api/store': 'admin',
+  '/api/employee': 'admin',
+  '/api/schedule': ['admin', 'manager']
+}
+
   if (publicPaths.includes(req.path)) {
     return next()
   }
@@ -38,6 +45,13 @@ app.use((req, res, next) => {
   try {
     const decoded = verifyToken(token)
     req.user = decoded
+
+    // 角色权限验证
+    const requiredRole = getRequiredRole(req.path)
+    if (requiredRole && decoded.role !== requiredRole) {
+      return res.status(403).json({ error: '权限不足' })
+    }
+
     next()
   }
   catch (error) {

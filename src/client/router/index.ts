@@ -1,5 +1,6 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '../stores/auth'
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
@@ -75,41 +76,28 @@ const routes: RouteRecordRaw[] = [
 // 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
-  routes,
+  routes
 })
 
-// 全局前置守卫
 router.beforeEach((to, _from, next) => {
-  // 设置页面标题
-  document.title = `${to.meta.title || '智能排班系统'} - SmartRoster`
+  const authStore = useAuthStore()
   
-  // 检查路由是否需要鉴权
-  if (to.matched.some(record => record.meta.requiresAuth)) {
-    const token = localStorage.getItem('token')
-    if (!token) {
-      // 未登录则重定向到登录页
-      next({ path: '/login', query: { redirect: to.fullPath } })
-      return
-    }
-    
-    // 检查token有效性（示例逻辑，实际项目中需要根据后端实现调整）
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]))
-      if (payload.exp * 1000 < Date.now()) {
-        // token已过期
-        localStorage.removeItem('token')
-        next({ path: '/login', query: { redirect: to.fullPath } })
-        return
-      }
-    } catch (e) {
-      // token无效
-      localStorage.removeItem('token')
-      next({ path: '/login', query: { redirect: to.fullPath } })
-      return
+  if (to.meta.requiresAuth && !authStore.token) {
+    next({ name: 'Login', query: { redirect: to.fullPath } })
+  } else if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
+    next({ name: 'Home' })
+  } else {
+    next()
+  }
+})
+
+router.afterEach((to) => {
+  if (to.meta.requiresAdmin) {
+    const authStore = useAuthStore()
+    if (authStore.user?.role !== 'admin') {
+      router.push('/')
     }
   }
-  
-  next()
 })
 
 export default router

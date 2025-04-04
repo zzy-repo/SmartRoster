@@ -51,7 +51,7 @@
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { login } from '@/api/auth'
+import { login } from '@/api/auth.ts'
 
 const resizeObserver = ref<ResizeObserver | null>(null)
 
