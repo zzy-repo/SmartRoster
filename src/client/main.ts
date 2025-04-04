@@ -9,7 +9,10 @@ import 'animate.css'
 import 'element-plus/dist/index.css'
 
 const app = createApp(App)
+
+// 使用插件
 app.use(ElementPlus)
 app.use(router)
 app.use(pinia)
+
 app.mount('#app')
