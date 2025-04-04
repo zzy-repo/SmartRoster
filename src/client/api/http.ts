@@ -13,9 +13,10 @@ const http: AxiosInstance = axios.create({
 // 请求拦截器
 http.interceptors.request.use(
   (config) => {
-    // 可以在这里添加token等认证信息
+    // Skip auth header for registration and login endpoints
+    const skipAuthUrls = ['/auth/register', '/auth/login']
     const token = localStorage.getItem('token')
-    if (token) {
+    if (token && !skipAuthUrls.some(url => config.url?.includes(url))) {
       config.headers.Authorization = `Bearer ${token}`
     }
     return config
@@ -27,34 +28,19 @@ http.interceptors.request.use(
 
 // 响应拦截器
 http.interceptors.response.use(
-  (response) => {
-    return response
-  },
+  (response) => response,
   (error) => {
     const { response } = error
     if (response) {
-      switch (response.status) {
-        case 401:
-          // 清除本地存储的 token
-          localStorage.removeItem('token')
-          // 跳转到登录页
-          window.location.href = '/login'
-          break
-        case 403:
-          console.error('没有权限访问该资源')
-          break
-        case 404:
-          console.error('请求的资源不存在')
-          break
-        case 500:
-          console.error('服务器错误')
-          break
-        default:
-          console.error(`未知错误: ${response.status}`)
+      // Skip auth cleanup for registration endpoint
+      if (response.status === 401 && !response.config.url?.includes('/auth/register')) {
+        localStorage.removeItem('token')
+        window.location.href = '/login'
       }
+      return Promise.reject(error)
     }
     return Promise.reject(error)
-  },
+  }
 )
 
 // 封装GET请求

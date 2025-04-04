@@ -37,7 +37,7 @@
           auto-complete="on"
           placeholder="确认密码"
           @keyup.enter="handleRegister"
-          @input="validatePassword"
+          @input="() => registerFormRef.value?.validateField('confirmPassword')"
         />
       </el-form-item>
       <el-form-item>
@@ -95,15 +95,14 @@ function handleInputChange() {
   }
 }
 
-// 修改validatePassword方法
 const validatePassword = (_rule: any, value: string, callback: any) => {
   if (!value) {
-    callback(new Error('请确认密码'))
-  } else if (value !== registerForm.value.password) {
-    callback(new Error('两次输入密码不一致!'))
-  } else {
-    callback()
+    return callback(new Error('请确认密码'))
   }
+  if (value !== registerForm.value.password) {
+    return callback(new Error('两次输入密码不一致!'))
+  }
+  return callback()
 }
 
 const registerRules = {
@@ -122,16 +121,27 @@ const registerRules = {
 const loading = ref(false)
 
 async function handleRegister() {
-  loading.value = true
-  try {
-    await register(registerForm.value)
-    ElMessage.success('注册成功')
-    router.push('/login')
-  } catch (error: any) {
-    ElMessage.error(error?.message || '注册失败')
-  } finally {
-    loading.value = false
-  }
+  if (!registerFormRef.value) return
+  
+  // Validate the form first
+  await registerFormRef.value.validate(async (valid: boolean) => {
+    if (!valid) {
+      ElMessage.error('请正确填写表单')
+      return
+    }
+    
+    loading.value = true
+    try {
+      await register(registerForm.value)
+      ElMessage.success('注册成功')
+      router.push('/login')
+    } catch (error: any) {
+      console.error('Registration error:', error)
+      ElMessage.error(error?.message || '注册失败')
+    } finally {
+      loading.value = false
+    }
+  })
 }
 
 function goToLogin() {
