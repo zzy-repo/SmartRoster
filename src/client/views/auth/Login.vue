@@ -72,13 +72,13 @@ async function handleLogin() {
     // 调用登录API
     const response = await login(loginForm.value)
     console.log('登录响应:', response)
-    if (!response?.token) {
+    if (!response?.data.token) {
       throw new Error('登录响应格式错误')
     }
 
     // 使用auth store保存用户信息
     const authStore = useAuthStore()
-    authStore.setUser(response.token, response.user)
+    authStore.setUser(response.data.token, response.data.user)
     console.log('用户信息已保存:', authStore.user)
 
     // 登录成功后跳转到首页

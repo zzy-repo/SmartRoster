@@ -55,14 +55,18 @@ app.post('/login', async (req, res) => {
     const token = generateToken(user)
     console.log('登录成功')
 
-    res.json({
-      token,
-      user: {
-        id: user.id,
-        username: user.username,
-        role: user.role,
-      },
-    })
+    res.json(
+      {
+        data: {
+          token,
+          user: {
+            id: user.id,
+            username: user.username,
+            role: user.role,
+          },
+        }
+      }
+    )
   }
   catch (error) {
     console.error('登录失败:', error)

@@ -8,6 +8,11 @@ export interface LoginForm {
 
 export interface LoginResponse {
   token: string
+  user: {  // 添加user字段
+    id: string
+    username: string
+    // 可以根据实际返回的用户信息添加更多字段
+  }
 }
 
 export function login(data: LoginForm): AxiosPromise<LoginResponse> {
