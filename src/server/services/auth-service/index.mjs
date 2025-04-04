@@ -64,7 +64,7 @@ app.post('/login', async (req, res) => {
           username: user.username,
           role: user.role,
         },
-      }
+      },
     }) // 已经是统一格式，无需修改
   }
   catch (error) {
@@ -112,7 +112,7 @@ app.post('/register', async (req, res) => {
       data: {
         message: '用户注册成功',
         userId: result.insertId,
-      }
+      },
     }) // 修改为统一格式
   }
   catch (error) {

@@ -22,7 +22,6 @@ export const useStoreStore = defineStore('store', () => {
     try {
       const { data } = await storeApi.getStores()
       stores.value = data.data
-      
     }
     catch (error) {
       console.error('获取门店列表失败:', error)

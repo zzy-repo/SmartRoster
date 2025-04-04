@@ -25,7 +25,7 @@ app.get('/historical/:storeId', async (req, res) => {
       ORDER BY date, hour
     `, [storeId, startDate, endDate])
 
-    res.json({data: data}) // 修改为统一格式
+    res.json({ data }) // 修改为统一格式
   }
   catch (error) {
     console.error('获取历史数据失败:', error)
@@ -107,7 +107,7 @@ app.post('/predict', async (req, res) => {
         endDate,
         method: method || 'average',
         predictions,
-      }
+      },
     }) // 修改为统一格式
   }
   catch (error) {

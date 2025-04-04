@@ -61,19 +61,20 @@ app.use((req, res, next) => {
 // 认证中间件
 app.use((req, res, next) => {
   // 放行认证相关路径
-  if (['/api/auth/login', '/api/auth/register'].some(p => req.path.startsWith(p))) 
+  if (['/api/auth/login', '/api/auth/register'].some(p => req.path.startsWith(p)))
     return next()
 
   // 验证令牌
   const token = req.headers.authorization?.split(' ')[1]
-  if (!token) 
+  if (!token)
     return res.status(401).json({ error: '未提供认证令牌' })
 
   try {
     req.user = verifyToken(token)
     // 如需角色验证可在此添加
     next()
-  } catch {
+  }
+  catch {
     res.status(401).json({ error: '无效的认证令牌' })
   }
 })

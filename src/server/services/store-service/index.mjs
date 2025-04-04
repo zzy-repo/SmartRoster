@@ -11,7 +11,7 @@ app.use(express.json())
 app.get('/', async (req, res) => {
   try {
     const [stores] = await pool.query('SELECT * FROM stores')
-    res.json({data: stores}) // 修改为统一格式
+    res.json({ data: stores }) // 修改为统一格式
   }
   catch (error) {
     console.error('获取门店列表失败:', error)
@@ -29,7 +29,7 @@ app.get('/:id', async (req, res) => {
       return res.status(404).json({ error: '门店不存在' })
     }
 
-    res.json({data: stores[0]}) // 修改为统一格式
+    res.json({ data: stores[0] }) // 修改为统一格式
   }
   catch (error) {
     console.error('获取门店详情失败:', error)

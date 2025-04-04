@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { ElMessage } from 'element-plus'
+import { ref, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 const router = useRouter()
 const route = useRoute()
@@ -22,7 +22,8 @@ async function handleLogout() {
     await authStore.clearUser()
     ElMessage.success('退出登录')
     router.push('/login')
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('退出登录失败')
   }
 }
