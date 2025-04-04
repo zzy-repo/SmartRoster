@@ -1,7 +1,5 @@
 import type { AxiosPromise } from 'axios'
 import request from '@/utils/request'
-import http from './http'  // Add this import
-
 export interface LoginForm {
   username: string
   password: string
@@ -57,7 +55,11 @@ function getDefaultMessage(status: number): string {
 }
 
 export function register(data: RegisterForm): AxiosPromise<void> {
-  return http.post('/auth/register', data).catch(error => {
+  return request({
+    url: '/auth/register',
+    method: 'post',
+    data
+  }).catch(error => {
     if (!error.response) {
       throw {
         response: {

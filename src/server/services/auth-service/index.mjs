@@ -8,6 +8,14 @@ const PORT = config.services.auth.port
 
 app.use(express.json())
 
+// 添加健康检查端点
+app.get('/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'UP',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // 用户登录
 app.post('/login', async (req, res) => {
   try {
@@ -56,6 +64,8 @@ app.post('/login', async (req, res) => {
 // 用户注册
 app.post('/register', async (req, res) => {
   try {
+    console.log(req.body)
+    // 获取用户注册信息
     const { username, password, role } = req.body
 
     if (!username || !password) {
@@ -93,8 +103,9 @@ app.post('/register', async (req, res) => {
 })
 
 // 启动服务器
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {  // 明确指定监听所有网络接口
   console.log(`认证服务运行在端口 ${PORT}`)
+  console.log(`当前环境: ${process.env.NODE_ENV || 'development'}`)  // 添加环境信息
 })
 
 export default app

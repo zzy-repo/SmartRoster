@@ -38,6 +38,9 @@ importers:
       express-http-proxy:
         specifier: ^2.1.1
         version: 2.1.1
+      http-proxy:
+        specifier: ^1.18.1
+        version: 1.18.1(debug@4.4.0)
       http-proxy-middleware:
         specifier: ^3.0.3
         version: 3.0.3
