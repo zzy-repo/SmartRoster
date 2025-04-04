@@ -1,3 +1,175 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+
+// 定义门店类型
+interface Store {
+  id: string
+  name: string
+  address: string
+  phone: string
+  businessHours: string
+  employeeCount: number
+}
+
+// 状态
+const stores = ref<Store[]>([])
+const selectedStore = ref<Store | null>(null)
+const loading = ref(true)
+const showAddStoreForm = ref(false)
+const showEditStoreForm = ref(false)
+const confirmDelete = ref(false)
+
+// 新门店表单数据
+const newStore = reactive({
+  name: '',
+  address: '',
+  phone: '',
+  businessHours: '',
+})
+
+// 编辑门店表单数据
+const editingStore = reactive({
+  id: '',
+  name: '',
+  address: '',
+  phone: '',
+  businessHours: '',
+})
+
+// 加载门店数据
+onMounted(async () => {
+  try {
+    // 这里应该调用API获取门店数据
+    // 模拟数据
+    setTimeout(() => {
+      stores.value = [
+        {
+          id: '1',
+          name: '中关村店',
+          address: '北京市海淀区中关村大街1号',
+          phone: '010-12345678',
+          businessHours: '09:00-22:00',
+          employeeCount: 15,
+        },
+        {
+          id: '2',
+          name: '望京店',
+          address: '北京市朝阳区望京西园四区',
+          phone: '010-87654321',
+          businessHours: '10:00-21:00',
+          employeeCount: 12,
+        },
+        {
+          id: '3',
+          name: '五道口店',
+          address: '北京市海淀区五道口华清嘉园',
+          phone: '010-56781234',
+          businessHours: '09:30-21:30',
+          employeeCount: 10,
+        },
+      ]
+      loading.value = false
+    }, 1000)
+  }
+  catch (error) {
+    console.error('加载门店数据失败', error)
+    loading.value = false
+  }
+})
+
+// 选择门店
+function selectStore(store: Store) {
+  selectedStore.value = store
+}
+
+// 添加门店
+async function addStore() {
+  try {
+    // 这里应该调用API添加门店
+    // 模拟添加
+    const newId = String(stores.value.length + 1)
+    const storeToAdd: Store = {
+      id: newId,
+      name: newStore.name,
+      address: newStore.address,
+      phone: newStore.phone,
+      businessHours: newStore.businessHours,
+      employeeCount: 0,
+    }
+
+    stores.value.push(storeToAdd)
+    showAddStoreForm.value = false
+
+    // 重置表单
+    Object.assign(newStore, {
+      name: '',
+      address: '',
+      phone: '',
+      businessHours: '',
+    })
+  }
+  catch (error) {
+    console.error('添加门店失败', error)
+  }
+}
+
+// 准备编辑门店
+// 准备编辑门店
+// const prepareEditStore = () => {
+//   if (selectedStore.value) {
+//     Object.assign(editingStore, {
+//       id: selectedStore.value.id,
+//       name: selectedStore.value.name,
+//       address: selectedStore.value.address,
+//       phone: selectedStore.value.phone,
+//       businessHours: selectedStore.value.businessHours
+//     })
+//     showEditStoreForm.value = true
+//   }
+// }
+
+// 更新门店
+async function updateStore() {
+  try {
+    // 这里应该调用API更新门店
+    // 模拟更新
+    const index = stores.value.findIndex(s => s.id === editingStore.id)
+    if (index !== -1) {
+      const updatedStore = {
+        ...stores.value[index],
+        name: editingStore.name,
+        address: editingStore.address,
+        phone: editingStore.phone,
+        businessHours: editingStore.businessHours,
+      }
+
+      stores.value[index] = updatedStore
+      selectedStore.value = updatedStore
+      showEditStoreForm.value = false
+    }
+  }
+  catch (error) {
+    console.error('更新门店失败', error)
+  }
+}
+
+// 删除门店
+async function deleteStore() {
+  try {
+    // 这里应该调用API删除门店
+    // 模拟删除
+    if (selectedStore.value) {
+      stores.value = stores.value.filter(s => s.id !== selectedStore.value?.id)
+      selectedStore.value = null
+      confirmDelete.value = false
+    }
+  }
+  catch (error) {
+    console.error('删除门店失败', error)
+  }
+}
+</script>
+
 <template>
   <div class="store-management">
     <h1>门店管理</h1>
@@ -6,21 +178,31 @@
       <div class="store-list">
         <div class="store-list-header">
           <h2>门店列表</h2>
-          <button class="add-store-btn" @click="showAddStoreForm = true">添加门店</button>
+          <button class="add-store-btn" @click="showAddStoreForm = true">
+            添加门店
+          </button>
         </div>
         <div class="store-list-content">
-          <div v-if="loading" class="loading">加载中...</div>
-          <div v-else-if="stores.length === 0" class="no-data">暂无门店数据</div>
+          <div v-if="loading" class="loading">
+            加载中...
+          </div>
+          <div v-else-if="stores.length === 0" class="no-data">
+            暂无门店数据
+          </div>
           <div v-else class="store-items">
-            <div 
-              v-for="store in stores" 
-              :key="store.id" 
+            <div
+              v-for="store in stores"
+              :key="store.id"
               class="store-item"
-              :class="{ 'active': selectedStore?.id === store.id }"
+              :class="{ active: selectedStore?.id === store.id }"
               @click="selectStore(store)"
             >
-              <div class="store-name">{{ store.name }}</div>
-              <div class="store-address">{{ store.address }}</div>
+              <div class="store-name">
+                {{ store.name }}
+              </div>
+              <div class="store-address">
+                {{ store.address }}
+              </div>
             </div>
           </div>
         </div>
@@ -58,8 +240,12 @@
             <span>{{ selectedStore.employeeCount }}</span>
           </div>
           <div class="actions">
-            <button class="edit-btn" @click="showEditStoreForm = true">编辑</button>
-            <button class="delete-btn" @click="confirmDelete = true">删除</button>
+            <button class="edit-btn" @click="showEditStoreForm = true">
+              编辑
+            </button>
+            <button class="delete-btn" @click="confirmDelete = true">
+              删除
+            </button>
           </div>
         </div>
       </div>
@@ -72,23 +258,27 @@
         <form @submit.prevent="addStore">
           <div class="form-group">
             <label for="name">门店名称</label>
-            <input type="text" id="name" v-model="newStore.name" required>
+            <input id="name" v-model="newStore.name" type="text" required>
           </div>
           <div class="form-group">
             <label for="address">门店地址</label>
-            <input type="text" id="address" v-model="newStore.address" required>
+            <input id="address" v-model="newStore.address" type="text" required>
           </div>
           <div class="form-group">
             <label for="phone">联系电话</label>
-            <input type="text" id="phone" v-model="newStore.phone" required>
+            <input id="phone" v-model="newStore.phone" type="text" required>
           </div>
           <div class="form-group">
             <label for="businessHours">营业时间</label>
-            <input type="text" id="businessHours" v-model="newStore.businessHours" required>
+            <input id="businessHours" v-model="newStore.businessHours" type="text" required>
           </div>
           <div class="form-actions">
-            <button type="button" @click="showAddStoreForm = false">取消</button>
-            <button type="submit">保存</button>
+            <button type="button" @click="showAddStoreForm = false">
+              取消
+            </button>
+            <button type="submit">
+              保存
+            </button>
           </div>
         </form>
       </div>
@@ -101,23 +291,27 @@
         <form @submit.prevent="updateStore">
           <div class="form-group">
             <label for="edit-name">门店名称</label>
-            <input type="text" id="edit-name" v-model="editingStore.name" required>
+            <input id="edit-name" v-model="editingStore.name" type="text" required>
           </div>
           <div class="form-group">
             <label for="edit-address">门店地址</label>
-            <input type="text" id="edit-address" v-model="editingStore.address" required>
+            <input id="edit-address" v-model="editingStore.address" type="text" required>
           </div>
           <div class="form-group">
             <label for="edit-phone">联系电话</label>
-            <input type="text" id="edit-phone" v-model="editingStore.phone" required>
+            <input id="edit-phone" v-model="editingStore.phone" type="text" required>
           </div>
           <div class="form-group">
             <label for="edit-businessHours">营业时间</label>
-            <input type="text" id="edit-businessHours" v-model="editingStore.businessHours" required>
+            <input id="edit-businessHours" v-model="editingStore.businessHours" type="text" required>
           </div>
           <div class="form-actions">
-            <button type="button" @click="showEditStoreForm = false">取消</button>
-            <button type="submit">保存</button>
+            <button type="button" @click="showEditStoreForm = false">
+              取消
+            </button>
+            <button type="submit">
+              保存
+            </button>
           </div>
         </form>
       </div>
@@ -129,181 +323,17 @@
         <h2>确认删除</h2>
         <p>您确定要删除门店 "{{ selectedStore.name }}" 吗？此操作不可撤销。</p>
         <div class="form-actions">
-          <button type="button" @click="confirmDelete = false">取消</button>
-          <button type="button" class="delete-btn" @click="deleteStore">确认删除</button>
+          <button type="button" @click="confirmDelete = false">
+            取消
+          </button>
+          <button type="button" class="delete-btn" @click="deleteStore">
+            确认删除
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-
-// 定义门店类型
-interface Store {
-  id: string
-  name: string
-  address: string
-  phone: string
-  businessHours: string
-  employeeCount: number
-}
-
-// 状态
-const stores = ref<Store[]>([])
-const selectedStore = ref<Store | null>(null)
-const loading = ref(true)
-const showAddStoreForm = ref(false)
-const showEditStoreForm = ref(false)
-const confirmDelete = ref(false)
-
-// 新门店表单数据
-const newStore = reactive({
-  name: '',
-  address: '',
-  phone: '',
-  businessHours: ''
-})
-
-// 编辑门店表单数据
-const editingStore = reactive({
-  id: '',
-  name: '',
-  address: '',
-  phone: '',
-  businessHours: ''
-})
-
-// 加载门店数据
-onMounted(async () => {
-  try {
-    // 这里应该调用API获取门店数据
-    // 模拟数据
-    setTimeout(() => {
-      stores.value = [
-        {
-          id: '1',
-          name: '中关村店',
-          address: '北京市海淀区中关村大街1号',
-          phone: '010-12345678',
-          businessHours: '09:00-22:00',
-          employeeCount: 15
-        },
-        {
-          id: '2',
-          name: '望京店',
-          address: '北京市朝阳区望京西园四区',
-          phone: '010-87654321',
-          businessHours: '10:00-21:00',
-          employeeCount: 12
-        },
-        {
-          id: '3',
-          name: '五道口店',
-          address: '北京市海淀区五道口华清嘉园',
-          phone: '010-56781234',
-          businessHours: '09:30-21:30',
-          employeeCount: 10
-        }
-      ]
-      loading.value = false
-    }, 1000)
-  } catch (error) {
-    console.error('加载门店数据失败', error)
-    loading.value = false
-  }
-})
-
-// 选择门店
-const selectStore = (store: Store) => {
-  selectedStore.value = store
-}
-
-// 添加门店
-const addStore = async () => {
-  try {
-    // 这里应该调用API添加门店
-    // 模拟添加
-    const newId = String(stores.value.length + 1)
-    const storeToAdd: Store = {
-      id: newId,
-      name: newStore.name,
-      address: newStore.address,
-      phone: newStore.phone,
-      businessHours: newStore.businessHours,
-      employeeCount: 0
-    }
-    
-    stores.value.push(storeToAdd)
-    showAddStoreForm.value = false
-    
-    // 重置表单
-    Object.assign(newStore, {
-      name: '',
-      address: '',
-      phone: '',
-      businessHours: ''
-    })
-  } catch (error) {
-    console.error('添加门店失败', error)
-  }
-}
-
-// 准备编辑门店
-// 准备编辑门店
-// const prepareEditStore = () => {
-//   if (selectedStore.value) {
-//     Object.assign(editingStore, {
-//       id: selectedStore.value.id,
-//       name: selectedStore.value.name,
-//       address: selectedStore.value.address,
-//       phone: selectedStore.value.phone,
-//       businessHours: selectedStore.value.businessHours
-//     })
-//     showEditStoreForm.value = true
-//   }
-// }
-
-// 更新门店
-const updateStore = async () => {
-  try {
-    // 这里应该调用API更新门店
-    // 模拟更新
-    const index = stores.value.findIndex(s => s.id === editingStore.id)
-    if (index !== -1) {
-      const updatedStore = {
-        ...stores.value[index],
-        name: editingStore.name,
-        address: editingStore.address,
-        phone: editingStore.phone,
-        businessHours: editingStore.businessHours
-      }
-      
-      stores.value[index] = updatedStore
-      selectedStore.value = updatedStore
-      showEditStoreForm.value = false
-    }
-  } catch (error) {
-    console.error('更新门店失败', error)
-  }
-}
-
-// 删除门店
-const deleteStore = async () => {
-  try {
-    // 这里应该调用API删除门店
-    // 模拟删除
-    if (selectedStore.value) {
-      stores.value = stores.value.filter(s => s.id !== selectedStore.value?.id)
-      selectedStore.value = null
-      confirmDelete.value = false
-    }
-  } catch (error) {
-    console.error('删除门店失败', error)
-  }
-}
-</script>
 
 <style scoped>
 .store-management {

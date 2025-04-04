@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue'
+import type { Employee, ScheduleShift } from '../../types'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRosterStore } from '../../stores/rosterStore'
-import type { ScheduleShift, Employee } from '../../types'
 
 const props = defineProps<{
   weekStart: Date
@@ -19,16 +19,16 @@ const loading = ref(false)
 const weekDays = ref<Date[]>([])
 
 // 计算周日期范围
-const calculateWeekDays = (startDate: Date) => {
+function calculateWeekDays(startDate: Date) {
   const days: Date[] = []
   const start = new Date(startDate)
-  
+
   for (let i = 0; i < 7; i++) {
     const day = new Date(start)
     day.setDate(start.getDate() + i)
     days.push(day)
   }
-  
+
   return days
 }
 
@@ -38,12 +38,12 @@ const calculateWeekDays = (startDate: Date) => {
 // }
 
 // 格式化时间为HH:MM
-const formatTime = (timeStr: string): string => {
+function formatTime(timeStr: string): string {
   return timeStr
 }
 
 // 计算班次时长（小时）
-const calculateShiftDuration = (shift: ScheduleShift): number => {
+function calculateShiftDuration(shift: ScheduleShift): number {
   const start = new Date(`2000-01-01T${shift.start_time}`)
   const end = new Date(`2000-01-01T${shift.end_time}`)
   const diff = end.getTime() - start.getTime()
@@ -51,7 +51,7 @@ const calculateShiftDuration = (shift: ScheduleShift): number => {
 }
 
 // 获取班次在一周中的位置
-const getShiftDayIndex = (shift: ScheduleShift): number => {
+function getShiftDayIndex(shift: ScheduleShift): number {
   const shiftDate = new Date(shift.date)
   const dayOfWeek = shiftDate.getDay()
   return dayOfWeek === 0 ? 6 : dayOfWeek - 1 // 调整为周一为0，周日为6
@@ -59,97 +59,100 @@ const getShiftDayIndex = (shift: ScheduleShift): number => {
 
 // 定义排班表数据类型
 interface ScheduleGroup {
-  groupName: string;
-  shifts: ScheduleShift[][];
+  groupName: string
+  shifts: ScheduleShift[][]
 }
 
 // 根据分组方式获取排班表数据
 const scheduleData = computed((): ScheduleGroup[] => {
-  if (!rosterStore.schedule) return []
-  
+  if (!rosterStore.schedule)
+    return []
+
   const weekShifts = rosterStore.currentWeekSchedule
-  
+
   if (props.groupBy === 'position') {
     // 按岗位分组
     const positionGroups: Record<string, ScheduleShift[][]> = {}
-    
+
     // 初始化每个岗位的7天数组
     const allPositions = new Set<string>()
-    weekShifts.forEach(shift => {
+    weekShifts.forEach((shift) => {
       Object.keys(shift.required_positions).forEach(pos => allPositions.add(pos))
     })
-    
-    allPositions.forEach(position => {
-      positionGroups[position] = Array(7).fill(null).map(() => [])
+
+    allPositions.forEach((position) => {
+      positionGroups[position] = Array.from({ length: 7 }).fill(null).map(() => [])
     })
-    
+
     // 填充班次数据
-    weekShifts.forEach(shift => {
+    weekShifts.forEach((shift) => {
       const dayIndex = getShiftDayIndex(shift)
-      Object.keys(shift.required_positions).forEach(position => {
+      Object.keys(shift.required_positions).forEach((position) => {
         if (positionGroups[position]) {
           positionGroups[position][dayIndex].push(shift)
         }
       })
     })
-    
+
     return Object.entries(positionGroups).map(([position, shifts]) => ({
       groupName: position,
-      shifts
+      shifts,
     }))
-  } else if (props.groupBy === 'employee') {
+  }
+  else if (props.groupBy === 'employee') {
     // 按员工分组
     const employeeGroups: Record<string, ScheduleShift[][]> = {}
-    
+
     // 收集所有员工
     const allEmployees = new Map<string, Employee>()
-    weekShifts.forEach(shift => {
-      Object.values(shift.assignments).forEach(assignments => {
-        assignments.forEach(employee => {
+    weekShifts.forEach((shift) => {
+      Object.values(shift.assignments).forEach((assignments) => {
+        assignments.forEach((employee) => {
           allEmployees.set(employee.id, employee as any)
         })
       })
     })
-    
+
     // 初始化每个员工的7天数组
     allEmployees.forEach((_employee, id) => {
-      employeeGroups[id] = Array(7).fill(null).map(() => [])
+      employeeGroups[id] = Array.from({ length: 7 }).fill(null).map(() => [])
     })
-    
+
     // 填充班次数据
-    weekShifts.forEach(shift => {
+    weekShifts.forEach((shift) => {
       const dayIndex = getShiftDayIndex(shift)
       Object.entries(shift.assignments).forEach(([_, assignments]) => {
-        assignments.forEach(employee => {
+        assignments.forEach((employee) => {
           if (employeeGroups[employee.id]) {
             employeeGroups[employee.id][dayIndex].push(shift)
           }
         })
       })
     })
-    
+
     return Array.from(allEmployees.entries()).map(([id, emp]) => ({
       groupName: emp.name,
-      shifts: employeeGroups[id]
+      shifts: employeeGroups[id],
     }))
-  } else {
+  }
+  else {
     // 按技能分组（简化为按职位分组）
     return scheduleData.value
   }
 })
 
 // 获取班次的员工分配情况
-const getShiftAssignments = (shift: ScheduleShift, position: string) => {
+function getShiftAssignments(shift: ScheduleShift, position: string) {
   return shift.assignments[position] || []
 }
 
 // 处理分配班次
-const handleAssignShift = (shiftId: string, position: string) => {
+function handleAssignShift(shiftId: string, position: string) {
   emit('assign', { shiftId, position })
 }
 
 // 处理取消分配
-const handleUnassignShift = (shiftId: string, employeeId: string, position: string) => {
+function handleUnassignShift(shiftId: string, employeeId: string, position: string) {
   emit('unassign', { shiftId, employeeId, position })
 }
 
@@ -168,17 +171,23 @@ onMounted(() => {
     <el-card v-loading="loading">
       <!-- 周日期导航 -->
       <div class="week-header">
-        <div class="week-day-header" v-for="(day, index) in weekDays" :key="index">
-          <div class="day-name">{{ ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][index] }}</div>
-          <div class="day-date">{{ day.getMonth() + 1 }}/{{ day.getDate() }}</div>
+        <div v-for="(day, index) in weekDays" :key="index" class="week-day-header">
+          <div class="day-name">
+            {{ ['周一', '周二', '周三', '周四', '周五', '周六', '周日'][index] }}
+          </div>
+          <div class="day-date">
+            {{ day.getMonth() + 1 }}/{{ day.getDate() }}
+          </div>
         </div>
       </div>
-      
+
       <!-- 排班表内容 -->
       <div class="schedule-content">
         <div v-for="(group, groupIndex) in scheduleData" :key="groupIndex" class="schedule-group">
-          <div class="group-header">{{ group.groupName }}</div>
-          
+          <div class="group-header">
+            {{ group.groupName }}
+          </div>
+
           <div class="group-content">
             <div v-for="(dayShifts, dayIndex) in group.shifts" :key="dayIndex" class="day-shifts">
               <template v-if="dayShifts.length > 0">
@@ -186,24 +195,24 @@ onMounted(() => {
                   <div class="shift-time">
                     {{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}
                   </div>
-                  
+
                   <div class="shift-duration">
                     {{ calculateShiftDuration(shift).toFixed(1) }}小时
                   </div>
-                  
+
                   <div class="shift-assignments">
                     <template v-if="props.groupBy === 'position'">
                       <div class="assigned-employees">
-                        <el-tag 
-                          v-for="emp in getShiftAssignments(shift, group.groupName)" 
+                        <el-tag
+                          v-for="emp in getShiftAssignments(shift, group.groupName)"
                           :key="emp.id"
                           closable
                           @close="handleUnassignShift(shift.id, emp.id, group.groupName)"
                         >
                           {{ emp.name }}
                         </el-tag>
-                        
-                        <el-button 
+
+                        <el-button
                           v-if="getShiftAssignments(shift, group.groupName).length < (shift.required_positions[group.groupName] || 0)"
                           size="small"
                           type="primary"
@@ -214,7 +223,7 @@ onMounted(() => {
                         </el-button>
                       </div>
                     </template>
-                    
+
                     <template v-else-if="props.groupBy === 'employee'">
                       <div class="employee-positions">
                         <el-tag v-for="position in Object.keys(shift.assignments)" :key="position">
@@ -225,7 +234,7 @@ onMounted(() => {
                   </div>
                 </div>
               </template>
-              
+
               <div v-else class="empty-shift">
                 <span>无班次</span>
               </div>

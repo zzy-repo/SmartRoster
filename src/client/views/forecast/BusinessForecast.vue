@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
 
 // 业务预测数据类型定义
 interface ForecastData {
@@ -29,47 +29,48 @@ const stores = [
 ]
 
 // 加载预测数据
-const loadForecastData = async () => {
+async function loadForecastData() {
   if (!selectedStore.value) {
     ElMessage.warning('请选择门店')
     return
   }
-  
+
   loading.value = true
   try {
     // 这里应该是从API获取数据
     // const response = await fetch(`/api/forecast?date=${selectedDate.value}&storeId=${selectedStore.value}`)
     // forecastData.value = await response.json()
-    
+
     // 模拟数据
     setTimeout(() => {
       const store = stores.find(s => s.id === selectedStore.value)
-      
+
       // 生成24小时的模拟数据
       const hourlyData = Array.from({ length: 24 }, (_, i) => {
         // 模拟客流量和销售额的高峰期
         const isPeakHour = (i >= 11 && i <= 13) || (i >= 17 && i <= 19)
         const baseCustomers = isPeakHour ? 50 : 20
         const baseSales = isPeakHour ? 5000 : 2000
-        
+
         return {
           hour: i,
           customerCount: Math.floor(baseCustomers + Math.random() * baseCustomers),
-          salesAmount: Math.floor(baseSales + Math.random() * baseSales)
+          salesAmount: Math.floor(baseSales + Math.random() * baseSales),
         }
       })
-      
+
       forecastData.value = [{
         id: '1',
         date: selectedDate.value,
         storeId: selectedStore.value,
         storeName: store?.name || '',
-        hourlyData
+        hourlyData,
       }]
-      
+
       loading.value = false
     }, 500)
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载预测数据失败')
     loading.value = false
   }
@@ -111,55 +112,61 @@ onMounted(() => {
                 :value="store.id"
               />
             </el-select>
-            <el-button type="primary" @click="loadForecastData">查询</el-button>
+            <el-button type="primary" @click="loadForecastData">
+              查询
+            </el-button>
           </div>
         </div>
       </template>
-      
+
       <div v-if="forecastData.length > 0" class="forecast-content">
         <h3>{{ forecastData[0].storeName }} - {{ forecastData[0].date }} 预测数据</h3>
-        
+
         <!-- 客流量图表 -->
         <div class="chart-container">
           <h4>预计客流量</h4>
           <div class="chart">
-            <div 
-              v-for="item in forecastData[0].hourlyData" 
+            <div
+              v-for="item in forecastData[0].hourlyData"
               :key="item.hour"
               class="chart-bar"
             >
-              <div 
-                class="bar customer-bar" 
+              <div
+                class="bar customer-bar"
                 :style="{ height: `${item.customerCount}px` }"
               >
                 <span class="bar-value">{{ item.customerCount }}</span>
               </div>
-              <div class="bar-label">{{ item.hour }}:00</div>
+              <div class="bar-label">
+                {{ item.hour }}:00
+              </div>
             </div>
           </div>
         </div>
-        
+
         <!-- 销售额图表 -->
         <div class="chart-container">
           <h4>预计销售额</h4>
           <div class="chart">
-            <div 
-              v-for="item in forecastData[0].hourlyData" 
+            <div
+              v-for="item in forecastData[0].hourlyData"
               :key="item.hour"
               class="chart-bar"
             >
-              <div 
-                class="bar sales-bar" 
+              <div
+                class="bar sales-bar"
                 :style="{ height: `${item.salesAmount / 100}px` }"
               >
                 <span class="bar-value">{{ item.salesAmount }}</span>
               </div>
-              <div class="bar-label">{{ item.hour }}:00</div>
+              <div class="bar-label">
+                {{ item.hour }}:00
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
+
       <el-empty v-else description="暂无预测数据" />
     </el-card>
   </div>

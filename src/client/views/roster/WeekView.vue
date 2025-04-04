@@ -11,7 +11,7 @@ const selectedStoreId = ref('')
 const viewType = ref<'position' | 'employee' | 'skill'>('position')
 
 // 计算当前周的开始日期
-const calculateWeekStart = (date: Date) => {
+function calculateWeekStart(date: Date) {
   const result = new Date(date)
   const day = result.getDay() || 7
   if (day !== 1) {
@@ -21,14 +21,15 @@ const calculateWeekStart = (date: Date) => {
 }
 
 // 从路由参数获取日期和门店ID
-const initFromRoute = () => {
+function initFromRoute() {
   if (route.query.date) {
     const date = new Date(route.query.date as string)
     weekStart.value = calculateWeekStart(date)
-  } else {
+  }
+  else {
     weekStart.value = calculateWeekStart(new Date())
   }
-  
+
   if (route.query.storeId) {
     selectedStoreId.value = route.query.storeId as string
   }
@@ -42,15 +43,21 @@ initFromRoute()
   <div class="week-view">
     <div class="view-controls">
       <el-radio-group v-model="viewType" size="large">
-        <el-radio-button label="position">按岗位</el-radio-button>
-        <el-radio-button label="employee">按员工</el-radio-button>
-        <el-radio-button label="skill">按技能</el-radio-button>
+        <el-radio-button label="position">
+          按岗位
+        </el-radio-button>
+        <el-radio-button label="employee">
+          按员工
+        </el-radio-button>
+        <el-radio-button label="skill">
+          按技能
+        </el-radio-button>
       </el-radio-group>
     </div>
-    
-    <WeekSchedule 
-      :week-start="weekStart" 
-      :store-id="selectedStoreId" 
+
+    <WeekSchedule
+      :week-start="weekStart"
+      :store-id="selectedStoreId"
       :group-by="viewType"
       @assign="$emit('assign', $event)"
       @unassign="$emit('unassign', $event)"

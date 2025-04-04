@@ -1,3 +1,244 @@
+<script setup lang="ts">
+import { onMounted, reactive, ref } from 'vue'
+
+// 定义员工类型
+interface Employee {
+  id: string
+  name: string
+  gender: string
+  age: number
+  position: string
+  storeId: string
+  storeName: string
+  phone: string
+  hireDate: string
+  skills: string[]
+}
+
+// 定义门店类型
+interface Store {
+  id: string
+  name: string
+}
+
+// 状态
+const employees = ref<Employee[]>([])
+const selectedEmployee = ref<Employee | null>(null)
+const loading = ref(true)
+const showAddEmployeeForm = ref(false)
+const showEditEmployeeForm = ref(false)
+const confirmDelete = ref(false)
+const stores = ref<Store[]>([])
+
+// 可用技能列表
+const availableSkills = [
+  '收银',
+  '理货',
+  '促销',
+  '客服',
+  '库存管理',
+  '食品加工',
+  '生鲜处理',
+  '团队管理',
+]
+
+// 新员工表单数据
+const newEmployee = reactive({
+  name: '',
+  gender: '男',
+  age: 25,
+  position: '',
+  storeId: '',
+  phone: '',
+  hireDate: '',
+  skills: [] as string[],
+})
+
+// 编辑员工表单数据
+const editingEmployee = reactive({
+  id: '',
+  name: '',
+  gender: '',
+  age: 0,
+  position: '',
+  storeId: '',
+  phone: '',
+  hireDate: '',
+  skills: [] as string[],
+})
+
+// 加载员工和门店数据
+onMounted(async () => {
+  try {
+    // 这里应该调用API获取员工和门店数据
+    // 模拟数据
+    setTimeout(() => {
+      stores.value = [
+        { id: '1', name: '中关村店' },
+        { id: '2', name: '望京店' },
+        { id: '3', name: '五道口店' },
+      ]
+
+      employees.value = [
+        {
+          id: '1',
+          name: '张三',
+          gender: '男',
+          age: 32,
+          position: '店长',
+          storeId: '1',
+          storeName: '中关村店',
+          phone: '13812345678',
+          hireDate: '2020-01-15',
+          skills: ['收银', '团队管理', '库存管理'],
+        },
+        {
+          id: '2',
+          name: '李四',
+          gender: '女',
+          age: 28,
+          position: '收银员',
+          storeId: '1',
+          storeName: '中关村店',
+          phone: '13987654321',
+          hireDate: '2021-03-10',
+          skills: ['收银', '客服'],
+        },
+        {
+          id: '3',
+          name: '王五',
+          gender: '男',
+          age: 25,
+          position: '理货员',
+          storeId: '2',
+          storeName: '望京店',
+          phone: '13567891234',
+          hireDate: '2022-05-20',
+          skills: ['理货', '库存管理'],
+        },
+      ]
+      loading.value = false
+    }, 1000)
+  }
+  catch (error) {
+    console.error('加载数据失败', error)
+    loading.value = false
+  }
+})
+
+// 选择员工
+function selectEmployee(employee: Employee) {
+  selectedEmployee.value = employee
+}
+
+// 添加员工
+async function addEmployee() {
+  try {
+    // 这里应该调用API添加员工
+    // 模拟添加
+    const newId = String(employees.value.length + 1)
+    const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
+
+    const employeeToAdd: Employee = {
+      id: newId,
+      name: newEmployee.name,
+      gender: newEmployee.gender,
+      age: newEmployee.age,
+      position: newEmployee.position,
+      storeId: newEmployee.storeId,
+      storeName,
+      phone: newEmployee.phone,
+      hireDate: newEmployee.hireDate,
+      skills: [...newEmployee.skills],
+    }
+
+    employees.value.push(employeeToAdd)
+    showAddEmployeeForm.value = false
+
+    // 重置表单
+    Object.assign(newEmployee, {
+      name: '',
+      gender: '男',
+      age: 25,
+      position: '',
+      storeId: '',
+      phone: '',
+      hireDate: '',
+      skills: [],
+    })
+  }
+  catch (error) {
+    console.error('添加员工失败', error)
+  }
+}
+
+// 准备编辑员工
+function prepareEditEmployee() {
+  if (selectedEmployee.value) {
+    Object.assign(editingEmployee, {
+      id: selectedEmployee.value.id,
+      name: selectedEmployee.value.name,
+      gender: selectedEmployee.value.gender,
+      age: selectedEmployee.value.age,
+      position: selectedEmployee.value.position,
+      storeId: selectedEmployee.value.storeId,
+      phone: selectedEmployee.value.phone,
+      hireDate: selectedEmployee.value.hireDate,
+      skills: [...selectedEmployee.value.skills],
+    })
+    showEditEmployeeForm.value = true
+  }
+}
+
+// 更新员工
+async function updateEmployee() {
+  try {
+    // 这里应该调用API更新员工
+    // 模拟更新
+    const index = employees.value.findIndex(e => e.id === editingEmployee.id)
+    if (index !== -1) {
+      const storeName = stores.value.find(s => s.id === editingEmployee.storeId)?.name || ''
+
+      const updatedEmployee = {
+        ...employees.value[index],
+        name: editingEmployee.name,
+        gender: editingEmployee.gender,
+        age: editingEmployee.age,
+        position: editingEmployee.position,
+        storeId: editingEmployee.storeId,
+        storeName,
+        phone: editingEmployee.phone,
+        hireDate: editingEmployee.hireDate,
+        skills: [...editingEmployee.skills],
+      }
+
+      employees.value[index] = updatedEmployee
+      selectedEmployee.value = updatedEmployee
+      showEditEmployeeForm.value = false
+    }
+  }
+  catch (error) {
+    console.error('更新员工失败', error)
+  }
+}
+
+// 删除员工
+async function deleteEmployee() {
+  try {
+    // 这里应该调用API删除员工
+    // 模拟删除
+    if (selectedEmployee.value) {
+      employees.value = employees.value.filter(e => e.id !== selectedEmployee.value?.id)
+      selectedEmployee.value = null
+      confirmDelete.value = false
+    }
+  }
+  catch (error) {
+    console.error('删除员工失败', error)
+  }
+}
+</script>
+
 <template>
   <div class="employee-management">
     <h1>员工管理</h1>
@@ -6,21 +247,31 @@
       <div class="employee-list">
         <div class="employee-list-header">
           <h2>员工列表</h2>
-          <button class="add-employee-btn" @click="showAddEmployeeForm = true">添加员工</button>
+          <button class="add-employee-btn" @click="showAddEmployeeForm = true">
+            添加员工
+          </button>
         </div>
         <div class="employee-list-content">
-          <div v-if="loading" class="loading">加载中...</div>
-          <div v-else-if="employees.length === 0" class="no-data">暂无员工数据</div>
+          <div v-if="loading" class="loading">
+            加载中...
+          </div>
+          <div v-else-if="employees.length === 0" class="no-data">
+            暂无员工数据
+          </div>
           <div v-else class="employee-items">
-            <div 
-              v-for="employee in employees" 
-              :key="employee.id" 
+            <div
+              v-for="employee in employees"
+              :key="employee.id"
               class="employee-item"
-              :class="{ 'active': selectedEmployee?.id === employee.id }"
+              :class="{ active: selectedEmployee?.id === employee.id }"
               @click="selectEmployee(employee)"
             >
-              <div class="employee-name">{{ employee.name }}</div>
-              <div class="employee-position">{{ employee.position }}</div>
+              <div class="employee-name">
+                {{ employee.name }}
+              </div>
+              <div class="employee-position">
+                {{ employee.position }}
+              </div>
             </div>
           </div>
         </div>
@@ -72,8 +323,12 @@
             </div>
           </div>
           <div class="actions">
-            <button class="edit-btn" @click="prepareEditEmployee()">编辑</button>
-            <button class="delete-btn" @click="confirmDelete = true">删除</button>
+            <button class="edit-btn" @click="prepareEditEmployee()">
+              编辑
+            </button>
+            <button class="delete-btn" @click="confirmDelete = true">
+              删除
+            </button>
           </div>
         </div>
       </div>
@@ -86,55 +341,75 @@
         <form @submit.prevent="addEmployee">
           <div class="form-group">
             <label for="name">姓名</label>
-            <input type="text" id="name" v-model="newEmployee.name" required>
+            <input id="name" v-model="newEmployee.name" type="text" required>
           </div>
           <div class="form-group">
             <label for="gender">性别</label>
             <select id="gender" v-model="newEmployee.gender" required>
-              <option value="男">男</option>
-              <option value="女">女</option>
+              <option value="男">
+                男
+              </option>
+              <option value="女">
+                女
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="age">年龄</label>
-            <input type="number" id="age" v-model="newEmployee.age" required min="18" max="65">
+            <input id="age" v-model="newEmployee.age" type="number" required min="18" max="65">
           </div>
           <div class="form-group">
             <label for="position">职位</label>
             <select id="position" v-model="newEmployee.position" required>
-              <option value="店长">店长</option>
-              <option value="副店长">副店长</option>
-              <option value="收银员">收银员</option>
-              <option value="理货员">理货员</option>
-              <option value="促销员">促销员</option>
+              <option value="店长">
+                店长
+              </option>
+              <option value="副店长">
+                副店长
+              </option>
+              <option value="收银员">
+                收银员
+              </option>
+              <option value="理货员">
+                理货员
+              </option>
+              <option value="促销员">
+                促销员
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="store">所属门店</label>
             <select id="store" v-model="newEmployee.storeId" required>
-              <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
+              <option v-for="store in stores" :key="store.id" :value="store.id">
+                {{ store.name }}
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="phone">联系电话</label>
-            <input type="tel" id="phone" v-model="newEmployee.phone" required>
+            <input id="phone" v-model="newEmployee.phone" type="tel" required>
           </div>
           <div class="form-group">
             <label for="hireDate">入职日期</label>
-            <input type="date" id="hireDate" v-model="newEmployee.hireDate" required>
+            <input id="hireDate" v-model="newEmployee.hireDate" type="date" required>
           </div>
           <div class="form-group">
             <label>技能</label>
             <div class="skills-checkboxes">
               <label v-for="skill in availableSkills" :key="skill">
-                <input type="checkbox" :value="skill" v-model="newEmployee.skills">
+                <input v-model="newEmployee.skills" type="checkbox" :value="skill">
                 {{ skill }}
               </label>
             </div>
           </div>
           <div class="form-actions">
-            <button type="button" @click="showAddEmployeeForm = false">取消</button>
-            <button type="submit">保存</button>
+            <button type="button" @click="showAddEmployeeForm = false">
+              取消
+            </button>
+            <button type="submit">
+              保存
+            </button>
           </div>
         </form>
       </div>
@@ -147,55 +422,75 @@
         <form @submit.prevent="updateEmployee">
           <div class="form-group">
             <label for="edit-name">姓名</label>
-            <input type="text" id="edit-name" v-model="editingEmployee.name" required>
+            <input id="edit-name" v-model="editingEmployee.name" type="text" required>
           </div>
           <div class="form-group">
             <label for="edit-gender">性别</label>
             <select id="edit-gender" v-model="editingEmployee.gender" required>
-              <option value="男">男</option>
-              <option value="女">女</option>
+              <option value="男">
+                男
+              </option>
+              <option value="女">
+                女
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="edit-age">年龄</label>
-            <input type="number" id="edit-age" v-model="editingEmployee.age" required min="18" max="65">
+            <input id="edit-age" v-model="editingEmployee.age" type="number" required min="18" max="65">
           </div>
           <div class="form-group">
             <label for="edit-position">职位</label>
             <select id="edit-position" v-model="editingEmployee.position" required>
-              <option value="店长">店长</option>
-              <option value="副店长">副店长</option>
-              <option value="收银员">收银员</option>
-              <option value="理货员">理货员</option>
-              <option value="促销员">促销员</option>
+              <option value="店长">
+                店长
+              </option>
+              <option value="副店长">
+                副店长
+              </option>
+              <option value="收银员">
+                收银员
+              </option>
+              <option value="理货员">
+                理货员
+              </option>
+              <option value="促销员">
+                促销员
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="edit-store">所属门店</label>
             <select id="edit-store" v-model="editingEmployee.storeId" required>
-              <option v-for="store in stores" :key="store.id" :value="store.id">{{ store.name }}</option>
+              <option v-for="store in stores" :key="store.id" :value="store.id">
+                {{ store.name }}
+              </option>
             </select>
           </div>
           <div class="form-group">
             <label for="edit-phone">联系电话</label>
-            <input type="tel" id="edit-phone" v-model="editingEmployee.phone" required>
+            <input id="edit-phone" v-model="editingEmployee.phone" type="tel" required>
           </div>
           <div class="form-group">
             <label for="edit-hireDate">入职日期</label>
-            <input type="date" id="edit-hireDate" v-model="editingEmployee.hireDate" required>
+            <input id="edit-hireDate" v-model="editingEmployee.hireDate" type="date" required>
           </div>
           <div class="form-group">
             <label>技能</label>
             <div class="skills-checkboxes">
               <label v-for="skill in availableSkills" :key="skill">
-                <input type="checkbox" :value="skill" v-model="editingEmployee.skills">
+                <input v-model="editingEmployee.skills" type="checkbox" :value="skill">
                 {{ skill }}
               </label>
             </div>
           </div>
           <div class="form-actions">
-            <button type="button" @click="showEditEmployeeForm = false">取消</button>
-            <button type="submit">保存</button>
+            <button type="button" @click="showEditEmployeeForm = false">
+              取消
+            </button>
+            <button type="submit">
+              保存
+            </button>
           </div>
         </form>
       </div>
@@ -207,250 +502,17 @@
         <h2>确认删除</h2>
         <p>您确定要删除员工 "{{ selectedEmployee.name }}" 吗？此操作不可撤销。</p>
         <div class="form-actions">
-          <button type="button" @click="confirmDelete = false">取消</button>
-          <button type="button" class="delete-btn" @click="deleteEmployee">确认删除</button>
+          <button type="button" @click="confirmDelete = false">
+            取消
+          </button>
+          <button type="button" class="delete-btn" @click="deleteEmployee">
+            确认删除
+          </button>
         </div>
       </div>
     </div>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
-
-// 定义员工类型
-interface Employee {
-  id: string
-  name: string
-  gender: string
-  age: number
-  position: string
-  storeId: string
-  storeName: string
-  phone: string
-  hireDate: string
-  skills: string[]
-}
-
-// 定义门店类型
-interface Store {
-  id: string
-  name: string
-}
-
-// 状态
-const employees = ref<Employee[]>([])
-const selectedEmployee = ref<Employee | null>(null)
-const loading = ref(true)
-const showAddEmployeeForm = ref(false)
-const showEditEmployeeForm = ref(false)
-const confirmDelete = ref(false)
-const stores = ref<Store[]>([])
-
-// 可用技能列表
-const availableSkills = [
-  '收银',
-  '理货',
-  '促销',
-  '客服',
-  '库存管理',
-  '食品加工',
-  '生鲜处理',
-  '团队管理'
-]
-
-// 新员工表单数据
-const newEmployee = reactive({
-  name: '',
-  gender: '男',
-  age: 25,
-  position: '',
-  storeId: '',
-  phone: '',
-  hireDate: '',
-  skills: [] as string[]
-})
-
-// 编辑员工表单数据
-const editingEmployee = reactive({
-  id: '',
-  name: '',
-  gender: '',
-  age: 0,
-  position: '',
-  storeId: '',
-  phone: '',
-  hireDate: '',
-  skills: [] as string[]
-})
-
-// 加载员工和门店数据
-onMounted(async () => {
-  try {
-    // 这里应该调用API获取员工和门店数据
-    // 模拟数据
-    setTimeout(() => {
-      stores.value = [
-        { id: '1', name: '中关村店' },
-        { id: '2', name: '望京店' },
-        { id: '3', name: '五道口店' }
-      ]
-      
-      employees.value = [
-        {
-          id: '1',
-          name: '张三',
-          gender: '男',
-          age: 32,
-          position: '店长',
-          storeId: '1',
-          storeName: '中关村店',
-          phone: '13812345678',
-          hireDate: '2020-01-15',
-          skills: ['收银', '团队管理', '库存管理']
-        },
-        {
-          id: '2',
-          name: '李四',
-          gender: '女',
-          age: 28,
-          position: '收银员',
-          storeId: '1',
-          storeName: '中关村店',
-          phone: '13987654321',
-          hireDate: '2021-03-10',
-          skills: ['收银', '客服']
-        },
-        {
-          id: '3',
-          name: '王五',
-          gender: '男',
-          age: 25,
-          position: '理货员',
-          storeId: '2',
-          storeName: '望京店',
-          phone: '13567891234',
-          hireDate: '2022-05-20',
-          skills: ['理货', '库存管理']
-        }
-      ]
-      loading.value = false
-    }, 1000)
-  } catch (error) {
-    console.error('加载数据失败', error)
-    loading.value = false
-  }
-})
-
-// 选择员工
-const selectEmployee = (employee: Employee) => {
-  selectedEmployee.value = employee
-}
-
-// 添加员工
-const addEmployee = async () => {
-  try {
-    // 这里应该调用API添加员工
-    // 模拟添加
-    const newId = String(employees.value.length + 1)
-    const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
-    
-    const employeeToAdd: Employee = {
-      id: newId,
-      name: newEmployee.name,
-      gender: newEmployee.gender,
-      age: newEmployee.age,
-      position: newEmployee.position,
-      storeId: newEmployee.storeId,
-      storeName: storeName,
-      phone: newEmployee.phone,
-      hireDate: newEmployee.hireDate,
-      skills: [...newEmployee.skills]
-    }
-    
-    employees.value.push(employeeToAdd)
-    showAddEmployeeForm.value = false
-    
-    // 重置表单
-    Object.assign(newEmployee, {
-      name: '',
-      gender: '男',
-      age: 25,
-      position: '',
-      storeId: '',
-      phone: '',
-      hireDate: '',
-      skills: []
-    })
-  } catch (error) {
-    console.error('添加员工失败', error)
-  }
-}
-
-// 准备编辑员工
-const prepareEditEmployee = () => {
-  if (selectedEmployee.value) {
-    Object.assign(editingEmployee, {
-      id: selectedEmployee.value.id,
-      name: selectedEmployee.value.name,
-      gender: selectedEmployee.value.gender,
-      age: selectedEmployee.value.age,
-      position: selectedEmployee.value.position,
-      storeId: selectedEmployee.value.storeId,
-      phone: selectedEmployee.value.phone,
-      hireDate: selectedEmployee.value.hireDate,
-      skills: [...selectedEmployee.value.skills]
-    })
-    showEditEmployeeForm.value = true
-  }
-}
-
-// 更新员工
-const updateEmployee = async () => {
-  try {
-    // 这里应该调用API更新员工
-    // 模拟更新
-    const index = employees.value.findIndex(e => e.id === editingEmployee.id)
-    if (index !== -1) {
-      const storeName = stores.value.find(s => s.id === editingEmployee.storeId)?.name || ''
-      
-      const updatedEmployee = {
-        ...employees.value[index],
-        name: editingEmployee.name,
-        gender: editingEmployee.gender,
-        age: editingEmployee.age,
-        position: editingEmployee.position,
-        storeId: editingEmployee.storeId,
-        storeName: storeName,
-        phone: editingEmployee.phone,
-        hireDate: editingEmployee.hireDate,
-        skills: [...editingEmployee.skills]
-      }
-      
-      employees.value[index] = updatedEmployee
-      selectedEmployee.value = updatedEmployee
-      showEditEmployeeForm.value = false
-    }
-  } catch (error) {
-    console.error('更新员工失败', error)
-  }
-}
-
-// 删除员工
-const deleteEmployee = async () => {
-  try {
-    // 这里应该调用API删除员工
-    // 模拟删除
-    if (selectedEmployee.value) {
-      employees.value = employees.value.filter(e => e.id !== selectedEmployee.value?.id)
-      selectedEmployee.value = null
-      confirmDelete.value = false
-    }
-  } catch (error) {
-    console.error('删除员工失败', error)
-  }
-}
-</script>
 
 <style scoped>
 .employee-management {

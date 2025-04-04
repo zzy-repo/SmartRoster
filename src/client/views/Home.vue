@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { useStoreStore } from '../stores/storeStore'
 import { useEmployeeStore } from '../stores/employeeStore'
+import { useStoreStore } from '../stores/storeStore'
 
 const router = useRouter()
 const storeStore = useStoreStore()
@@ -11,42 +11,44 @@ const employeeStore = useEmployeeStore()
 const loading = ref(false)
 
 // 加载数据
-const loadData = async () => {
+async function loadData() {
   loading.value = true
   try {
     await Promise.all([
       storeStore.fetchStores(),
-      employeeStore.fetchEmployees()
+      employeeStore.fetchEmployees(),
     ])
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载数据失败:', error)
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 // 跳转到排班表页面
-const goToRoster = () => {
+function goToRoster() {
   router.push('/roster')
 }
 
 // 跳转到员工管理页面
-const goToEmployees = () => {
+function goToEmployees() {
   router.push('/employees')
 }
 
 // 跳转到门店管理页面
-const goToStores = () => {
+function goToStores() {
   router.push('/stores')
 }
 
 // 跳转到排班规则页面
-const goToRules = () => {
+function goToRules() {
   router.push('/rules')
 }
 
 // 跳转到业务预测页面
-const goToForecast = () => {
+function goToForecast() {
   router.push('/forecast')
 }
 
@@ -56,17 +58,19 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="home-container" v-loading="loading">
+  <div v-loading="loading" class="home-container">
     <el-row :gutter="20">
       <el-col :span="24">
         <div class="welcome-section">
           <h1>欢迎使用智能排班系统</h1>
           <p>基于员工偏好和业务需求，自动生成最优排班方案</p>
-          <el-button type="primary" size="large" @click="goToRoster">开始排班</el-button>
+          <el-button type="primary" size="large" @click="goToRoster">
+            开始排班
+          </el-button>
         </div>
       </el-col>
     </el-row>
-    
+
     <el-row :gutter="20" class="stats-section">
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="stat-card">
@@ -78,10 +82,12 @@ onMounted(() => {
           <div class="stat-value">
             {{ storeStore.storeCount }}
           </div>
-          <el-button text @click="goToStores">管理门店</el-button>
+          <el-button text @click="goToStores">
+            管理门店
+          </el-button>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="stat-card">
           <template #header>
@@ -92,10 +98,12 @@ onMounted(() => {
           <div class="stat-value">
             {{ employeeStore.employeeCount }}
           </div>
-          <el-button text @click="goToEmployees">管理员工</el-button>
+          <el-button text @click="goToEmployees">
+            管理员工
+          </el-button>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="stat-card">
           <template #header>
@@ -104,33 +112,39 @@ onMounted(() => {
             </div>
           </template>
           <div class="feature-list">
-            <el-button text @click="goToRules">排班规则</el-button>
-            <el-button text @click="goToForecast">业务预测</el-button>
-            <el-button text @click="goToRoster">排班表</el-button>
+            <el-button text @click="goToRules">
+              排班规则
+            </el-button>
+            <el-button text @click="goToForecast">
+              业务预测
+            </el-button>
+            <el-button text @click="goToRoster">
+              排班表
+            </el-button>
           </div>
         </el-card>
       </el-col>
     </el-row>
-    
+
     <el-row :gutter="20" class="features-section">
       <el-col :span="24">
         <h2>系统功能</h2>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="feature-card">
           <h3>智能排班</h3>
           <p>根据员工偏好、技能匹配度和业务需求，自动生成最优排班方案</p>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="feature-card">
           <h3>多维度视图</h3>
           <p>支持按日、按周查看排班表，可按技能、岗位和员工分组查看</p>
         </el-card>
       </el-col>
-      
+
       <el-col :xs="24" :sm="12" :md="8">
         <el-card shadow="hover" class="feature-card">
           <h3>灵活调整</h3>

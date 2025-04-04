@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import type { Store } from '../types'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import { storeApi } from '../api/storeApi'
 
 export const useStoreStore = defineStore('store', () => {
@@ -13,7 +13,7 @@ export const useStoreStore = defineStore('store', () => {
   const storeCount = computed(() => stores.value.length)
   const storeOptions = computed(() => stores.value.map(store => ({
     label: store.name,
-    value: store.id
+    value: store.id,
   })))
 
   // 方法
@@ -22,9 +22,11 @@ export const useStoreStore = defineStore('store', () => {
     try {
       const { data } = await storeApi.getStores()
       stores.value = data.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('获取门店列表失败:', error)
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -34,7 +36,8 @@ export const useStoreStore = defineStore('store', () => {
       const { data } = await storeApi.getStoreById(id)
       currentStore.value = data.data
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`获取门店信息失败 (ID: ${id}):`, error)
       return null
     }
@@ -45,7 +48,8 @@ export const useStoreStore = defineStore('store', () => {
       const { data } = await storeApi.createStore(storeData)
       stores.value.push(data.data)
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('创建门店失败:', error)
       throw error
     }
@@ -62,7 +66,8 @@ export const useStoreStore = defineStore('store', () => {
         currentStore.value = { ...currentStore.value, ...data }
       }
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`更新门店失败 (ID: ${id}):`, error)
       throw error
     }
@@ -76,7 +81,8 @@ export const useStoreStore = defineStore('store', () => {
         currentStore.value = null
       }
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`删除门店失败 (ID: ${id}):`, error)
       throw error
     }
@@ -95,6 +101,6 @@ export const useStoreStore = defineStore('store', () => {
     getStoreById,
     createStore,
     updateStore,
-    deleteStore
+    deleteStore,
   }
 })

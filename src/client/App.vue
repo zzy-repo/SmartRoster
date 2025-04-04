@@ -5,7 +5,7 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const activeIndex = ref('/')
 
-const handleSelect = (key: string) => {
+function handleSelect(key: string) {
   router.push(key)
 }
 </script>
@@ -22,23 +22,35 @@ const handleSelect = (key: string) => {
             :default-active="activeIndex"
             class="main-menu"
             mode="horizontal"
-            @select="handleSelect"
             router
+            @select="handleSelect"
           >
-            <el-menu-item index="/">首页</el-menu-item>
-            <el-menu-item index="/stores">门店管理</el-menu-item>
-            <el-menu-item index="/employees">员工管理</el-menu-item>
-            <el-menu-item index="/rules">排班规则</el-menu-item>
-            <el-menu-item index="/forecast">业务预测</el-menu-item>
-            <el-menu-item index="/roster">排班表</el-menu-item>
+            <el-menu-item index="/">
+              首页
+            </el-menu-item>
+            <el-menu-item index="/stores">
+              门店管理
+            </el-menu-item>
+            <el-menu-item index="/employees">
+              员工管理
+            </el-menu-item>
+            <el-menu-item index="/rules">
+              排班规则
+            </el-menu-item>
+            <el-menu-item index="/forecast">
+              业务预测
+            </el-menu-item>
+            <el-menu-item index="/roster">
+              排班表
+            </el-menu-item>
           </el-menu>
         </div>
       </el-header>
-      
+
       <el-main>
         <router-view />
       </el-main>
-      
+
       <el-footer height="50px">
         <div class="footer-content">
           <p>© {{ new Date().getFullYear() }} SmartRoster - 智能排班系统</p>

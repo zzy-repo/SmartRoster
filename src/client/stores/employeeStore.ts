@@ -1,6 +1,6 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
 import type { Employee } from '../types'
+import { defineStore } from 'pinia'
+import { computed, ref } from 'vue'
 import { employeeApi } from '../api/employeeApi'
 
 export const useEmployeeStore = defineStore('employee', () => {
@@ -24,9 +24,11 @@ export const useEmployeeStore = defineStore('employee', () => {
     try {
       const { data } = await employeeApi.getEmployees(storeId)
       employees.value = data.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('获取员工列表失败:', error)
-    } finally {
+    }
+    finally {
       loading.value = false
     }
   }
@@ -36,7 +38,8 @@ export const useEmployeeStore = defineStore('employee', () => {
       const { data } = await employeeApi.getEmployeeById(id)
       currentEmployee.value = data.data
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`获取员工信息失败 (ID: ${id}):`, error)
       return null
     }
@@ -47,7 +50,8 @@ export const useEmployeeStore = defineStore('employee', () => {
       const { data } = await employeeApi.createEmployee(employeeData)
       employees.value.push(data.data)
       return data
-    } catch (error) {
+    }
+    catch (error) {
       console.error('创建员工失败:', error)
       throw error
     }
@@ -64,7 +68,8 @@ export const useEmployeeStore = defineStore('employee', () => {
         currentEmployee.value = { ...currentEmployee.value, ...updatedEmployee.data }
       }
       return updatedEmployee.data
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`更新员工失败 (ID: ${id}):`, error)
       throw error
     }
@@ -78,7 +83,8 @@ export const useEmployeeStore = defineStore('employee', () => {
         currentEmployee.value = null
       }
       return true
-    } catch (error) {
+    }
+    catch (error) {
       console.error(`删除员工失败 (ID: ${id}):`, error)
       throw error
     }
@@ -98,6 +104,6 @@ export const useEmployeeStore = defineStore('employee', () => {
     getEmployeeById,
     createEmployee,
     updateEmployee,
-    deleteEmployee
+    deleteEmployee,
   }
 })

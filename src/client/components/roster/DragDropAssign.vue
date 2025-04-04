@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRosterStore } from '../../stores/rosterStore'
 import type { Employee } from '../../types'
 import { ElMessage } from 'element-plus'
+import { onMounted, ref, watch } from 'vue'
+import { useRosterStore } from '../../stores/rosterStore'
 import ConflictDetector from './ConflictDetector.vue'
 
 const emit = defineEmits<{
@@ -15,95 +15,100 @@ const loading = ref(false)
 const draggingEmployee = ref<Employee | null>(null)
 const showConflictDialog = ref(false)
 const conflictInfo = ref<any[]>([])
-const pendingAssignment = ref<{shiftId: string, employeeId: string, position: string} | null>(null)
+const pendingAssignment = ref<{ shiftId: string, employeeId: string, position: string } | null>(null)
 const conflictDetectorRef = ref()
 
 // 获取所有员工列表
 const allEmployees = ref<Employee[]>([])
-const loadEmployees = async () => {
+async function loadEmployees() {
   loading.value = true
   try {
     // 这里应该调用API获取员工列表
     // 暂时使用模拟数据
     allEmployees.value = []
-    
+
     // 如果有排班表，从中提取员工信息
     if (rosterStore.schedule) {
       const employeeMap = new Map<string, Employee>()
-      
-      rosterStore.schedule.shifts.forEach(shift => {
-        Object.values(shift.assignments).forEach(assignments => {
-          assignments.forEach(emp => {
+
+      rosterStore.schedule.shifts.forEach((shift) => {
+        Object.values(shift.assignments).forEach((assignments) => {
+          assignments.forEach((emp) => {
             if (!employeeMap.has(emp.id)) {
               employeeMap.set(emp.id, emp as any)
             }
           })
         })
       })
-      
+
       allEmployees.value = Array.from(employeeMap.values())
     }
-  } catch (error) {
+  }
+  catch (error) {
     console.error('加载员工列表失败:', error)
     ElMessage.error('加载员工列表失败')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
 
 // 开始拖拽员工
-const onDragStart = (employee: Employee) => {
+function onDragStart(employee: Employee) {
   draggingEmployee.value = employee
 }
 
 // 拖拽结束
-const onDragEnd = () => {
+function onDragEnd() {
   draggingEmployee.value = null
 }
 
 // 允许放置和处理放置的逻辑已移至onDragStart和onDragEnd函数
 
 // 处理冲突检测结果
-const handleConflictDetected = (data: { conflicts: any[] }) => {
+function handleConflictDetected(data: { conflicts: any[] }) {
   conflictInfo.value = data.conflicts
   showConflictDialog.value = true
 }
 
 // 处理无冲突情况
-const handleNoConflict = () => {
+function handleNoConflict() {
   assignEmployee()
 }
 
 // 确认分配（忽略冲突）
-const confirmAssignWithConflicts = () => {
+function confirmAssignWithConflicts() {
   assignEmployee()
   showConflictDialog.value = false
 }
 
 // 取消分配
-const cancelAssign = () => {
+function cancelAssign() {
   pendingAssignment.value = null
   showConflictDialog.value = false
 }
 
 // 分配员工到班次
-const assignEmployee = async () => {
-  if (!pendingAssignment.value) return
-  
+async function assignEmployee() {
+  if (!pendingAssignment.value)
+    return
+
   try {
     loading.value = true
     await rosterStore.assignShift({
       shiftId: pendingAssignment.value.shiftId,
       employeeId: pendingAssignment.value.employeeId,
-      position: pendingAssignment.value.position
+      position: pendingAssignment.value.position,
     })
-    
+
     ElMessage.success('分配成功')
     emit('assign-success', pendingAssignment.value)
-  } catch (error) {
+  }
+  catch (error) {
     console.error('分配失败:', error)
     ElMessage.error('分配失败')
-  } finally {
+  }
+  finally {
     loading.value = false
     pendingAssignment.value = null
   }
@@ -119,7 +124,7 @@ const assignEmployee = async () => {
 //       employeeId,
 //       position
 //     })
-//     
+//
 //     ElMessage.success('取消分配成功')
 //     emit('unassign-success', { shiftId, employeeId, position })
 //   } catch (error) {
@@ -141,12 +146,12 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="drag-drop-assign" v-loading="loading">
+  <div v-loading="loading" class="drag-drop-assign">
     <!-- 员工列表 -->
     <div class="employee-list">
       <h3>可用员工</h3>
-      <div 
-        v-for="employee in allEmployees" 
+      <div
+        v-for="employee in allEmployees"
         :key="employee.id"
         class="employee-item"
         draggable="true"
@@ -158,23 +163,23 @@ onMounted(() => {
         </el-tag>
         <span class="employee-name">{{ employee.name }}</span>
       </div>
-      
+
       <div v-if="allEmployees.length === 0" class="empty-list">
         暂无员工数据
       </div>
     </div>
-    
+
     <!-- 冲突检测器（隐藏） -->
     <ConflictDetector
       v-if="pendingAssignment"
       ref="conflictDetectorRef"
-      :shiftId="pendingAssignment.shiftId"
-      :employeeId="pendingAssignment.employeeId"
+      :shift-id="pendingAssignment.shiftId"
+      :employee-id="pendingAssignment.employeeId"
       :position="pendingAssignment.position"
       @conflict-detected="handleConflictDetected"
       @no-conflict="handleNoConflict"
     />
-    
+
     <!-- 冲突提示对话框 -->
     <el-dialog
       v-model="showConflictDialog"
@@ -189,7 +194,7 @@ onMounted(() => {
             :closable="false"
             show-icon
           >
-            <div class="conflict-details" v-if="conflict.details">
+            <div v-if="conflict.details" class="conflict-details">
               <div v-if="conflict.type === 'overlap'">
                 与 {{ conflict.details.existingShift.date }} 的班次时间重叠
               </div>
@@ -209,7 +214,7 @@ onMounted(() => {
           </el-alert>
         </div>
       </div>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="cancelAssign">取消分配</el-button>

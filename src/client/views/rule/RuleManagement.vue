@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { onMounted, ref } from 'vue'
 
 // 排班规则类型定义
 interface Rule {
@@ -22,14 +22,14 @@ const currentRule = ref<Rule | null>(null)
 const formRules = {
   name: [
     { required: true, message: '请输入规则名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '长度在 2 到 50 个字符', trigger: 'blur' },
   ],
   type: [
-    { required: true, message: '请选择规则类型', trigger: 'change' }
+    { required: true, message: '请选择规则类型', trigger: 'change' },
   ],
   description: [
-    { required: true, message: '请输入规则描述', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入规则描述', trigger: 'blur' },
+  ],
 }
 
 // 规则类型选项
@@ -38,17 +38,17 @@ const ruleTypeOptions = [
   { label: '最小休息时间', value: 'min_rest_hours' },
   { label: '连续工作天数', value: 'consecutive_working_days' },
   { label: '技能匹配', value: 'skill_matching' },
-  { label: '员工偏好', value: 'employee_preference' }
+  { label: '员工偏好', value: 'employee_preference' },
 ]
 
 // 加载规则列表
-const loadRules = async () => {
+async function loadRules() {
   loading.value = true
   try {
     // 这里应该是从API获取数据
     // const response = await fetch('/api/rules')
     // rules.value = await response.json()
-    
+
     // 模拟数据
     setTimeout(() => {
       rules.value = [
@@ -58,7 +58,7 @@ const loadRules = async () => {
           description: '员工每天最多工作8小时',
           type: 'max_working_hours',
           parameters: { maxHours: 8 },
-          active: true
+          active: true,
         },
         {
           id: '2',
@@ -66,7 +66,7 @@ const loadRules = async () => {
           description: '员工两个班次之间至少休息12小时',
           type: 'min_rest_hours',
           parameters: { minHours: 12 },
-          active: true
+          active: true,
         },
         {
           id: '3',
@@ -74,45 +74,48 @@ const loadRules = async () => {
           description: '员工最多连续工作6天',
           type: 'consecutive_working_days',
           parameters: { maxDays: 6 },
-          active: true
-        }
+          active: true,
+        },
       ]
       loading.value = false
     }, 500)
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载规则失败')
     loading.value = false
   }
 }
 
 // 打开新增/编辑对话框
-const openDialog = (rule?: Rule) => {
+function openDialog(rule?: Rule) {
   if (rule) {
     currentRule.value = { ...rule }
-  } else {
+  }
+  else {
     currentRule.value = {
       id: '',
       name: '',
       description: '',
       type: '',
       parameters: {},
-      active: true
+      active: true,
     }
   }
   dialogVisible.value = true
 }
 
 // 保存规则
-const saveRule = async () => {
-  if (!currentRule.value) return
-  
+async function saveRule() {
+  if (!currentRule.value)
+    return
+
   // 这里应该是调用API保存数据
   // const response = await fetch('/api/rules', {
   //   method: currentRule.value.id ? 'PUT' : 'POST',
   //   headers: { 'Content-Type': 'application/json' },
   //   body: JSON.stringify(currentRule.value)
   // })
-  
+
   // 模拟保存成功
   setTimeout(() => {
     if (currentRule.value!.id) {
@@ -121,22 +124,23 @@ const saveRule = async () => {
       if (index !== -1) {
         rules.value[index] = { ...currentRule.value! }
       }
-    } else {
+    }
+    else {
       // 添加新规则
       const newRule = {
         ...currentRule.value!,
-        id: Date.now().toString()
+        id: Date.now().toString(),
       }
       rules.value.push(newRule)
     }
-    
+
     dialogVisible.value = false
     ElMessage.success('保存成功')
   }, 300)
 }
 
 // 删除规则
-const deleteRule = (rule: Rule) => {
+function deleteRule(rule: Rule) {
   ElMessageBox.confirm(
     '确定要删除这条规则吗？',
     '警告',
@@ -144,11 +148,11 @@ const deleteRule = (rule: Rule) => {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
       type: 'warning',
-    }
+    },
   ).then(async () => {
     // 这里应该是调用API删除数据
     // await fetch(`/api/rules/${rule.id}`, { method: 'DELETE' })
-    
+
     // 模拟删除成功
     setTimeout(() => {
       const index = rules.value.findIndex(r => r.id === rule.id)
@@ -163,10 +167,10 @@ const deleteRule = (rule: Rule) => {
 }
 
 // 切换规则状态
-const toggleRuleStatus = async (rule: Rule) => {
+async function toggleRuleStatus(rule: Rule) {
   // 这里应该是调用API更新状态
   // await fetch(`/api/rules/${rule.id}/toggle`, { method: 'PUT' })
-  
+
   // 模拟更新成功
   setTimeout(() => {
     const index = rules.value.findIndex(r => r.id === rule.id)
@@ -188,10 +192,12 @@ onMounted(() => {
       <template #header>
         <div class="card-header">
           <span>排班规则管理</span>
-          <el-button type="primary" @click="openDialog()">添加规则</el-button>
+          <el-button type="primary" @click="openDialog()">
+            添加规则
+          </el-button>
         </div>
       </template>
-      
+
       <el-table :data="rules" style="width: 100%">
         <el-table-column prop="name" label="规则名称" width="180" />
         <el-table-column prop="description" label="描述" />
@@ -212,13 +218,17 @@ onMounted(() => {
         </el-table-column>
         <el-table-column label="操作" width="150">
           <template #default="{ row }">
-            <el-button type="primary" size="small" @click="openDialog(row)">编辑</el-button>
-            <el-button type="danger" size="small" @click="deleteRule(row)">删除</el-button>
+            <el-button type="primary" size="small" @click="openDialog(row)">
+              编辑
+            </el-button>
+            <el-button type="danger" size="small" @click="deleteRule(row)">
+              删除
+            </el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-card>
-    
+
     <!-- 新增/编辑对话框 -->
     <el-dialog
       v-model="dialogVisible"
@@ -247,7 +257,7 @@ onMounted(() => {
         <el-form-item label="规则描述" prop="description">
           <el-input v-model="currentRule.description" type="textarea" :rows="3" />
         </el-form-item>
-        
+
         <!-- 根据规则类型显示不同的参数设置 -->
         <template v-if="currentRule.type === 'max_working_hours'">
           <el-form-item label="最大工时">
@@ -255,14 +265,14 @@ onMounted(() => {
             <span class="ml-2">小时</span>
           </el-form-item>
         </template>
-        
+
         <template v-if="currentRule.type === 'min_rest_hours'">
           <el-form-item label="最小休息时间">
             <el-input-number v-model="currentRule.parameters.minHours" :min="1" :max="48" />
             <span class="ml-2">小时</span>
           </el-form-item>
         </template>
-        
+
         <template v-if="currentRule.type === 'consecutive_working_days'">
           <el-form-item label="最大连续天数">
             <el-input-number v-model="currentRule.parameters.maxDays" :min="1" :max="14" />
@@ -270,7 +280,7 @@ onMounted(() => {
           </el-form-item>
         </template>
       </el-form>
-      
+
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="dialogVisible = false">取消</el-button>
