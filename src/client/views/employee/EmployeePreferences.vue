@@ -3,7 +3,7 @@ import type { AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { employeeApi } from '../api/employeeApi'
+import { employeeApi } from '../../api/employeeApi'
 
 // 定义员工偏好类型
 // 修改类型定义

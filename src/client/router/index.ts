@@ -36,7 +36,7 @@ const routes: RouteRecordRaw[] = [
   },
   {
     path: '/employees/:id/preferences',
-    component: () => import('@/views/EmployeePreferences.vue'),
+    component: () => import('@/views/employee/EmployeePreferences.vue'),
     meta: { requiresAuth: true },
   },
   {
