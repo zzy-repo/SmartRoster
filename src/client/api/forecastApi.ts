@@ -2,7 +2,7 @@ import { get } from './http'
 
 export const forecastApi = {
   // 获取预测数据
-  getForecast: (params: { storeId: string; date: string }) => {
+  getForecast: (params: { storeId: string, date: string }) => {
     return get<{
       data: {
         storeId: string

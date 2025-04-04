@@ -76,18 +76,20 @@ const routes: RouteRecordRaw[] = [
 // 创建路由实例
 const router = createRouter({
   history: createWebHistory(),
-  routes
+  routes,
 })
 
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
   console.log('authStore', authStore.token)
-  
+
   if (to.meta.requiresAuth && !authStore.token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
-  } else if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
+  }
+  else if (to.meta.requiresAdmin && authStore.user?.role !== 'admin') {
     next({ name: 'Home' })
-  } else {
+  }
+  else {
     next()
   }
 })

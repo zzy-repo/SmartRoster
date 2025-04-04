@@ -1,8 +1,8 @@
 <script setup lang="ts">
+import { forecastApi } from '@/api/forecastApi'
+import { storeApi } from '@/api/storeApi'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
-import { storeApi } from '@/api/storeApi'
-import { forecastApi } from '@/api/forecastApi'
 
 // 业务预测数据类型定义
 interface ForecastData {
@@ -37,8 +37,8 @@ async function loadForecastData() {
       date: selectedDate.value,
     })
 
-    const store = stores.value.find((s: { id: string; name: string }) => s.id === selectedStore.value)
-    
+    const store = stores.value.find((s: { id: string, name: string }) => s.id === selectedStore.value)
+
     forecastData.value = [{
       id: '1',
       date: selectedDate.value,
@@ -61,7 +61,7 @@ async function loadForecastData() {
 }
 
 // 状态
-const stores = ref<{ id: string; name: string }[]>([])
+const stores = ref<{ id: string, name: string }[]>([])
 
 // 加载门店列表
 async function loadStores() {

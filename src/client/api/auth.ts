@@ -1,5 +1,6 @@
 import type { AxiosPromise } from 'axios'
 import request from '@/utils/request'
+
 export interface LoginForm {
   username: string
   password: string
@@ -13,21 +14,21 @@ export function login(data: LoginForm): AxiosPromise<LoginResponse> {
   return request({
     url: '/auth/login',
     method: 'post',
-    data
+    data,
   })
 }
 
 export function logout(): AxiosPromise<void> {
   return request({
     url: '/auth/logout',
-    method: 'post'
+    method: 'post',
   })
 }
 
 export function getUserInfo(): AxiosPromise<any> {
   return request({
     url: '/auth/userinfo',
-    method: 'get'
+    method: 'get',
   })
 }
 
@@ -38,7 +39,7 @@ export interface RegisterForm {
 }
 
 function getDefaultMessage(status: number): string {
-  switch(status) {
+  switch (status) {
     case 400:
       return '请求参数错误'
     case 401:
@@ -58,26 +59,26 @@ export function register(data: RegisterForm): AxiosPromise<void> {
   return request({
     url: '/auth/register',
     method: 'post',
-    data
-  }).catch(error => {
+    data,
+  }).catch((error) => {
     if (!error.response) {
       throw {
         response: {
           status: 0,
-          data: { message: '网络错误，请检查连接' }
+          data: { message: '网络错误，请检查连接' },
         },
-        message: '网络错误'
+        message: '网络错误',
       }
     }
     throw {
       response: {
         status: error.response.status,
         data: {
-          message: error.response.data?.message || 
-                 getDefaultMessage(error.response.status)
-        }
+          message: error.response.data?.message
+            || getDefaultMessage(error.response.status),
+        },
       },
-      message: error.response.data?.message || '注册失败'
+      message: error.response.data?.message || '注册失败',
     }
   })
 }

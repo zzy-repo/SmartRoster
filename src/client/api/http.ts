@@ -28,7 +28,7 @@ http.interceptors.request.use(
 
 // 响应拦截器
 http.interceptors.response.use(
-  (response) => response,
+  response => response,
   (error) => {
     const { response } = error
     if (response) {
@@ -40,7 +40,7 @@ http.interceptors.response.use(
       return Promise.reject(error)
     }
     return Promise.reject(error)
-  }
+  },
 )
 
 // 封装GET请求

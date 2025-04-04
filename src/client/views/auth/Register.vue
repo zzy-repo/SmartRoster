@@ -1,3 +1,99 @@
+<script setup lang="ts">
+import { register } from '@/api/auth'
+import { ElMessage } from 'element-plus'
+import { onBeforeUnmount, onMounted, ref } from 'vue'
+import { useRouter } from 'vue-router'
+
+const resizeObserver = ref<ResizeObserver | null>(null)
+
+onMounted(() => {
+  resizeObserver.value = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      if (!entry.contentRect)
+        return
+    }
+  })
+})
+
+onBeforeUnmount(() => {
+  if (resizeObserver.value) {
+    resizeObserver.value.disconnect()
+  }
+})
+
+const router = useRouter()
+
+const registerForm = ref({
+  username: '',
+  password: '',
+  confirmPassword: '',
+})
+
+const registerFormRef = ref() // 添加表单引用
+
+function handleInputChange() {
+  if (registerFormRef.value) {
+    registerFormRef.value.validate() // 触发表单验证
+  }
+}
+
+function validatePassword(_rule: any, value: string, callback: any) {
+  if (!value) {
+    return callback(new Error('请确认密码'))
+  }
+  if (value !== registerForm.value.password) {
+    return callback(new Error('两次输入密码不一致!'))
+  }
+  return callback()
+}
+
+const registerRules = {
+  username: [
+    { required: true, message: '请输入用户名', trigger: ['blur', 'input'] },
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: ['blur', 'input'] },
+  ],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: ['blur', 'input'] },
+    { validator: validatePassword, trigger: ['blur', 'input'] },
+  ],
+}
+
+const loading = ref(false)
+
+async function handleRegister() {
+  if (!registerFormRef.value)
+    return
+
+  // Validate the form first
+  await registerFormRef.value.validate(async (valid: boolean) => {
+    if (!valid) {
+      ElMessage.error('请正确填写表单')
+      return
+    }
+
+    loading.value = true
+    try {
+      await register(registerForm.value)
+      ElMessage.success('注册成功')
+      router.push('/login')
+    }
+    catch (error: any) {
+      console.error('Registration error:', error)
+      ElMessage.error(error?.message || '注册失败')
+    }
+    finally {
+      loading.value = false
+    }
+  })
+}
+
+function goToLogin() {
+  router.push('/login')
+}
+</script>
+
 <template>
   <div class="register-container">
     <el-form
@@ -8,7 +104,9 @@
       auto-complete="on"
       label-position="left"
     >
-      <h3 class="title">SmartRoster 注册</h3>
+      <h3 class="title">
+        SmartRoster 注册
+      </h3>
       <el-form-item prop="username">
         <el-input
           v-model="registerForm.username"
@@ -51,103 +149,13 @@
         </el-button>
       </el-form-item>
       <div class="login-link">
-        已有账号？<el-link type="primary" @click="goToLogin">立即登录</el-link>
+        已有账号？<el-link type="primary" @click="goToLogin">
+          立即登录
+        </el-link>
       </div>
     </el-form>
   </div>
 </template>
-
-<script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
-import { register } from '@/api/auth'
-
-const resizeObserver = ref<ResizeObserver | null>(null)
-
-onMounted(() => {
-  resizeObserver.value = new ResizeObserver((entries) => {
-    for (const entry of entries) {
-      if (!entry.contentRect) return
-    }
-  })
-})
-
-onBeforeUnmount(() => {
-  if (resizeObserver.value) {
-    resizeObserver.value.disconnect()
-  }
-})
-
-const router = useRouter()
-
-const registerForm = ref({
-  username: '',
-  password: '',
-  confirmPassword: ''
-})
-
-const registerFormRef = ref() // 添加表单引用
-
-function handleInputChange() {
-  if (registerFormRef.value) {
-    registerFormRef.value.validate() // 触发表单验证
-  }
-}
-
-const validatePassword = (_rule: any, value: string, callback: any) => {
-  if (!value) {
-    return callback(new Error('请确认密码'))
-  }
-  if (value !== registerForm.value.password) {
-    return callback(new Error('两次输入密码不一致!'))
-  }
-  return callback()
-}
-
-const registerRules = {
-  username: [
-    { required: true, message: '请输入用户名', trigger: ['blur', 'input'] }
-  ],
-  password: [
-    { required: true, message: '请输入密码', trigger: ['blur', 'input'] }
-  ],
-  confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: ['blur', 'input'] },
-    { validator: validatePassword, trigger: ['blur', 'input'] }
-  ]
-}
-
-const loading = ref(false)
-
-async function handleRegister() {
-  if (!registerFormRef.value) return
-  
-  // Validate the form first
-  await registerFormRef.value.validate(async (valid: boolean) => {
-    if (!valid) {
-      ElMessage.error('请正确填写表单')
-      return
-    }
-    
-    loading.value = true
-    try {
-      await register(registerForm.value)
-      ElMessage.success('注册成功')
-      router.push('/login')
-    } catch (error: any) {
-      console.error('Registration error:', error)
-      ElMessage.error(error?.message || '注册失败')
-    } finally {
-      loading.value = false
-    }
-  })
-}
-
-function goToLogin() {
-  router.push('/login')
-}
-</script>
 
 <style scoped>
 .register-container {
