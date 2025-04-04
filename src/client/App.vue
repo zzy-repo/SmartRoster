@@ -1,12 +1,25 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/authStore'
+import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const authStore = useAuthStore()
 const activeIndex = ref('/')
 
 function handleSelect(key: string) {
   router.push(key)
+}
+
+async function handleLogout() {
+  try {
+    await authStore.clearUser()
+    ElMessage.success('退出登录成功')
+    router.push('/login')
+  } catch (error) {
+    ElMessage.error('退出登录失败')
+  }
 }
 </script>
 
@@ -42,6 +55,9 @@ function handleSelect(key: string) {
             </el-menu-item>
             <el-menu-item index="/roster">
               排班表
+            </el-menu-item>
+            <el-menu-item index="/logout" @click="handleLogout">
+              退出登录
             </el-menu-item>
           </el-menu>
         </div>

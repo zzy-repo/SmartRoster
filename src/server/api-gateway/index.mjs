@@ -58,38 +58,23 @@ app.use((req, res, next) => {
   next()
 })
 
-// 认证中间件 - 除了登录和注册接口外都需要验证token
+// 认证中间件
 app.use((req, res, next) => {
-  // 不需要验证token的路径
-  const publicPaths = [
-    '/api/auth/login',
-    '/api/auth/register',
-  ]
-
-  if (publicPaths.some(path => req.path.includes(path))) {
+  // 放行认证相关路径
+  if (['/api/auth/login', '/api/auth/register'].some(p => req.path.startsWith(p))) 
     return next()
-  }
 
-  // 验证token
+  // 验证令牌
   const token = req.headers.authorization?.split(' ')[1]
-  if (!token) {
+  if (!token) 
     return res.status(401).json({ error: '未提供认证令牌' })
-  }
 
   try {
-    const decoded = verifyToken(token)
-    req.user = decoded
-
-    // 角色权限验证
-    const requiredRole = getRequiredRole(req.path)
-    if (requiredRole && decoded.role !== requiredRole) {
-      return res.status(403).json({ error: '权限不足' })
-    }
-
+    req.user = verifyToken(token)
+    // 如需角色验证可在此添加
     next()
-  }
-  catch (error) {
-    return res.status(401).json({ error: '无效的认证令牌' })
+  } catch {
+    res.status(401).json({ error: '无效的认证令牌' })
   }
 })
 

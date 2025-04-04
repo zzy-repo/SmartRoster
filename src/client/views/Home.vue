@@ -16,7 +16,7 @@ async function loadData() {
   try {
     await Promise.all([
       storeStore.fetchStores(),
-      employeeStore.fetchEmployees(),
+      // employeeStore.fetchEmployees(),
     ])
   }
   catch (error) {
