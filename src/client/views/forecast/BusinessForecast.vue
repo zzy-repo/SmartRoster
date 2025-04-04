@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
+import { storeApi } from '@/api/storeApi'
+import { forecastApi } from '@/api/forecastApi'
 
 // 业务预测数据类型定义
 interface ForecastData {
@@ -21,13 +23,6 @@ const loading = ref(false)
 const selectedDate = ref(new Date().toISOString().split('T')[0])
 const selectedStore = ref('')
 
-// 模拟门店数据
-const stores = [
-  { id: '1', name: '北京中关村店' },
-  { id: '2', name: '上海南京路店' },
-  { id: '3', name: '广州天河店' },
-]
-
 // 加载预测数据
 async function loadForecastData() {
   if (!selectedStore.value) {
@@ -37,49 +32,54 @@ async function loadForecastData() {
 
   loading.value = true
   try {
-    // 这里应该是从API获取数据
-    // const response = await fetch(`/api/forecast?date=${selectedDate.value}&storeId=${selectedStore.value}`)
-    // forecastData.value = await response.json()
+    const { data } = await forecastApi.getForecast({
+      storeId: selectedStore.value,
+      date: selectedDate.value,
+    })
 
-    // 模拟数据
-    setTimeout(() => {
-      const store = stores.find(s => s.id === selectedStore.value)
-
-      // 生成24小时的模拟数据
-      const hourlyData = Array.from({ length: 24 }, (_, i) => {
-        // 模拟客流量和销售额的高峰期
-        const isPeakHour = (i >= 11 && i <= 13) || (i >= 17 && i <= 19)
-        const baseCustomers = isPeakHour ? 50 : 20
-        const baseSales = isPeakHour ? 5000 : 2000
-
-        return {
-          hour: i,
-          customerCount: Math.floor(baseCustomers + Math.random() * baseCustomers),
-          salesAmount: Math.floor(baseSales + Math.random() * baseSales),
-        }
-      })
-
-      forecastData.value = [{
-        id: '1',
-        date: selectedDate.value,
-        storeId: selectedStore.value,
-        storeName: store?.name || '',
-        hourlyData,
-      }]
-
-      loading.value = false
-    }, 500)
+    const store = stores.value.find((s: { id: string; name: string }) => s.id === selectedStore.value)
+    
+    forecastData.value = [{
+      id: '1',
+      date: selectedDate.value,
+      storeId: selectedStore.value,
+      storeName: store?.name || '',
+      hourlyData: data.data.predictions.map(p => ({
+        hour: p.hour,
+        customerCount: p.customerCount,
+        salesAmount: p.salesAmount,
+      })),
+    }]
   }
-  catch {
+  catch (error) {
+    console.error('加载预测数据失败:', error)
     ElMessage.error('加载预测数据失败')
+  }
+  finally {
     loading.value = false
   }
 }
 
+// 状态
+const stores = ref<{ id: string; name: string }[]>([])
+
+// 加载门店列表
+async function loadStores() {
+  try {
+    const { data } = await storeApi.getStores()
+    stores.value = data.data
+  }
+  catch (error) {
+    console.error('加载门店列表失败:', error)
+    ElMessage.error('加载门店列表失败')
+  }
+}
+
 // 初始化
-onMounted(() => {
-  if (stores.length > 0) {
-    selectedStore.value = stores[0].id
+onMounted(async () => {
+  await loadStores()
+  if (stores.value.length > 0) {
+    selectedStore.value = stores.value[0].id
     loadForecastData()
   }
 })
