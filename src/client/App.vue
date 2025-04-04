@@ -1,12 +1,17 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
 import { ElMessage } from 'element-plus'
 
 const router = useRouter()
+const route = useRoute()
 const authStore = useAuthStore()
-const activeIndex = ref('/')
+const activeIndex = ref(route.path)
+
+watch(() => route.path, (newPath) => {
+  activeIndex.value = newPath
+})
 
 function handleSelect(key: string) {
   router.push(key)
