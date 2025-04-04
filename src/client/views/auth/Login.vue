@@ -52,6 +52,7 @@ import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import { login } from '@/api/auth.ts'
+import { useAuthStore } from '@/stores/authStore'
 
 const resizeObserver = ref<ResizeObserver | null>(null)
 
@@ -70,7 +71,6 @@ onBeforeUnmount(() => {
 })
 
 const router = useRouter()
-const route = useRoute()
 
 const loginForm = ref({
   username: '',
@@ -109,13 +109,13 @@ async function handleLogin() {
       throw new Error('登录响应格式错误')
     }
     
-    // 保存用户信息
-    localStorage.setItem('token', response.token)
-    localStorage.setItem('user', JSON.stringify(response.user))
+    // 使用 auth store 保存用户信息
+    const authStore = useAuthStore()
+    authStore.setUser(response.token, response.user)
     
-    // 重定向到原页面或首页
-    const redirect = route.query.redirect || '/'
-    router.push(redirect as string)
+    // 直接跳转到主页
+    router.push('/')
+    ElMessage.success('登录成功')
   } catch (error: any) {
     console.error('登录失败:', error)
     ElMessage.error(error?.response?.data?.error || error?.message || '登录失败')

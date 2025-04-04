@@ -1,19 +1,19 @@
 import type { RouteRecordRaw } from 'vue-router'
 import { createRouter, createWebHistory } from 'vue-router'
-import { useAuthStore } from '../stores/auth'
+import { useAuthStore } from '../stores/authStore'
 
 // 定义路由
 const routes: RouteRecordRaw[] = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('@/views/Login.vue'),
+    component: () => import('@/views/auth/Login.vue'),
     meta: { title: '登录' },
   },
   {
     path: '/register',
     name: 'Register',
-    component: () => import('@/views/Register.vue'),
+    component: () => import('@/views/auth/Register.vue'),
     meta: { title: '注册' },
   },
   {
@@ -81,6 +81,7 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
+  console.log('authStore', authStore.token)
   
   if (to.meta.requiresAuth && !authStore.token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
