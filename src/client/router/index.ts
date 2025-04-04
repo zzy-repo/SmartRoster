@@ -22,6 +22,11 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '员工管理' },
   },
   {
+    path: '/employees/:id/preferences',
+    component: () => import('@/views/EmployeePreferences.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/rules',
     name: 'RuleManagement',
     component: () => import('@/views/rule/RuleManagement.vue'),

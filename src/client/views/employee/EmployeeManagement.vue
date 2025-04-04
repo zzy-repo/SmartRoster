@@ -329,6 +329,9 @@ async function deleteEmployee() {
             <button class="delete-btn" @click="confirmDelete = true">
               删除
             </button>
+            <button class="pref-btn" @click="$router.push(`/employees/${selectedEmployee.id}/preferences`)">
+              偏好设置
+            </button>
           </div>
         </div>
       </div>
