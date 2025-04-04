@@ -20,8 +20,7 @@ app.get('/', async (req, res) => {
       LEFT JOIN stores st ON e.store_id = st.id
       GROUP BY e.id
     `)
-
-    res.json(employees)
+    res.json({data: employees}) // 修改为统一格式
   }
   catch (error) {
     console.error('获取员工列表失败:', error)
@@ -54,7 +53,7 @@ app.get('/:id', async (req, res) => {
     const employee = employees[0]
     employee.skills = employee.skills ? employee.skills.split(',') : []
 
-    res.json(employee)
+    res.json({data: employee}) // 修改为统一格式
   }
   catch (error) {
     console.error('获取员工详情失败:', error)
@@ -145,9 +144,11 @@ app.post('/', async (req, res) => {
       await connection.commit()
 
       res.status(201).json({
-        message: '员工创建成功',
-        employeeId,
-      })
+        data: {
+          message: '员工创建成功',
+          employeeId,
+        }
+      }) // 修改为统一格式
     }
     catch (error) {
       // 回滚事务

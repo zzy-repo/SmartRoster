@@ -170,7 +170,7 @@ async function saveSchedule(storeId, startDate, endDate, assignments) {
   }
 }
 
-// 生成排班表
+// 修改生成排班表接口
 app.post('/generate', async (req, res) => {
   try {
     const { storeId, startDate, endDate, saConfig, costParams } = req.body

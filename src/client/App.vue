@@ -20,7 +20,7 @@ function handleSelect(key: string) {
 async function handleLogout() {
   try {
     await authStore.clearUser()
-    ElMessage.success('退出登录成功')
+    ElMessage.success('退出登录')
     router.push('/login')
   } catch (error) {
     ElMessage.error('退出登录失败')

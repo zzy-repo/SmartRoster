@@ -17,6 +17,7 @@ app.get('/health', (req, res) => {
 })
 
 // 用户登录
+// 修改登录接口
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body
@@ -55,18 +56,16 @@ app.post('/login', async (req, res) => {
     const token = generateToken(user)
     console.log('登录成功')
 
-    res.json(
-      {
-        data: {
-          token,
-          user: {
-            id: user.id,
-            username: user.username,
-            role: user.role,
-          },
-        }
+    res.json({
+      data: {
+        token,
+        user: {
+          id: user.id,
+          username: user.username,
+          role: user.role,
+        },
       }
-    )
+    }) // 已经是统一格式，无需修改
   }
   catch (error) {
     console.error('登录失败:', error)
@@ -74,6 +73,7 @@ app.post('/login', async (req, res) => {
   }
 })
 
+// 修改注册接口
 app.post('/register', async (req, res) => {
   try {
     const { username, password, role } = req.body
@@ -109,9 +109,11 @@ app.post('/register', async (req, res) => {
 
     console.log(`用户注册成功 - 用户ID: ${result.insertId}`)
     res.status(201).json({
-      message: '用户注册成功',
-      userId: result.insertId,
-    })
+      data: {
+        message: '用户注册成功',
+        userId: result.insertId,
+      }
+    }) // 修改为统一格式
   }
   catch (error) {
     console.error('注册失败:', error)

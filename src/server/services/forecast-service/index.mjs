@@ -25,7 +25,7 @@ app.get('/historical/:storeId', async (req, res) => {
       ORDER BY date, hour
     `, [storeId, startDate, endDate])
 
-    res.json(data)
+    res.json({data: data}) // 修改为统一格式
   }
   catch (error) {
     console.error('获取历史数据失败:', error)
@@ -101,12 +101,14 @@ app.post('/predict', async (req, res) => {
     // 这里应该有保存逻辑
 
     res.json({
-      storeId,
-      startDate,
-      endDate,
-      method: method || 'average',
-      predictions,
-    })
+      data: {
+        storeId,
+        startDate,
+        endDate,
+        method: method || 'average',
+        predictions,
+      }
+    }) // 修改为统一格式
   }
   catch (error) {
     console.error('生成预测数据失败:', error)

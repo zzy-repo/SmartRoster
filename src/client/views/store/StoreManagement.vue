@@ -46,7 +46,8 @@ onMounted(async () => {
   try {
     loading.value = true
     await storeStore.fetchStores()
-    stores.value = storeStore.stores // 直接使用 stores，不需要 .value
+    console.log(storeStore.stores)
+    stores.value = storeStore.stores
   }
   catch (error) {
     console.error('加载门店数据失败', error)

@@ -81,7 +81,6 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   const authStore = useAuthStore()
-  console.log('authStore', authStore.token)
 
   if (to.meta.requiresAuth && !authStore.token) {
     next({ name: 'Login', query: { redirect: to.fullPath } })
