@@ -1,7 +1,7 @@
 <template>
   <div class="register-container">
     <el-form
-      ref="registerForm"
+      ref="registerFormRef"
       :model="registerForm"
       :rules="registerRules"
       class="register-form"
@@ -16,6 +16,7 @@
           type="text"
           auto-complete="on"
           placeholder="用户名"
+          @input="handleInputChange"
         />
       </el-form-item>
       <el-form-item prop="password">
@@ -36,6 +37,7 @@
           auto-complete="on"
           placeholder="确认密码"
           @keyup.enter="handleRegister"
+          @input="validatePassword"
         />
       </el-form-item>
       <el-form-item>
@@ -85,8 +87,19 @@ const registerForm = ref({
   confirmPassword: ''
 })
 
+const registerFormRef = ref() // 添加表单引用
+
+function handleInputChange() {
+  if (registerFormRef.value) {
+    registerFormRef.value.validate() // 触发表单验证
+  }
+}
+
+// 修改validatePassword方法
 const validatePassword = (_rule: any, value: string, callback: any) => {
-  if (value !== registerForm.value.password) {
+  if (!value) {
+    callback(new Error('请确认密码'))
+  } else if (value !== registerForm.value.password) {
     callback(new Error('两次输入密码不一致!'))
   } else {
     callback()
@@ -94,11 +107,15 @@ const validatePassword = (_rule: any, value: string, callback: any) => {
 }
 
 const registerRules = {
-  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  username: [
+    { required: true, message: '请输入用户名', trigger: ['blur', 'input'] }
+  ],
+  password: [
+    { required: true, message: '请输入密码', trigger: ['blur', 'input'] }
+  ],
   confirmPassword: [
-    { required: true, message: '请再次输入密码', trigger: 'blur' },
-    { validator: validatePassword, trigger: 'blur' }
+    { required: true, message: '请再次输入密码', trigger: ['blur', 'input'] },
+    { validator: validatePassword, trigger: ['blur', 'input'] }
   ]
 }
 
