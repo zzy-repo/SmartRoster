@@ -103,14 +103,22 @@ function goToRegister() {
 async function handleLogin() {
   loading.value = true
   try {
-    const { data } = await login(loginForm.value)
-    localStorage.setItem('token', data.token)
+    const response = await login(loginForm.value)
+    console.log('登录响应:', response)
+    if (!response?.token) {
+      throw new Error('登录响应格式错误')
+    }
+    
+    // 保存用户信息
+    localStorage.setItem('token', response.token)
+    localStorage.setItem('user', JSON.stringify(response.user))
     
     // 重定向到原页面或首页
     const redirect = route.query.redirect || '/'
     router.push(redirect as string)
   } catch (error: any) {
-    ElMessage.error(error?.message || '登录失败')
+    console.error('登录失败:', error)
+    ElMessage.error(error?.response?.data?.error || error?.message || '登录失败')
   } finally {
     loading.value = false
   }
