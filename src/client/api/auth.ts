@@ -31,3 +31,17 @@ export function getUserInfo(): AxiosPromise<any> {
     method: 'get'
   })
 }
+
+export interface RegisterForm {
+  username: string
+  password: string
+  confirmPassword: string
+}
+
+export function register(data: RegisterForm): AxiosPromise<void> {
+  return request({
+    url: '/auth/register',
+    method: 'post',
+    data
+  })
+}

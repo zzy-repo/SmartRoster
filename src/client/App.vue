@@ -13,7 +13,7 @@ function handleSelect(key: string) {
 <template>
   <div class="app-container">
     <el-container>
-      <el-header height="60px" v-if="$route.path !== '/login'">
+      <el-header height="60px" v-if="$route.path !== '/login' && $route.path !== '/register'">
         <div class="header-content">
           <div class="logo">
             <h1>SmartRoster</h1>

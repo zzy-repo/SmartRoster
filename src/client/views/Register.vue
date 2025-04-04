@@ -1,17 +1,17 @@
 <template>
-  <div class="login-container">
+  <div class="register-container">
     <el-form
-      ref="loginForm"
-      :model="loginForm"
-      :rules="loginRules"
-      class="login-form"
+      ref="registerForm"
+      :model="registerForm"
+      :rules="registerRules"
+      class="register-form"
       auto-complete="on"
       label-position="left"
     >
-      <h3 class="title">SmartRoster 登录</h3>
+      <h3 class="title">SmartRoster 注册</h3>
       <el-form-item prop="username">
         <el-input
-          v-model="loginForm.username"
+          v-model="registerForm.username"
           name="username"
           type="text"
           auto-complete="on"
@@ -20,12 +20,22 @@
       </el-form-item>
       <el-form-item prop="password">
         <el-input
-          v-model="loginForm.password"
+          v-model="registerForm.password"
           name="password"
           type="password"
           auto-complete="on"
           placeholder="密码"
-          @keyup.enter="handleLogin"
+          @keyup.enter="handleRegister"
+        />
+      </el-form-item>
+      <el-form-item prop="confirmPassword">
+        <el-input
+          v-model="registerForm.confirmPassword"
+          name="confirmPassword"
+          type="password"
+          auto-complete="on"
+          placeholder="确认密码"
+          @keyup.enter="handleRegister"
         />
       </el-form-item>
       <el-form-item>
@@ -33,13 +43,13 @@
           :loading="loading"
           type="primary"
           style="width:100%;"
-          @click.native.prevent="handleLogin"
+          @click.native.prevent="handleRegister"
         >
-          登录
+          注册
         </el-button>
       </el-form-item>
-      <div class="register-link">
-        没有账号？<el-link type="primary" @click="goToRegister">立即注册</el-link>
+      <div class="login-link">
+        已有账号？<el-link type="primary" @click="goToLogin">立即登录</el-link>
       </div>
     </el-form>
   </div>
@@ -47,9 +57,9 @@
 
 <script setup lang="ts">
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import { login } from '@/api/auth'
+import { register } from '@/api/auth'
 
 const resizeObserver = ref<ResizeObserver | null>(null)
 
@@ -68,43 +78,52 @@ onBeforeUnmount(() => {
 })
 
 const router = useRouter()
-const route = useRoute()
 
-const loginForm = ref({
+const registerForm = ref({
   username: '',
-  password: ''
+  password: '',
+  confirmPassword: ''
 })
 
-const loginRules = {
+const validatePassword = (_rule: any, value: string, callback: any) => {
+  if (value !== registerForm.value.password) {
+    callback(new Error('两次输入密码不一致!'))
+  } else {
+    callback()
+  }
+}
+
+const registerRules = {
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  password: [{ required: true, message: '请输入密码', trigger: 'blur' }],
+  confirmPassword: [
+    { required: true, message: '请再次输入密码', trigger: 'blur' },
+    { validator: validatePassword, trigger: 'blur' }
+  ]
 }
 
 const loading = ref(false)
 
-function goToRegister() {
-  router.push('/register')
-}
-
-async function handleLogin() {
+async function handleRegister() {
   loading.value = true
   try {
-    const { data } = await login(loginForm.value)
-    localStorage.setItem('token', data.token)
-    
-    // 重定向到原页面或首页
-    const redirect = route.query.redirect || '/'
-    router.push(redirect as string)
+    await register(registerForm.value)
+    ElMessage.success('注册成功')
+    router.push('/login')
   } catch (error: any) {
-    ElMessage.error(error?.message || '登录失败')
+    ElMessage.error(error?.message || '注册失败')
   } finally {
     loading.value = false
   }
 }
+
+function goToLogin() {
+  router.push('/login')
+}
 </script>
 
 <style scoped>
-.login-container {
+.register-container {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -112,7 +131,7 @@ async function handleLogin() {
   background-color: #f5f5f5;
 }
 
-.login-form {
+.register-form {
   width: 350px;
   padding: 30px;
   background: #fff;
@@ -126,7 +145,7 @@ async function handleLogin() {
   text-align: center;
 }
 
-.register-link {
+.login-link {
   text-align: center;
   margin-top: 20px;
   font-size: 14px;
