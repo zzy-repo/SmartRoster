@@ -1,7 +1,24 @@
 \documentclass{ctexart}
 \usepackage{textcomp} % 添加 textcomp 宏包支持特殊字符
 
+\title{智能排班系统设计与实现}
+\author{
+    曾智勇 \\[0.5em]
+    \small 学校：杭州电子科技大学 \\[0.5em]
+    \small 学院：杭州电子科技大学 \\[0.5em]
+    \small 学号：21071423 \\[0.5em]
+    \small 专业：智能计算与数据科学 \\[0.5em]
+    \small 指导老师：徐翀
+}
+\date{\today}
+
 \begin{document}
+
+\maketitle
+\newpage
+
+\tableofcontents
+\newpage
 
 \begin{abstract}
 % 摘要内容
@@ -19,55 +36,68 @@
 \subsection{研究方法}
 
 \section{需求分析}
-\subsection{需求分析}
-\subsubsection{需求概述}
-智能排班系统是为零售门店管理者设计的Web应用，基于前后端分离与微服务架构开发，支持自动化排班与人工调整。系统通过匹配员工岗位、时间可用性及偏好规则，一键生成周排班表，未匹配的班次标记为开放状态。生成的排班表支持按日/周视图查看，可基于技能、岗位或员工分组展示，并提供手动修改功能，实现班次灵活分配。
+\subsection{功能分析}
+\subsubsection{功能概述}
+
+智能排班系统是为零售门店管理者设计的Web应用，基于前后端分离与微服务架构开发，支持自动化排班与人工调整。系统通过匹配员工岗位、时间可用性及偏好规则，一键生成周排班表。生成的排班表支持按日/周视图查看，可基于技能、岗位或员工分组展示，并提供手动修改功能，实现班次灵活分配。
 
 \subsubsection{核心功能需求}
 \begin{itemize}
-    \item \textbf{员工全周期管理}：实现从入职建档、信息维护到离职归档的全流程数字化管理，支持多维检索（技能资质/所属门店/岗位类型）与批量导入导出功能
+    \item \textbf{员工管理}：作为系统的基础数据模块，员工管理子系统负责维护完整的员工信息档案，通过精细化的偏好设置和灵活的检索机制，为智能排班提供基础数据支撑。系统支持从入职到离职的全生命周期管理，确保员工信息的实时性和准确性。
+        \begin{itemize}
+            \item \textbf{基本信息管理}：维护员工姓名、职位（门店经理/副经理/小组长/店员（收银/导购/库房））、电话、电邮、工作门店等核心信息
+            \item \textbf{工作偏好设置}：
+            \begin{itemize}
+                \item 工作日偏好：设置可工作日期范围（如：周三至周六），默认全周可用
+                \item 工作时间偏好：设置每日可工作时间段（如：上午8点至下午6点），默认全天可用
+                \item 班次时长偏好：设置每日/每周最大工作时长（如：每日不超过4小时，每周不超过20小时），默认无限制
+            \end{itemize}
+            \item \textbf{多维检索}：支持按技能资质、所属门店、岗位类型等条件进行快速筛选
+            \item \textbf{批量操作}：支持员工信息的批量导入导出，便于大规模数据维护
+        \end{itemize}
     
-    \item \textbf{门店拓扑管理}：建立多层级门店组织架构，支持跨区域门店分组管理，实现人员-门店双向关系维护与智能匹配
+    \item \textbf{门店管理}：作为系统的基础数据模块，门店管理子系统负责维护完整的门店信息档案，为智能排班提供场所和岗位需求等基础数据支撑。系统支持多层级门店组织架构，实现跨区域门店分组管理。
+        \begin{itemize}
+            \item \textbf{基本信息管理}：维护门店名称、地址、工作场所面积等核心信息
+            \item \textbf{排班需求配置}：管理者可根据门店规模和工作场所面积，配置各岗位需求
+        \end{itemize}
     
-    \item \textbf{业务预测引擎}：基于时序特征工程与回归分析，实现客流峰谷预测、班次需求测算及动态容量规划
+    \item \textbf{智能排班引擎}：作为系统的核心计算模块，智能排班引擎负责根据预设规则和优化算法生成最优排班方案，确保排班结果满足业务需求的同时兼顾员工偏好。
+        \begin{itemize}
+            \item \textbf{规则管理}：维护和管理排班规则，包括班次时长、岗位需求、员工技能匹配等约束条件
+            \item \textbf{智能排班}：基于模拟退火算法，综合考虑员工偏好、岗位匹配度和排班规则等多维度因素，生成最优化的排班方案
+        \end{itemize}
     
-    \item \textbf{智能排班中心}：融合规则引擎与优化算法，支持分钟级排班生成、成本模拟分析及多方案效能对比
+    % \item \textbf{业务预测引擎}：作为系统的核心计算模块，业务预测引擎负责根据历史数据和业务趋势，预测未来7日内各时段的客流规模，为智能排班提供基础数据支撑。
+    %     \begin{itemize}
+    %         \item \textbf{时序分析}：基于历史客流数据，利用ARIMA模型进行时间序列预测，生成未来7日内各时段的客流规模
+    %         \item \textbf{岗位需求预测}：基于预测客流数据，结合门店规模和岗位需求配置，生成未来7日内各岗位的需求规模
+    %     \end{itemize}
     
-    \item \textbf{统一接入网关}：提供API安全认证、流量管控与服务治理能力，实现跨系统数据互通与高可用保障
-    
-    \item \textbf{可视化工作台}：提供智能排班沙盘系统，支持班次拖拽指派、冲突实时检测、多维度（技能组/时间段/门店区域）人力资源透视分析
 \end{itemize}
 
 \subsection{业务流程}
-智能排班系统遵循\"数据驱动-智能生成-动态优化\"的业务闭环，具体流程如下：
+智能排班系统的业务流程主要包括以下几个阶段：
 
 \begin{itemize}
-    \item \textbf{基础数据准备阶段}
+    \item \textbf{基础数据准备阶段}：作为排班流程的初始环节，该阶段主要完成系统运行所需的基础数据准备工作，为后续智能排班提供数据支撑。
     \begin{enumerate}
-        \item 门店信息初始化：建立多层级门店档案，配置营业时间、岗位需求等基础参数
-        \item 员工档案构建：维护员工技能矩阵、时间偏好及工时限制等约束条件
+        \item 门店信息初始化：建立门店档案，配置营业时间、岗位需求等基础参数
+        \item 员工档案构建：维护员工技能列表、时间偏好及工时限制等约束条件
         \item 历史数据导入：同步门店客流、销售等业务历史记录作为预测基准
+        \item 规则参数配置：设置排班规则、算法参数等关键参数
     \end{enumerate}
 
-    \item \textbf{智能排班生成阶段}
-    \begin{enumerate}
-        \item 业务需求预测：基于时序分析预测未来7日各时段客流量，生成岗位需求矩阵
-        \item 自动排班运算：根据\"岗位匹配度优先，员工偏好次之\"原则进行班次分配
-        \item 开放班次标注：对未匹配的班次标记为开放状态，触发人工干预流程
-    \end{enumerate}
+    \item \textbf{智能排班生成阶段}：作为排班流程的核心环节，该阶段基于前期准备的数据和规则，通过智能算法生成初步排班方案。
+        \begin{enumerate}
+            \item 业务需求预测：基于历史数据和时序分析，预测未来7日内各时段的客流规模，生成岗位需求展示
+            \item 自动排班运算：根据岗位匹配度优先、员工偏好结合排班规则进行班次分配
+        \end{enumerate}
 
     \item \textbf{排班调整优化阶段}
     \begin{enumerate}
         \item 可视化调整：通过拖拽交互实现班次重新分配，系统实时校验工时约束
-        \item 冲突解决方案：对超负荷员工自动推荐替代方案，支持多版本方案对比
         \item 最终确认发布：生成可打印排班表并通过消息通知相关员工
-    \end{enumerate}
-
-    \item \textbf{执行反馈阶段}
-    \begin{enumerate}
-        \item 实际执行记录：跟踪班次到岗情况，记录异常考勤事件
-        \item 效果评估分析：对比预测与实际业务量，优化后续排班参数
-        \item 知识库更新：将调整记录转化为规则优化建议，提升后续排班准确率
     \end{enumerate}
 \end{itemize}
 \subsection{可行性分析}
@@ -110,23 +140,24 @@
 \section{总体设计}
 \subsection{前后端分离}
 \subsubsection{前端技术选型}
-前端系统采用Vue 3组合式API开发，主要技术栈包括：
+前端系统采用Vue 3组合式API开发，构建了完整的技术栈体系，主要包含以下核心组件：
 \begin{itemize}
-    \item \textbf{核心框架}: Vue 3.5 + TypeScript 5.6 构建响应式界面
-    \item \textbf{UI组件库}: Element Plus 2.9 实现管理系统视觉规范
-    \item \textbf{状态管理}: Pinia 2.3 管理门店/员工/排班等业务状态
-    \item \textbf{构建工具}: Vite 6.2 实现HMR热更新和按需编译
-    \item \textbf{可视化引擎}: Canvas + ECharts 实现排班表拖拽交互
+    \item \textbf{核心框架}: Vue 3.5 + TypeScript 5.6 构建响应式界面，提供高效的开发体验和类型安全支持
+    \item \textbf{UI组件库}: Element Plus 2.9 实现管理系统视觉规范，提供丰富的UI组件和交互设计
+    \item \textbf{状态管理}: Pinia 2.3 管理门店/员工/排班等业务状态，实现数据的集中管理和响应式更新
+    \item \textbf{构建工具}: Vite 6.2 实现HMR热更新和按需编译，提升开发效率和构建性能
+    \item \textbf{CSS样式}: UnoCss 4.6 实现原子化CSS，优化样式管理和性能表现
 \end{itemize}
 
 \subsubsection{后端技术选型}
-后端服务基于Node.js技术栈构建，关键组件包括：
+后端服务基于Node.js技术栈构建，采用模块化设计思想，构建了完整的后端技术体系，主要包含以下核心组件：
 \begin{itemize}
-    \item \textbf{运行时}: Node.js 20 + ES Module 规范
-    \item \textbf{Web框架}: Express 4.21 构建RESTful API
-    \item \textbf{数据存储}: MySQL 8.0 关系型数据库
-    \item \textbf{安全认证}: JWT + bcryptjs 实现接口鉴权
-    \item \textbf{微服务通信}: HTTP Proxy Middleware 3.0 实现服务间调用
+    \item \textbf{运行时}: Node.js 20 + ES Module 规范，提供高效的JavaScript运行环境和模块化支持
+    \item \textbf{Web框架}: Express 4.21 构建RESTful API，提供简洁的路由和中间件支持
+    \item \textbf{数据存储}: MySQL 8.0 关系型数据库，提供可靠的数据持久化解决方案
+    \item \textbf{安全认证}: JWT + bcryptjs 实现接口鉴权，确保系统访问的安全性
+    \item \textbf{微服务通信}: HTTP Proxy Middleware 3.0 实现服务间调用，支持微服务架构下的服务通信
+    \item \textbf{API文档}: apidoc 自动生成API文档，提升接口开发效率和可维护性
 \end{itemize}
 
 \subsubsection{接口设计}
