@@ -6,14 +6,13 @@
 
 % 封面页、陈诺书（无页码）
 \includepdf[pages={1}]{./source/封面页.pdf}
-\thispagestyle{empty} % 封面页不显示页眉
 \includepdf[pages={2}]{./source/封面页.pdf}
 \setcounter{page}{0}   % 重置页码计数器
 
 
 % 摘要、目录（无页码）
 \pagenumbering{gobble} % 禁用页码
-\tableofcontents % 生成目录内容，但不显示"目录"二字
+\tableofcontents
 \newpage
 
 % 中文摘要
