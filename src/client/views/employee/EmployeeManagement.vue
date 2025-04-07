@@ -1,5 +1,8 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue'
+import { useEmployeeStore } from '../../stores/employeeStore'
+import { useStoreStore } from '../../stores/storeStore'
+import { ElMessage } from 'element-plus'
 
 // 定义员工类型
 interface Employee {
@@ -20,6 +23,10 @@ interface Store {
   id: string
   name: string
 }
+
+// 获取store实例
+const employeeStore = useEmployeeStore()
+const storeStore = useStoreStore()
 
 // 状态
 const employees = ref<Employee[]>([])
@@ -70,58 +77,46 @@ const editingEmployee = reactive({
 // 加载员工和门店数据
 onMounted(async () => {
   try {
-    // 这里应该调用API获取员工和门店数据
-    // 模拟数据
-    setTimeout(() => {
-      stores.value = [
-        { id: '1', name: '中关村店' },
-        { id: '2', name: '望京店' },
-        { id: '3', name: '五道口店' },
-      ]
-
-      employees.value = [
-        {
-          id: '1',
-          name: '张三',
-          gender: '男',
-          age: 32,
-          position: '店长',
-          storeId: '1',
-          storeName: '中关村店',
-          phone: '13812345678',
-          hireDate: '2020-01-15',
-          skills: ['收银', '团队管理', '库存管理'],
-        },
-        {
-          id: '2',
-          name: '李四',
-          gender: '女',
-          age: 28,
-          position: '收银员',
-          storeId: '1',
-          storeName: '中关村店',
-          phone: '13987654321',
-          hireDate: '2021-03-10',
-          skills: ['收银', '客服'],
-        },
-        {
-          id: '3',
-          name: '王五',
-          gender: '男',
-          age: 25,
-          position: '理货员',
-          storeId: '2',
-          storeName: '望京店',
-          phone: '13567891234',
-          hireDate: '2022-05-20',
-          skills: ['理货', '库存管理'],
-        },
-      ]
-      loading.value = false
-    }, 1000)
+    loading.value = true
+    // 使用真实API调用获取数据
+    await Promise.all([
+      storeStore.fetchStores(),
+      employeeStore.fetchEmployees()
+    ])
+    
+    // 从store中获取数据
+    stores.value = storeStore.stores
+    
+    // 将employeeStore中的数据格式转换为当前组件需要的格式
+    employees.value = employeeStore.employees.map(emp => {
+      // 创建符合本地Employee接口的对象
+      const employee: Employee = {
+        id: emp.id,
+        name: emp.name,
+        gender: '男', // 默认值，因为API返回的数据可能没有这个字段
+        age: 25, // 默认值
+        position: emp.position,
+        storeId: emp.store || '', // 使用store字段作为storeId
+        storeName: '', // 稍后会根据storeId查找
+        phone: emp.phone || '',
+        hireDate: emp.createdAt?.split('T')[0] || '', // 使用创建日期作为入职日期
+        skills: [], // 默认空数组
+      }
+      
+      // 查找门店名称
+      const store = stores.value.find(s => s.id === employee.storeId)
+      if (store) {
+        employee.storeName = store.name
+      }
+      
+      return employee
+    })
   }
   catch (error) {
     console.error('加载数据失败', error)
+    ElMessage.error('加载员工和门店数据失败')
+  }
+  finally {
     loading.value = false
   }
 })
@@ -134,13 +129,28 @@ function selectEmployee(employee: Employee) {
 // 添加员工
 async function addEmployee() {
   try {
-    // 这里应该调用API添加员工
-    // 模拟添加
-    const newId = String(employees.value.length + 1)
-    const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
+    // 准备API所需的员工数据格式
+    const employeeData = {
+      name: newEmployee.name,
+      position: newEmployee.position,
+      phone: newEmployee.phone,
+      email: `${newEmployee.name}@example.com`, // 添加必要的email字段
+      store: newEmployee.storeId, // 使用storeId作为store
+      preferences: {
+        workday_pref: [9, 17] as [number, number], // 修复类型为元组
+        time_pref: ['09:00', '17:00'] as [string, string], // 修复类型为元组
+        max_daily_hours: 8, // 默认每日最大工作时间
+        max_weekly_hours: 40, // 默认每周最大工作时间
+      }
+    }
 
+    // 调用API创建员工
+    const response = await employeeStore.createEmployee(employeeData)
+    
+    // 添加到本地列表
+    const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
     const employeeToAdd: Employee = {
-      id: newId,
+      id: response.data.id, // 修复：正确访问返回数据中的id
       name: newEmployee.name,
       gender: newEmployee.gender,
       age: newEmployee.age,
@@ -154,6 +164,7 @@ async function addEmployee() {
 
     employees.value.push(employeeToAdd)
     showAddEmployeeForm.value = false
+    ElMessage.success('员工添加成功')
 
     // 重置表单
     Object.assign(newEmployee, {
@@ -169,32 +180,25 @@ async function addEmployee() {
   }
   catch (error) {
     console.error('添加员工失败', error)
-  }
-}
-
-// 准备编辑员工
-function prepareEditEmployee() {
-  if (selectedEmployee.value) {
-    Object.assign(editingEmployee, {
-      id: selectedEmployee.value.id,
-      name: selectedEmployee.value.name,
-      gender: selectedEmployee.value.gender,
-      age: selectedEmployee.value.age,
-      position: selectedEmployee.value.position,
-      storeId: selectedEmployee.value.storeId,
-      phone: selectedEmployee.value.phone,
-      hireDate: selectedEmployee.value.hireDate,
-      skills: [...selectedEmployee.value.skills],
-    })
-    showEditEmployeeForm.value = true
+    ElMessage.error('添加员工失败')
   }
 }
 
 // 更新员工
 async function updateEmployee() {
   try {
-    // 这里应该调用API更新员工
-    // 模拟更新
+    // 准备API所需的员工数据格式
+    const employeeData = {
+      name: editingEmployee.name,
+      position: editingEmployee.position,
+      phone: editingEmployee.phone,
+      store: editingEmployee.storeId, // 使用storeId作为store
+    }
+
+    // 调用API更新员工
+    await employeeStore.updateEmployee(editingEmployee.id, employeeData)
+    
+    // 更新本地列表
     const index = employees.value.findIndex(e => e.id === editingEmployee.id)
     if (index !== -1) {
       const storeName = stores.value.find(s => s.id === editingEmployee.storeId)?.name || ''
@@ -215,26 +219,50 @@ async function updateEmployee() {
       employees.value[index] = updatedEmployee
       selectedEmployee.value = updatedEmployee
       showEditEmployeeForm.value = false
+      ElMessage.success('员工更新成功')
     }
   }
   catch (error) {
     console.error('更新员工失败', error)
+    ElMessage.error('更新员工失败')
   }
 }
 
 // 删除员工
 async function deleteEmployee() {
   try {
-    // 这里应该调用API删除员工
-    // 模拟删除
     if (selectedEmployee.value) {
+      // 调用API删除员工
+      await employeeStore.deleteEmployee(selectedEmployee.value.id)
+      
+      // 更新本地列表
       employees.value = employees.value.filter(e => e.id !== selectedEmployee.value?.id)
       selectedEmployee.value = null
       confirmDelete.value = false
+      ElMessage.success('员工删除成功')
     }
   }
   catch (error) {
     console.error('删除员工失败', error)
+    ElMessage.error('删除员工失败')
+  }
+}
+
+// 准备编辑员工 - 添加缺失的函数
+function prepareEditEmployee() {
+  if (selectedEmployee.value) {
+    Object.assign(editingEmployee, {
+      id: selectedEmployee.value.id,
+      name: selectedEmployee.value.name,
+      gender: selectedEmployee.value.gender,
+      age: selectedEmployee.value.age,
+      position: selectedEmployee.value.position,
+      storeId: selectedEmployee.value.storeId,
+      phone: selectedEmployee.value.phone,
+      hireDate: selectedEmployee.value.hireDate,
+      skills: [...selectedEmployee.value.skills],
+    })
+    showEditEmployeeForm.value = true
   }
 }
 </script>
