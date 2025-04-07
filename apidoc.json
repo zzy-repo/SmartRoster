@@ -3,8 +3,8 @@
   "version": "1.0.0",
   "description": "智能排班系统API文档",
   "title": "SmartRoster API Documentation",
-  "url": "http://localhost:3000/api",
-  "sampleUrl": "http://localhost:3000/api",
+  "url": "http://localhost:3000",
+  "sampleUrl": "http://localhost:3000",
   "template": {
     "withCompare": true,
     "withGenerator": true
