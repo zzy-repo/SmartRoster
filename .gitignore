@@ -55,3 +55,18 @@ var/
 # Test
 coverage
 .env.test
+
+# LaTeX 编译生成文件
+*.aux
+*.log
+*.out
+*.toc
+*.fls
+*.fdb_latexmk
+*.xdv
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
