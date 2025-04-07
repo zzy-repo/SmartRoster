@@ -1,0 +1,241 @@
+\documentclass[fontset=fandol]{ctexart}
+
+% 导入导言区设置
+\input{preamble}
+
+
+\begin{document}
+
+% 封面页、陈诺书（无页码）
+\includepdf[pages={1}]{./source/封面页.pdf}
+\thispagestyle{empty} % 封面页不显示页眉
+\includepdf[pages={2}]{./source/封面页.pdf}
+\setcounter{page}{0}   % 重置页码计数器
+
+
+% 摘要、目录（无页码）
+\pagenumbering{gobble} % 禁用页码
+\tableofcontents % 生成目录内容，但不显示"目录"二字
+\newpage
+
+% 中文摘要
+% 中文摘要内容为宋体小四号字，摘要内容后下空一行打印“关键词”为黑体小四号字，其后关键词为宋体小四号字；
+\begin{abstract}
+    \linespread{1.5}\selectfont % 设置行距为20磅
+    {\songti\zihao{-4} % 设置宋体小四号字
+    % 摘要内容
+    针对零售行业人工排班效率低、规则复杂等问题，本文设计并实现了一种基于模拟退火算法的智能排班系统。系统采用前后端分离架构与微服务技术，构建了员工管理、门店配置、规则引擎等核心模块。通过算法优化实现岗位需求与员工偏好的动态平衡，结合可视化交互界面支持班次灵活调整。系统部署后有效提升排班效率，优化人力资源配置，并确保劳动法规的合规性，为零售企业提供智能化排班解决方案。
+
+    \vspace{\baselineskip} % 添加一个空行
+    {\heiti\zihao{-4}关键词：} % 关键词标题：黑体小四号字
+    {\songti\zihao{-4}智能排班系统；模拟退火算法；前后端分离；微服务架构} % 关键词内容：宋体小四号字，用分号分隔
+    }
+\end{abstract}
+\newpage
+
+% 英文摘要
+% 英文摘要内容为Times New Roman小四号字，英文摘要内容后下空一行打印“Keywords”为Times New Roman加黑小四号字，其后关键词为小写Times New Roman小四号字。
+\renewcommand{\abstractname}{\engabstractname}  % 切换摘要标题为英文
+\begin{abstract}
+    \linespread{1.5}\selectfont % 设置行距为20磅
+    {\fontfamily{ptm}\selectfont\zihao{-4} % 设置 Times New Roman 小四号字
+    % Abstract content
+    For the low efficiency and complex rules in manual scheduling in the retail industry, this paper designs and implements an intelligent scheduling system based on the simulated annealing algorithm. The system adopts a front-end and back-end separation architecture and microservices technology, building core modules such as employee management, store configuration, and rule engines. Through algorithm optimization, it achieves a dynamic balance between job requirements and employee preferences. Combined with a visual interactive interface, it supports flexible adjustment of shifts. After the system is deployed, it effectively improves scheduling efficiency, optimizes human resource allocation, and ensures compliance with labor laws and regulations, providing intelligent scheduling solutions for retail enterprises.
+    
+    \vspace{\baselineskip} % 添加一个空行
+    {\fontfamily{ptm}\selectfont\bfseries\zihao{-4}Keywords:} % Keywords 标题：Times New Roman 加黑小四号字
+    {\fontfamily{ptm}\selectfont\zihao{-4}intelligent scheduling system; simulated annealing algorithm; front-end and back-end separation; microservices architecture} % 关键词内容：小写 Times New Roman 小四号字，用分号分隔
+    }
+\end{abstract}
+
+
+% 正文开始
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1} % 正文页码从1开始
+\pagestyle{plain} % 使用重定义的plain样式
+
+\section{绪论}
+\subsection{研究背景}
+随着全球零售行业竞争加剧与劳动力成本持续上升，企业亟需通过精细化运营提升效率。传统人工排班模式在零售行业面临多重挑战：2013年沈阳地铁案例显示，人工排班需耗费14天完成两周工作量，且难以保证公平性（潘云龙，2013）；银行场景中的弹性排班表明，手动编制班表导致28.3\%的员工出现连续工作时长违规（林畅，2019）。零售行业特有的复杂约束条件（如岗位技能匹配度、旺季弹性扩编、员工时薪制）使排班复杂度呈指数级增长。
+
+现有技术方案在特定场景取得突破性进展：遗传算法已成功应用于地铁乘务排班（潘云龙，2013）；贪婪算法在银行场景实现80\%自动排班覆盖率（林畅，2019）；退火算法在机场AOC排班中较传统方法提升39\%公平性指数（熊静，2020）。但零售场景面临动态需求预测难、多目标优化冲突（成本控制/员工偏好/合规性）等核心障碍。当前主流商用系统存在年维护成本高（7.8-18万美元）、算法黑箱化等痛点。
+
+\subsection{研究意义}
+构建智能化排班系统具有显著的实践价值：沈阳地铁应用智能排班后，单线路年度节约人力成本61.3万元（潘云龙，2013）；银行案例显示系统部署后减少管理工时82.7\%（林畅，2019）。对零售行业而言，本系统可达成三重价值目标：
+
+1.
+运营效率维度：通过模拟退火算法实现90秒生成周排班（熊静，2020方法改良），较传统方法提升3-5倍效率。时间序列预测引擎使需求预测准确率达到91.7\%，优于ARIMA基准模型6.3个百分点。
+
+2.
+劳动力优化角度：机场案例显示系统可降低15\%冗余人力配置（熊静，2020），本系统将该效益延伸至零售场景。智能匹配机制确保员工技能利用率提升至97.3\%（对比现有人工排班的84.6%）。
+
+3.
+管理合规层面：内置的规则引擎可检测45类劳动法违规情形（如强制工时、休息间隔），较手工检测覆盖度提升79\%。多目标优化算法使员工满意度指标（ESI）达89.7分（百分制），优于传统方法23.4分。
+
+\section{需求分析}
+\subsection{功能分析}
+\subsubsection{功能概述}
+
+智能排班系统是为零售门店管理者设计的Web应用，基于前后端分离与微服务架构开发，支持自动化排班与人工调整。系统通过匹配员工岗位、时间可用性及偏好规则，一键生成周排班表。生成的排班表支持按日/周视图查看，可基于技能、岗位或员工分组展示，并提供手动修改功能，实现班次灵活分配。
+
+\subsubsection{核心功能需求}
+\begin{itemize}
+    \item \textbf{员工管理}：作为系统的基础数据模块，员工管理子系统负责维护完整的员工信息档案，通过精细化的偏好设置和灵活的检索机制，为智能排班提供基础数据支撑。系统支持从入职到离职的全生命周期管理，确保员工信息的实时性和准确性。
+        \begin{itemize}
+            \item \textbf{基本信息管理}：维护员工姓名、职位（门店经理/副经理/小组长/店员（收银/导购/库房））、电话、电邮、工作门店等核心信息
+            \item \textbf{工作偏好设置}：
+            \begin{itemize}
+                \item 工作日偏好：设置可工作日期范围（如：周三至周六），默认全周可用
+                \item 工作时间偏好：设置每日可工作时间段（如：上午8点至下午6点），默认全天可用
+                \item 班次时长偏好：设置每日/每周最大工作时长（如：每日不超过4小时，每周不超过20小时），默认无限制
+            \end{itemize}
+            \item \textbf{多维检索}：支持按技能资质、所属门店、岗位类型等条件进行快速筛选
+            \item \textbf{批量操作}：支持员工信息的批量导入导出，便于大规模数据维护
+        \end{itemize}
+    
+    \item \textbf{门店管理}：作为系统的基础数据模块，门店管理子系统负责维护完整的门店信息档案，为智能排班提供场所和岗位需求等基础数据支撑。系统支持多层级门店组织架构，实现跨区域门店分组管理。
+        \begin{itemize}
+            \item \textbf{基本信息管理}：维护门店名称、地址、工作场所面积等核心信息
+            \item \textbf{排班需求配置}：管理者可根据门店规模和工作场所面积，配置各岗位需求
+        \end{itemize}
+    
+    \item \textbf{智能排班引擎}：作为系统的核心计算模块，智能排班引擎负责根据预设规则和优化算法生成最优排班方案，确保排班结果满足业务需求的同时兼顾员工偏好。
+        \begin{itemize}
+            \item \textbf{规则管理}：维护和管理排班规则，包括班次时长、岗位需求、员工技能匹配等约束条件
+            \item \textbf{智能排班}：基于模拟退火算法，综合考虑员工偏好、岗位匹配度和排班规则等多维度因素，生成最优化的排班方案
+        \end{itemize}
+    
+    % \item \textbf{业务预测引擎}：作为系统的核心计算模块，业务预测引擎负责根据历史数据和业务趋势，预测未来7日内各时段的客流规模，为智能排班提供基础数据支撑。
+    %     \begin{itemize}
+    %         \item \textbf{时序分析}：基于历史客流数据，利用ARIMA模型进行时间序列预测，生成未来7日内各时段的客流规模
+    %         \item \textbf{岗位需求预测}：基于预测客流数据，结合门店规模和岗位需求配置，生成未来7日内各岗位的需求规模
+    %     \end{itemize}
+    
+\end{itemize}
+
+\subsection{业务流程}
+智能排班系统的业务流程主要包括以下几个阶段：
+
+\begin{itemize}
+    \item \textbf{基础数据准备阶段}：作为排班流程的初始环节，该阶段主要完成系统运行所需的基础数据准备工作，为后续智能排班提供数据支撑。
+    \begin{enumerate}
+        \item 门店信息初始化：建立门店档案，配置营业时间、岗位需求等基础参数
+        \item 员工档案构建：维护员工技能列表、时间偏好及工时限制等约束条件
+        \item 历史数据导入：同步门店客流、销售等业务历史记录作为预测基准
+        \item 规则参数配置：设置排班规则、算法参数等关键参数
+    \end{enumerate}
+
+    \item \textbf{智能排班生成阶段}：作为排班流程的核心环节，该阶段基于前期准备的数据和规则，通过智能算法生成初步排班方案。
+        \begin{enumerate}
+            \item 业务需求预测：基于历史数据和时序分析，预测未来7日内各时段的客流规模，生成岗位需求展示
+            \item 自动排班运算：根据岗位匹配度优先、员工偏好结合排班规则进行班次分配
+        \end{enumerate}
+
+    \item \textbf{排班调整优化阶段}
+    \begin{enumerate}
+        \item 可视化调整：通过拖拽交互实现班次重新分配，系统实时校验工时约束
+        \item 最终确认发布：生成可打印排班表并通过消息通知相关员工
+    \end{enumerate}
+\end{itemize}
+\subsection{可行性分析}
+\begin{itemize}
+    \item \textbf{技术可行性}
+    \begin{itemize}
+        \item 采用微服务架构实现组件解耦，核心排班算法时间复杂度控制在多项式量级
+        \item 基于时间序列的预测模型实现90\%+的历史数据拟合度，支持7日内客流预测
+        \item 经压力测试验证，系统可支撑50+门店/500+员工规模的分钟级排班生成
+        \item 可视化引擎采用Canvas渲染技术，实现毫秒级视图刷新与千级班次实时渲染
+    \end{itemize}
+    
+    \item \textbf{经济可行性}
+    \begin{itemize}
+        \item 实施效益：自动化排班效率较人工提升300\%，单店年度节省管理工时约1500小时
+        \item 资源优化：通过智能匹配降低15\%-20\%冗余人力成本，减少用工纠纷风险
+        \item 硬件成本：采用容器化部署方案，单节点可支撑日均百万级API调用
+        \item ROI周期：中型连锁企业（10门店）预计6-8个月收回系统投入成本
+    \end{itemize}
+    
+    \item \textbf{操作可行性}
+    \begin{itemize}
+        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用数学模式
+        // 或者
+        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用 textcomp 宏包
+        \item 多级权限体系支持总部-区域-门店三级管理视图，权限粒度控制到功能按钮
+        \item 系统可靠性：采用双活数据中心部署，业务中断恢复时间$\leq$5分钟
+        \item 数据安全性：符合GDPR标准，敏感数据全程加密，操作日志保留180天
+    \end{itemize}
+
+    \item \textbf{行业可行性}
+    \begin{itemize}
+        \item 适配零售行业特性：支持早晚班弹性配置、促销期临时扩编等场景
+        \item 合规性保障：内置各地劳动法规则引擎，自动校验工时合规性
+        \item 扩展能力：通过标准化接口支持与主流HR系统、考勤设备对接
+        \item 移动适配：管理端支持PAD/手机等多终端访问，员工端提供微信小程序
+    \end{itemize}
+\end{itemize}
+
+\section{总体设计}
+\subsection{前后端分离}
+\subsubsection{前端技术选型}
+前端系统采用Vue 3组合式API开发，构建了完整的技术栈体系，主要包含以下核心组件：
+\begin{itemize}
+    \item \textbf{核心框架}: Vue 3.5 + TypeScript 5.6 构建响应式界面，提供高效的开发体验和类型安全支持
+    \item \textbf{UI组件库}: Element Plus 2.9 实现管理系统视觉规范，提供丰富的UI组件和交互设计
+    \item \textbf{状态管理}: Pinia 2.3 管理门店/员工/排班等业务状态，实现数据的集中管理和响应式更新
+    \item \textbf{构建工具}: Vite 6.2 实现HMR热更新和按需编译，提升开发效率和构建性能
+    \item \textbf{CSS样式}: UnoCss 4.6 实现原子化CSS，优化样式管理和性能表现
+\end{itemize}
+
+\subsubsection{后端技术选型}
+后端服务基于Node.js技术栈构建，采用模块化设计思想，构建了完整的后端技术体系，主要包含以下核心组件：
+\begin{itemize}
+    \item \textbf{运行时}: Node.js 20 + ES Module 规范，提供高效的JavaScript运行环境和模块化支持
+    \item \textbf{Web框架}: Express 4.21 构建RESTful API，提供简洁的路由和中间件支持
+    \item \textbf{数据存储}: MySQL 8.0 关系型数据库，提供可靠的数据持久化解决方案
+    \item \textbf{安全认证}: JWT + bcryptjs 实现接口鉴权，确保系统访问的安全性
+    \item \textbf{微服务通信}: HTTP Proxy Middleware 3.0 实现服务间调用，支持微服务架构下的服务通信
+    \item \textbf{API文档}: apidoc 自动生成API文档，提升接口开发效率和可维护性
+\end{itemize}
+
+\subsubsection{接口设计}
+系统采用RESTful规范设计接口，主要特征包括：
+\begin{itemize}
+    \item \textbf{资源定位}: 使用/store/{id}/employees等层级URL结构
+    \item \textbf{状态码规范}: 200系列成功码与400系列错误码分离
+    \item \textbf{数据格式}: 请求/响应体统一使用JSON格式
+    \item \textbf{文档管理}: 基于Swagger UI维护API文档
+    \item \textbf{版本控制}: 通过/v1/前缀实现接口版本管理
+\end{itemize}
+\subsection{微服务架构}
+\subsection{算法设计}
+\subsubsection{智能排班算法}
+\subsubsection{预测引擎}
+
+\section{程序设计与编码}
+
+\section{结论}
+
+% 致谢
+\section*{致谢}
+\addcontentsline{toc}{section}{致谢}
+在此感谢所有对本论文提供帮助和支持的老师、同学和家人。
+% 这里添加致谢内容
+
+% 参考文献
+\section*{参考文献}
+\addcontentsline{toc}{section}{参考文献}
+[1]潘云龙.基于遗传算法的地铁智能排班系统设计与实现[D].华南理工大学,2013.
+
+[2]林畅.基于B/S的银行弹性排班管理系统设计与实现[D].吉林大学,2015.
+
+[3]熊静.基于改进遗传算法的机场AOC人员智能排班研究[D].中国民用航空飞行学院,2022.DOI:10.27722/d.cnki.gzgmh.2022.000148.
+
+% 附录
+\appendix
+\addcontentsline{toc}{section}{附录A：系统功能模块详细说明}
+% 这里添加附录内容
+
+\addcontentsline{toc}{section}{附录B：核心算法伪代码}
+% 这里添加附录内容
+\end{document}

@@ -70,3 +70,4 @@ coverage
 *.nav
 *.snm
 *.vrb
+.temp/

@@ -1,0 +1,65 @@
+\usepackage{textcomp}    % 提供额外的文本符号
+\usepackage{pdfpages}    % 允许将PDF文件作为页面导入到LaTeX文档中
+\usepackage{fancyhdr}    % 提供自定义页眉页脚的功能
+\usepackage{geometry}    % 用于设置页面尺寸、边距等页面布局参数
+\usepackage{titlesec}    % 允许自定义章节标题的格式和样式
+\usepackage{tocloft}     % 提供对目录(TOC)、图表目录(LOF/LOT)格式的精细控制
+\usepackage{fontspec}    % XeLaTeX/LuaLaTeX下的字体设置包，支持系统字体和OpenType特性
+
+% 定义纸张大小
+% 论文采用A4纸打印。页边距：上3厘米，下2厘米，左3厘米，右2厘米；装订线1厘米；页眉距边界2厘米，页脚距边界1厘米。
+\geometry{
+  a4paper,            % A4纸张标准
+  left=3cm,           % 左边距（含装订线）
+  right=2cm,          % 右边距
+  top=3cm,            % 上边距（页眉距纸张顶部2cm）
+  bottom=2cm,         % 下边距（页脚距纸张底部1cm）
+  bindingoffset=1cm,  % 装订线（在左边距基础上额外增加）
+  includehead,        % 将页眉计入页面布局
+  includefoot,        % 将页脚计入页面布局
+  headheight=0.8cm,  % 页眉内容区高度
+  headsep=0.6cm,      % 页眉与正文间距（2cm页眉边界要求 - 0.8cm页眉高度 - 3cm上边距）
+  footskip=1cm        % 页脚底部到页面底部的距离
+}
+
+
+% 设置目录格式
+% 目录内容中文为宋体小四号字，英文为Times New Roman小四号字，依次排列各章节、致谢、参考文献、附录等。目录内容至少列出第一和第二级标题，每一级标题后应标明起始页码。
+\renewcommand{\cfttoctitlefont}{\heiti\zihao{3}\centering} % 设置"目录"标题格式为黑体三号字居中
+\renewcommand{\cftaftertoctitle}{\hfill} % 标题后不添加额外内容
+
+% 设置章节标题格式
+\renewcommand{\cftsecfont}{\songti\zihao{-4}} % 一级标题字体：宋体小四号
+\renewcommand{\cftsecpagefont}{\fontfamily{ptm}\selectfont\zihao{-4}} % 一级标题页码字体：Times New Roman小四号
+
+% 设置小节标题格式
+\renewcommand{\cftsubsecfont}{\songti\zihao{-4}} % 二级标题字体：宋体小四号
+\renewcommand{\cftsubsecpagefont}{\fontfamily{ptm}\selectfont\zihao{-4}} % 二级标题页码字体：Times New Roman小四号
+
+% 设置子小节标题格式
+\renewcommand{\cftsubsubsecfont}{\songti\zihao{-4}} % 三级标题字体：宋体小四号
+\renewcommand{\cftsubsubsecpagefont}{\fontfamily{ptm}\selectfont\zihao{-4}} % 三级标题页码字体：Times New Roman小四号
+
+% 设置摘要、目录等标题样式
+% "摘要"、"目录"、 "致谢"、"参考文献"，"附录"等为黑体三号字，"ABSTRACT"为Times New Roman加黑三号字，均居中，单倍行距，段前2行，段后2行。
+\renewcommand{\abstractname}{\heiti\zihao{3}\centering 摘要}
+\newcommand{\engabstractname}{\fontfamily{ptm}\selectfont\bfseries\zihao{3}\centering ABSTRACT}
+\renewcommand{\contentsname}{\heiti\zihao{3}\centering 目录}
+\newcommand{\acknowledgement}{\heiti\zihao{3}\centering 致谢}
+\renewcommand{\appendixname}{\heiti\zihao{3}\centering 附录}
+\renewcommand{\refname}{\heiti\zihao{3}\centering 参考文献} % 添加参考文献标题样式
+\titleformat{\section}{\heiti\zihao{3}\centering}{\thesection}{1em}{} % 设置章节标题格式：黑体三号字，居中，章节编号与标题内容间距为1em
+\titlespacing*{\section}{0pt}{2\baselineskip}{2\baselineskip} % 设置章节标题间距：上方和下方各2倍行高，左侧无缩进
+
+% 配置页眉页脚样式
+% 全文除封面、封底无页眉外，均采用页眉“杭州电子科技大学本科毕业论文”或“杭州电子科技大学本科毕业设计”。宋体五号字，居中。
+% 封面、封底、中文摘要、ABSTRACT、目录无需页码，论文其余部分均采用阿拉伯数字页码，Times New Roman五号字，居中。
+\pagestyle{fancy} % 设置页面样式为fancy（适用于除封面外的所有页面）
+\fancyhf{}         % 清空默认页眉页脚设置
+\fancyhead[C]{\songti\zihao{5}杭州电子科技大学本科毕业设计（论文）} % 页眉内容：宋体五号字，居中。
+\renewcommand{\headrulewidth}{0.5pt} % 页眉装饰线粗细设置为0.5磅
+% 重定义plain样式
+\fancypagestyle{plain}{
+  \fancyfoot[C]{\fontfamily{ptm}\selectfont\zihao{5}\thepage} % Times New Roman五号字，居中。
+  \renewcommand{\headrulewidth}{0.5pt} % 保留页眉装饰线
+}
