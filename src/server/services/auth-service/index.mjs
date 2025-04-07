@@ -65,7 +65,7 @@ app.post('/login', async (req, res) => {
           role: user.role,
         },
       },
-    }) // 已经是统一格式，无需修改
+    }) 
   }
   catch (error) {
     console.error('登录失败:', error)
@@ -113,7 +113,7 @@ app.post('/register', async (req, res) => {
         message: '用户注册成功',
         userId: result.insertId,
       },
-    }) // 修改为统一格式
+    }) 
   }
   catch (error) {
     console.error('注册失败:', error)
