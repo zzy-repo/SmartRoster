@@ -1,9 +1,12 @@
 \documentclass{ctexart}
+\usepackage{textcomp} % 添加 textcomp 宏包支持特殊字符
+
 \begin{document}
 
 \begin{abstract}
 % 摘要内容
 \par\textbf{关键词：} % 关键词
+智能排班系统，模拟退火算法，前后端分离，微服务架构
 \end{abstract}
 
 \section*{摘要}
@@ -87,9 +90,11 @@
     
     \item \textbf{操作可行性}
     \begin{itemize}
-        \item 可视化工作台实现零代码排班调整，新用户培训周期≤2小时
+        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用数学模式
+        // 或者
+        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用 textcomp 宏包
         \item 多级权限体系支持总部-区域-门店三级管理视图，权限粒度控制到功能按钮
-        \item 系统可靠性：采用双活数据中心部署，业务中断恢复时间≤5分钟
+        \item 系统可靠性：采用双活数据中心部署，业务中断恢复时间$\leq$5分钟
         \item 数据安全性：符合GDPR标准，敏感数据全程加密，操作日志保留180天
     \end{itemize}
 
