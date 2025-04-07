@@ -7,7 +7,25 @@ const PORT = config.services.employee.port
 
 app.use(express.json())
 
-// 获取所有员工
+/**
+ * @api {get} /api/employee 获取所有员工
+ * @apiName GetEmployees
+ * @apiGroup Employee
+ * @apiDescription 获取系统中所有员工的列表，包括其技能和所属门店信息
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Object[]} data.employees 员工列表
+ * @apiSuccess {Number} data.employees.id 员工ID
+ * @apiSuccess {String} data.employees.name 员工姓名
+ * @apiSuccess {String} data.employees.phone 联系电话
+ * @apiSuccess {String} data.employees.email 电子邮箱
+ * @apiSuccess {String} data.employees.position 职位
+ * @apiSuccess {Number} data.employees.store_id 所属门店ID
+ * @apiSuccess {String} data.employees.store_name 门店名称
+ * @apiSuccess {String[]} data.employees.skills 技能列表
+ * 
+ * @apiError {String} error 错误信息
+ */
 app.get('/', async (req, res) => {
   try {
     const [employees] = await pool.query(`
@@ -28,7 +46,38 @@ app.get('/', async (req, res) => {
   }
 })
 
-// 获取单个员工
+/**
+ * @api {get} /api/employee/:id 获取员工详情
+ * @apiName GetEmployee
+ * @apiGroup Employee
+ * @apiDescription 根据ID获取指定员工的详细信息
+ * 
+ * @apiParam {Number} id 员工ID
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Number} data.id 员工ID
+ * @apiSuccess {String} data.name 员工姓名
+ * @apiSuccess {String} data.phone 联系电话
+ * @apiSuccess {String} data.email 电子邮箱
+ * @apiSuccess {String} data.position 职位
+ * @apiSuccess {Number} data.store_id 所属门店ID
+ * @apiSuccess {String} data.store_name 门店名称
+ * @apiSuccess {String[]} data.skills 技能列表
+ * @apiSuccess {Number} data.max_daily_hours 每日最大工作时数
+ * @apiSuccess {Number} data.max_weekly_hours 每周最大工作时数
+ * @apiSuccess {Number} data.workday_pref_start 偏好工作日起始值
+ * @apiSuccess {Number} data.workday_pref_end 偏好工作日结束值
+ * @apiSuccess {String} data.time_pref_start 偏好工作时间起始值
+ * @apiSuccess {String} data.time_pref_end 偏好工作时间结束值
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 员工不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "员工不存在"
+ *     }
+ */
 app.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
@@ -61,7 +110,38 @@ app.get('/:id', async (req, res) => {
   }
 })
 
-// 创建员工
+/**
+ * @api {post} /api/employee 创建员工
+ * @apiName CreateEmployee
+ * @apiGroup Employee
+ * @apiDescription 创建新的员工记录，包括基本信息和技能设置
+ * 
+ * @apiBody {String} name 员工姓名
+ * @apiBody {String} [phone] 联系电话
+ * @apiBody {String} [email] 电子邮箱
+ * @apiBody {String} position 职位
+ * @apiBody {Number} [store_id] 所属门店ID
+ * @apiBody {Number} [user_id] 关联用户ID
+ * @apiBody {Number} [max_daily_hours=8] 每日最大工作时数
+ * @apiBody {Number} [max_weekly_hours=40] 每周最大工作时数
+ * @apiBody {Number} [workday_pref_start=0] 偏好工作日起始值
+ * @apiBody {Number} [workday_pref_end=6] 偏好工作日结束值
+ * @apiBody {String} [time_pref_start="08:00:00"] 偏好工作时间起始值
+ * @apiBody {String} [time_pref_end="20:00:00"] 偏好工作时间结束值
+ * @apiBody {String[]} [skills] 技能列表
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {String} data.message 成功消息
+ * @apiSuccess {Number} data.employeeId 新创建的员工ID
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 请求无效:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "员工姓名和职位不能为空"
+ *     }
+ */
 app.post('/', async (req, res) => {
   try {
     const {
@@ -165,7 +245,39 @@ app.post('/', async (req, res) => {
   }
 })
 
-// 更新员工
+/**
+ * @api {put} /api/employee/:id 更新员工
+ * @apiName UpdateEmployee
+ * @apiGroup Employee
+ * @apiDescription 更新指定员工的信息，包括基本信息和技能设置
+ * 
+ * @apiParam {Number} id 员工ID
+ * 
+ * @apiBody {String} name 员工姓名
+ * @apiBody {String} [phone] 联系电话
+ * @apiBody {String} [email] 电子邮箱
+ * @apiBody {String} position 职位
+ * @apiBody {Number} [store_id] 所属门店ID
+ * @apiBody {Number} [user_id] 关联用户ID
+ * @apiBody {Number} [max_daily_hours] 每日最大工作时数
+ * @apiBody {Number} [max_weekly_hours] 每周最大工作时数
+ * @apiBody {Number} [workday_pref_start] 偏好工作日起始值
+ * @apiBody {Number} [workday_pref_end] 偏好工作日结束值
+ * @apiBody {String} [time_pref_start] 偏好工作时间起始值
+ * @apiBody {String} [time_pref_end] 偏好工作时间结束值
+ * @apiBody {String[]} [skills] 技能列表
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {String} data.message 成功消息
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 员工不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "员工不存在"
+ *     }
+ */
 app.put('/:id', async (req, res) => {
   try {
     const { id } = req.params

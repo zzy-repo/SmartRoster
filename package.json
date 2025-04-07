@@ -14,7 +14,9 @@
     "lint:fix": "eslint . --fix",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "apidoc": "apidoc -i src/server/services/ -o docs/apidoc/",
+    "apidoc:serve": "npx serve docs/apidoc"
   },
   "dependencies": {
     "@element-plus/icons-vue": "^2.3.1",
@@ -43,6 +45,7 @@
     "@unocss/preset-icons": "66.1.0-beta.6",
     "@vitejs/plugin-vue": "^5.2.1",
     "@vue/tsconfig": "^0.7.0",
+    "apidoc": "^1.2.0",
     "concurrently": "^9.1.2",
     "cors": "^2.8.5",
     "eslint": "^9.21.0",

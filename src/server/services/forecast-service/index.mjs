@@ -7,7 +7,31 @@ const PORT = config.services.forecast.port
 
 app.use(express.json())
 
-// 获取门店历史数据
+/**
+ * @api {get} /api/forecast/historical/:storeId 获取门店历史数据
+ * @apiName GetHistoricalData
+ * @apiGroup Forecast
+ * @apiDescription 获取指定门店在给定时间范围内的历史客流量和销售数据
+ * 
+ * @apiParam {Number} storeId 门店ID
+ * @apiQuery {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiQuery {String} endDate 结束日期 (YYYY-MM-DD)
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Object[]} data.records 历史数据记录
+ * @apiSuccess {String} data.records.date 日期
+ * @apiSuccess {Number} data.records.hour 小时
+ * @apiSuccess {Number} data.records.customer_count 客流量
+ * @apiSuccess {Number} data.records.sales_amount 销售额
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "开始日期和结束日期不能为空"
+ *     }
+ */
 app.get('/historical/:storeId', async (req, res) => {
   try {
     const { storeId } = req.params
@@ -33,7 +57,37 @@ app.get('/historical/:storeId', async (req, res) => {
   }
 })
 
-// 生成预测数据
+/**
+ * @api {post} /api/forecast/predict 生成预测数据
+ * @apiName GeneratePrediction
+ * @apiGroup Forecast
+ * @apiDescription 根据历史数据生成指定时间范围内的客流量和销售预测
+ * 
+ * @apiBody {Number} storeId 门店ID
+ * @apiBody {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiBody {String} endDate 结束日期 (YYYY-MM-DD)
+ * @apiBody {String} [method="average"] 预测方法
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Number} data.storeId 门店ID
+ * @apiSuccess {String} data.startDate 开始日期
+ * @apiSuccess {String} data.endDate 结束日期
+ * @apiSuccess {String} data.method 使用的预测方法
+ * @apiSuccess {Object[]} data.predictions 预测结果列表
+ * @apiSuccess {String} data.predictions.date 日期
+ * @apiSuccess {Number} data.predictions.hour 小时
+ * @apiSuccess {Number} data.predictions.customer_count 预测客流量
+ * @apiSuccess {Number} data.predictions.sales_amount 预测销售额
+ * @apiSuccess {Number} data.predictions.required_staff 建议所需员工数
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少必要参数"
+ *     }
+ */
 app.post('/predict', async (req, res) => {
   try {
     const { storeId, startDate, endDate, method } = req.body
@@ -116,7 +170,35 @@ app.post('/predict', async (req, res) => {
   }
 })
 
-// 获取预测数据
+/**
+ * @api {get} /api/forecast/predict/:storeId 获取预测数据
+ * @apiName GetPrediction
+ * @apiGroup Forecast
+ * @apiDescription 获取指定门店在给定时间范围内的预测数据
+ * 
+ * @apiParam {Number} storeId 门店ID
+ * @apiQuery {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiQuery {String} endDate 结束日期 (YYYY-MM-DD)
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Number} data.storeId 门店ID
+ * @apiSuccess {String} data.startDate 开始日期
+ * @apiSuccess {String} data.endDate 结束日期
+ * @apiSuccess {Object[]} data.predictions 预测结果列表
+ * @apiSuccess {String} data.predictions.date 日期
+ * @apiSuccess {Number} data.predictions.hour 小时
+ * @apiSuccess {Number} data.predictions.customer_count 预测客流量
+ * @apiSuccess {Number} data.predictions.sales_amount 预测销售额
+ * @apiSuccess {Number} data.predictions.required_staff 建议所需员工数
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "开始日期和结束日期不能为空"
+ *     }
+ */
 app.get('/predict/:storeId', async (req, res) => {
   try {
     const { storeId } = req.params
@@ -165,7 +247,33 @@ app.get('/predict/:storeId', async (req, res) => {
   }
 })
 
-// 根据预测生成班次需求
+/**
+ * @api {post} /api/forecast/shifts/generate 生成班次需求
+ * @apiName GenerateShiftRequirements
+ * @apiGroup Forecast
+ * @apiDescription 根据预测数据生成指定时间范围内的班次需求
+ * 
+ * @apiBody {Number} storeId 门店ID
+ * @apiBody {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiBody {String} endDate 结束日期 (YYYY-MM-DD)
+ * @apiBody {Object} [staffingRules] 排班规则配置
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {Object[]} data.shifts 班次需求列表
+ * @apiSuccess {String} data.shifts.date 日期
+ * @apiSuccess {Number} data.shifts.start_hour 开始时间
+ * @apiSuccess {Number} data.shifts.end_hour 结束时间
+ * @apiSuccess {Number} data.shifts.required_staff 所需员工数
+ * @apiSuccess {Object} data.shifts.position_requirements 各职位所需人数
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少必要参数"
+ *     }
+ */
 app.post('/shifts/generate', async (req, res) => {
   try {
     const { storeId, startDate, endDate, staffingRules } = req.body

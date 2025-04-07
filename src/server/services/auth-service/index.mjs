@@ -8,7 +8,22 @@ const PORT = config.services.auth.port
 
 app.use(express.json())
 
-// 添加健康检查端点
+/**
+ * @api {get} /api/auth/health 健康检查
+ * @apiName HealthCheck
+ * @apiGroup Auth
+ * @apiDescription 检查认证服务的运行状态
+ * 
+ * @apiSuccess {String} status 服务状态
+ * @apiSuccess {String} timestamp 当前时间戳
+ * 
+ * @apiSuccessExample {json} 成功响应:
+ *     HTTP/1.1 200 OK
+ *     {
+ *       "status": "UP",
+ *       "timestamp": "2024-01-01T12:00:00.000Z"
+ *     }
+ */
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'UP',
@@ -16,8 +31,36 @@ app.get('/health', (req, res) => {
   })
 })
 
-// 用户登录
-// 修改登录接口
+/**
+ * @api {post} /api/auth/login 用户登录
+ * @apiName Login
+ * @apiGroup Auth
+ * @apiDescription 用户登录接口，验证用户身份并返回访问令牌
+ * 
+ * @apiBody {String} username 用户名
+ * @apiBody {String} password 密码
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {String} data.token JWT访问令牌
+ * @apiSuccess {Object} data.user 用户信息
+ * @apiSuccess {Number} data.user.id 用户ID
+ * @apiSuccess {String} data.user.username 用户名
+ * @apiSuccess {String} data.user.role 用户角色
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 验证失败:
+ *     HTTP/1.1 401 Unauthorized
+ *     {
+ *       "error": "用户名或密码错误"
+ *     }
+ * 
+ * @apiErrorExample {json} 请求无效:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "用户名和密码不能为空"
+ *     }
+ */
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body
@@ -73,7 +116,37 @@ app.post('/login', async (req, res) => {
   }
 })
 
-// 修改注册接口
+/**
+ * @api {post} /api/auth/register 用户注册
+ * @apiName Register
+ * @apiGroup Auth
+ * @apiDescription 创建新用户账户
+ * 
+ * @apiBody {String} username 用户名
+ * @apiBody {String} password 密码
+ * @apiBody {String} [role] 用户角色（可选）
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {String} data.token JWT访问令牌
+ * @apiSuccess {Object} data.user 用户信息
+ * @apiSuccess {Number} data.user.id 用户ID
+ * @apiSuccess {String} data.user.username 用户名
+ * @apiSuccess {String} data.user.role 用户角色
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 用户名已存在:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "用户名已存在"
+ *     }
+ * 
+ * @apiErrorExample {json} 请求无效:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "用户名和密码不能为空"
+ *     }
+ */
 app.post('/register', async (req, res) => {
   try {
     const { username, password, role } = req.body

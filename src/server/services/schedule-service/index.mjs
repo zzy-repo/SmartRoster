@@ -170,7 +170,57 @@ async function saveSchedule(storeId, startDate, endDate, assignments) {
   }
 }
 
-// 修改生成排班表接口
+/**
+ * @api {post} /api/schedule/generate 生成排班表
+ * @apiName GenerateSchedule
+ * @apiGroup Schedule
+ * @apiDescription 根据门店员工和班次需求生成排班表
+ * 
+ * @apiBody {Number} storeId 门店ID
+ * @apiBody {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiBody {String} endDate 结束日期 (YYYY-MM-DD)
+ * @apiBody {Object} [saConfig] 模拟退火算法配置
+ * @apiBody {Number} [saConfig.initial_temp=50.0] 初始温度
+ * @apiBody {Number} [saConfig.min_temp=0.5] 最小温度
+ * @apiBody {Number} [saConfig.cooling_rate=0.9] 冷却率
+ * @apiBody {Number} [saConfig.iter_per_temp=10] 每个温度的迭代次数
+ * @apiBody {Number} [saConfig.iterations=100] 总迭代次数
+ * @apiBody {Object} [costParams] 成本参数配置
+ * @apiBody {Number} [costParams.understaff_penalty=100] 人手不足惩罚
+ * @apiBody {Number} [costParams.workday_violation=10] 工作日违规惩罚
+ * @apiBody {Number} [costParams.time_pref_violation=5] 时间偏好违规惩罚
+ * @apiBody {Number} [costParams.daily_hours_violation=20] 每日工时违规惩罚
+ * @apiBody {Number} [costParams.weekly_hours_violation=50] 每周工时违规惩罚
+ * 
+ * @apiSuccess {Number} scheduleId 排班表ID
+ * @apiSuccess {Object[]} assignments 排班分配列表
+ * @apiSuccess {Number} assignments.employee_id 员工ID
+ * @apiSuccess {Number} assignments.shift_id 班次ID
+ * @apiSuccess {String} assignments.date 日期
+ * @apiSuccess {String} assignments.start_time 开始时间
+ * @apiSuccess {String} assignments.end_time 结束时间
+ * @apiSuccess {Number} cost 排班方案的总成本
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少必要参数"
+ *     }
+ * 
+ * @apiErrorExample {json} 员工数据不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "未找到员工数据"
+ *     }
+ * 
+ * @apiErrorExample {json} 班次需求数据不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "未找到班次需求数据"
+ *     }
+ */
 app.post('/generate', async (req, res) => {
   try {
     const { storeId, startDate, endDate, saConfig, costParams } = req.body
@@ -258,7 +308,56 @@ async function getScheduleDetails(scheduleId) {
   }
 }
 
-// 优化排班表
+/**
+ * @api {post} /api/schedule/optimize 优化排班表
+ * @apiName OptimizeSchedule
+ * @apiGroup Schedule
+ * @apiDescription 优化现有排班表，尝试找到更好的排班方案
+ * 
+ * @apiBody {Number} scheduleId 排班表ID
+ * @apiBody {Object} [saConfig] 模拟退火算法配置
+ * @apiBody {Number} [saConfig.initial_temp=50.0] 初始温度
+ * @apiBody {Number} [saConfig.min_temp=0.5] 最小温度
+ * @apiBody {Number} [saConfig.cooling_rate=0.9] 冷却率
+ * @apiBody {Number} [saConfig.iter_per_temp=10] 每个温度的迭代次数
+ * @apiBody {Number} [saConfig.iterations=100] 总迭代次数
+ * @apiBody {Object} [costParams] 成本参数配置
+ * @apiBody {Number} [costParams.understaff_penalty=100] 人手不足惩罚
+ * @apiBody {Number} [costParams.workday_violation=10] 工作日违规惩罚
+ * @apiBody {Number} [costParams.time_pref_violation=5] 时间偏好违规惩罚
+ * @apiBody {Number} [costParams.daily_hours_violation=20] 每日工时违规惩罚
+ * @apiBody {Number} [costParams.weekly_hours_violation=50] 每周工时违规惩罚
+ * 
+ * @apiSuccess {Number} scheduleId 排班表ID
+ * @apiSuccess {Object[]} assignments 优化后的排班分配列表
+ * @apiSuccess {Number} assignments.employee_id 员工ID
+ * @apiSuccess {Number} assignments.shift_id 班次ID
+ * @apiSuccess {String} assignments.date 日期
+ * @apiSuccess {String} assignments.start_time 开始时间
+ * @apiSuccess {String} assignments.end_time 结束时间
+ * @apiSuccess {Number} cost 优化后方案的总成本
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少排班表ID"
+ *     }
+ * 
+ * @apiErrorExample {json} 排班表不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "排班表不存在"
+ *     }
+ * 
+ * @apiErrorExample {json} 优化失败:
+ *     HTTP/1.1 500 Internal Server Error
+ *     {
+ *       "error": "服务器错误",
+ *       "message": "优化排班表失败"
+ *     }
+ */
 app.post('/optimize', async (req, res) => {
   try {
     const { scheduleId, saConfig, costParams } = req.body
@@ -366,7 +465,54 @@ app.post('/optimize', async (req, res) => {
   }
 })
 
-// 手动分配班次
+/**
+ * @api {post} /api/schedule/assign 手动分配班次
+ * @apiName AssignShift
+ * @apiGroup Schedule
+ * @apiDescription 手动为员工分配班次，包括验证排班表、员工和班次是否存在，以及检查时间冲突
+ * 
+ * @apiBody {Number} scheduleId 排班表ID
+ * @apiBody {Number} shiftId 班次ID
+ * @apiBody {Number} employeeId 员工ID
+ * @apiBody {String} date 日期 (YYYY-MM-DD)
+ * @apiBody {String} startTime 开始时间 (HH:mm:ss)
+ * @apiBody {String} endTime 结束时间 (HH:mm:ss)
+ * 
+ * @apiSuccess {Object} data 响应数据
+ * @apiSuccess {String} data.message 成功消息
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少必要参数"
+ *     }
+ * 
+ * @apiErrorExample {json} 排班表不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "排班表不存在"
+ *     }
+ * 
+ * @apiErrorExample {json} 员工不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "员工不存在"
+ *     }
+ * 
+ * @apiErrorExample {json} 班次不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "班次不存在"
+ *     }
+ * 
+ * @apiErrorExample {json} 排班冲突:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "该员工在所选时间段已有排班"
+ *     }
+ */
 app.post('/assign', async (req, res) => {
   try {
     const { scheduleId, shiftId, employeeId, date, startTime, endTime } = req.body
@@ -443,7 +589,33 @@ app.post('/assign', async (req, res) => {
   }
 })
 
-// 获取排班表
+/**
+ * @api {get} /api/schedule/:storeId 获取排班表
+ * @apiName GetSchedule
+ * @apiGroup Schedule
+ * @apiDescription 获取指定门店在给定时间范围内的排班表
+ * 
+ * @apiParam {Number} storeId 门店ID
+ * @apiQuery {String} startDate 开始日期 (YYYY-MM-DD)
+ * @apiQuery {String} endDate 结束日期 (YYYY-MM-DD)
+ * @apiQuery {String} [view] 视图类型 (employee: 按员工分组, day: 按日期分组)
+ * 
+ * @apiSuccess {Object} schedule 排班表信息
+ * @apiSuccess {Number} schedule.id 排班表ID
+ * @apiSuccess {Number} schedule.store_id 门店ID
+ * @apiSuccess {String} schedule.start_date 开始日期
+ * @apiSuccess {String} schedule.end_date 结束日期
+ * @apiSuccess {Object[]} [schedule.employees] 员工视图下的排班信息
+ * @apiSuccess {Object[]} [schedule.days] 日期视图下的排班信息
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 参数缺失:
+ *     HTTP/1.1 400 Bad Request
+ *     {
+ *       "error": "缺少必要参数"
+ *     }
+ */
 app.get('/:storeId', async (req, res) => {
   try {
     const { storeId } = req.params
@@ -547,7 +719,24 @@ app.get('/:storeId', async (req, res) => {
   }
 })
 
-// 删除排班表
+/**
+ * @api {delete} /api/schedule/:scheduleId 删除排班表
+ * @apiName DeleteSchedule
+ * @apiGroup Schedule
+ * @apiDescription 删除指定的排班表
+ * 
+ * @apiParam {Number} scheduleId 排班表ID
+ * 
+ * @apiSuccess {String} message 成功消息
+ * 
+ * @apiError {String} error 错误信息
+ * 
+ * @apiErrorExample {json} 排班表不存在:
+ *     HTTP/1.1 404 Not Found
+ *     {
+ *       "error": "排班表不存在"
+ *     }
+ */
 app.delete('/:scheduleId', async (req, res) => {
   try {
     const { scheduleId } = req.params
