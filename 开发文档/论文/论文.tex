@@ -105,10 +105,38 @@
 \section{总体设计}
 \subsection{前后端分离}
 \subsubsection{前端技术选型}
+前端系统采用Vue 3组合式API开发，主要技术栈包括：
+\begin{itemize}
+    \item \textbf{核心框架}: Vue 3.5 + TypeScript 5.6 构建响应式界面
+    \item \textbf{UI组件库}: Element Plus 2.9 实现管理系统视觉规范
+    \item \textbf{状态管理}: Pinia 2.3 管理门店/员工/排班等业务状态
+    \item \textbf{构建工具}: Vite 6.2 实现HMR热更新和按需编译
+    \item \textbf{可视化引擎}: Canvas + ECharts 实现排班表拖拽交互
+\end{itemize}
+
 \subsubsection{后端技术选型}
+后端服务基于Node.js技术栈构建，关键组件包括：
+\begin{itemize}
+    \item \textbf{运行时}: Node.js 20 + ES Module 规范
+    \item \textbf{Web框架}: Express 4.21 构建RESTful API
+    \item \textbf{数据存储}: MySQL 8.0 关系型数据库
+    \item \textbf{安全认证}: JWT + bcryptjs 实现接口鉴权
+    \item \textbf{微服务通信}: HTTP Proxy Middleware 3.0 实现服务间调用
+\end{itemize}
+
 \subsubsection{接口设计}
+系统采用RESTful规范设计接口，主要特征包括：
+\begin{itemize}
+    \item \textbf{资源定位}: 使用/store/{id}/employees等层级URL结构
+    \item \textbf{状态码规范}: 200系列成功码与400系列错误码分离
+    \item \textbf{数据格式}: 请求/响应体统一使用JSON格式
+    \item \textbf{文档管理}: 基于Swagger UI维护API文档
+    \item \textbf{版本控制}: 通过/v1/前缀实现接口版本管理
+\end{itemize}
 \subsection{微服务架构}
 \subsection{算法设计}
+\subsubsection{智能排班算法}
+\subsubsection{预测引擎}
 
 \section{程序设计与编码}
 
