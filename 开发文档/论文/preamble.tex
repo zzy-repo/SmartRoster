@@ -5,7 +5,11 @@
 \usepackage{titlesec}    % 允许自定义章节标题的格式和样式
 \usepackage{tocloft}     % 提供对目录(TOC)、图表目录(LOF/LOT)格式的精细控制
 \usepackage{fontspec}    % XeLaTeX/LuaLaTeX下的字体设置包，支持系统字体和OpenType特性
-\usepackage{xeCJK}
+\usepackage{xeCJK}       % 用于支持CJK文本的字体设置
+
+% 定义字体
+\setCJKmainfont{Songti SC}  % 调用宋体
+\setmainfont{Times New Roman} % 西文主字体
 
 % 定义纸张大小
 % 论文采用A4纸打印。页边距：上3厘米，下2厘米，左3厘米，右2厘米；装订线1厘米；页眉距边界2厘米，页脚距边界1厘米。
@@ -26,7 +30,7 @@
 % 设置摘要、目录等标题样式
 % "摘要"、"目录"、 "致谢"、"参考文献"，"附录"等为黑体三号字，"ABSTRACT"为Times New Roman加黑三号字，均居中，单倍行距，段前2行，段后2行。
 \renewcommand{\abstractname}{\heiti\zihao{3}\centering 摘要}
-\newcommand{\engabstractname}{\fontfamily{ptm}\selectfont\bfseries\zihao{3}\centering ABSTRACT}
+\newcommand{\engabstractname}{\selectfont\bfseries\zihao{3}\centering ABSTRACT}
 \renewcommand{\contentsname}{\heiti\zihao{3}\centering 目录}
 \newcommand{\acknowledgement}{\heiti\zihao{3}\centering 致谢}
 \renewcommand{\appendixname}{\heiti\zihao{3}\centering 附录}
@@ -42,7 +46,7 @@
 \renewcommand{\headrulewidth}{0.5pt} % 页眉装饰线粗细设置为0.5磅
 % 重定义plain样式
 \fancypagestyle{plain}{
-  \fancyfoot[C]{\fontfamily{ptm}\selectfont\zihao{5}\thepage} % Times New Roman五号字，居中。
+  \fancyfoot[C]{\selectfont\zihao{5}\thepage} % Times New Roman五号字，居中。
   \renewcommand{\headrulewidth}{0.5pt} % 保留页眉装饰线
 }
 
@@ -55,7 +59,6 @@
 
 % 配置正文内容样式
 % 正文内容中文为宋体小四号字，英文为Times New Roman小四号字，行距20磅，标准字符间距。每一章内容均另起一页。
-\setCJKmainfont{Songti SC}  % 调用宋体
 \renewcommand{\normalsize}{\songti\zihao{-4}} % 设置正文默认字体为宋体小四号
 \linespread{1.5} % 设置行距为20磅（约为1.5倍行距）
 \let\originalsection\section
