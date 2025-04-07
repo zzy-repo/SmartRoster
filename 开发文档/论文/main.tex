@@ -1,9 +1,7 @@
-\documentclass[fontset=fandol]{ctexart}
+\documentclass{ctexart}
 
 % 导入导言区设置
 \input{preamble}
-
-
 \begin{document}
 
 % 封面页、陈诺书（无页码）
@@ -33,20 +31,20 @@
 \end{abstract}
 \newpage
 
-% 英文摘要
-% 英文摘要内容为Times New Roman小四号字，英文摘要内容后下空一行打印“Keywords”为Times New Roman加黑小四号字，其后关键词为小写Times New Roman小四号字。
-\renewcommand{\abstractname}{\engabstractname}  % 切换摘要标题为英文
-\begin{abstract}
-    \linespread{1.5}\selectfont % 设置行距为20磅
-    {\fontfamily{ptm}\selectfont\zihao{-4} % 设置 Times New Roman 小四号字
-    % Abstract content
-    For the low efficiency and complex rules in manual scheduling in the retail industry, this paper designs and implements an intelligent scheduling system based on the simulated annealing algorithm. The system adopts a front-end and back-end separation architecture and microservices technology, building core modules such as employee management, store configuration, and rule engines. Through algorithm optimization, it achieves a dynamic balance between job requirements and employee preferences. Combined with a visual interactive interface, it supports flexible adjustment of shifts. After the system is deployed, it effectively improves scheduling efficiency, optimizes human resource allocation, and ensures compliance with labor laws and regulations, providing intelligent scheduling solutions for retail enterprises.
+% % 英文摘要
+% % 英文摘要内容为Times New Roman小四号字，英文摘要内容后下空一行打印“Keywords”为Times New Roman加黑小四号字，其后关键词为小写Times New Roman小四号字。
+% \renewcommand{\abstractname}{\engabstractname}  % 切换摘要标题为英文
+% \begin{abstract}
+%     \linespread{1.5}\selectfont % 设置行距为20磅
+%     {\fontfamily{ptm}\selectfont\zihao{-4} % 设置 Times New Roman 小四号字
+%     % Abstract content
+%     For the low efficiency and complex rules in manual scheduling in the retail industry, this paper designs and implements an intelligent scheduling system based on the simulated annealing algorithm. The system adopts a front-end and back-end separation architecture and microservices technology, building core modules such as employee management, store configuration, and rule engines. Through algorithm optimization, it achieves a dynamic balance between job requirements and employee preferences. Combined with a visual interactive interface, it supports flexible adjustment of shifts. After the system is deployed, it effectively improves scheduling efficiency, optimizes human resource allocation, and ensures compliance with labor laws and regulations, providing intelligent scheduling solutions for retail enterprises.
     
-    \vspace{\baselineskip} % 添加一个空行
-    {\fontfamily{ptm}\selectfont\bfseries\zihao{-4}Keywords:} % Keywords 标题：Times New Roman 加黑小四号字
-    {\fontfamily{ptm}\selectfont\zihao{-4}intelligent scheduling system; simulated annealing algorithm; front-end and back-end separation; microservices architecture} % 关键词内容：小写 Times New Roman 小四号字，用分号分隔
-    }
-\end{abstract}
+%     \vspace{\baselineskip} % 添加一个空行
+%     {\fontfamily{ptm}\selectfont\bfseries\zihao{-4}Keywords:} % Keywords 标题：Times New Roman 加黑小四号字
+%     {\fontfamily{ptm}\selectfont\zihao{-4}intelligent scheduling system; simulated annealing algorithm; front-end and back-end separation; microservices architecture} % 关键词内容：小写 Times New Roman 小四号字，用分号分隔
+%     }
+% \end{abstract}
 
 
 % 正文开始
@@ -180,34 +178,51 @@
 \subsubsection{前端技术选型}
 前端系统采用Vue 3组合式API开发，构建了完整的技术栈体系，主要包含以下核心组件：
 \begin{itemize}
-    \item \textbf{核心框架}: Vue 3.5 + TypeScript 5.6 构建响应式界面，提供高效的开发体验和类型安全支持
-    \item \textbf{UI组件库}: Element Plus 2.9 实现管理系统视觉规范，提供丰富的UI组件和交互设计
-    \item \textbf{状态管理}: Pinia 2.3 管理门店/员工/排班等业务状态，实现数据的集中管理和响应式更新
-    \item \textbf{构建工具}: Vite 6.2 实现HMR热更新和按需编译，提升开发效率和构建性能
-    \item \textbf{CSS样式}: UnoCss 4.6 实现原子化CSS，优化样式管理和性能表现
+    \item \textbf{核心框架与工具}: Vue 3 + TypeScript 5 构建响应式界面，Vite实现热更新和高效构建
+    \item \textbf{UI与样式}: Element Plus实现管理系统视觉规范，UnoCSS提供原子化CSS支持
+    \item \textbf{状态与路由}: Pinia管理业务状态，Vue Router实现基于角色的权限控制
+    \item \textbf{网络与通信}: Axios封装HTTP请求，统一处理认证和错误响应
 \end{itemize}
 
 \subsubsection{后端技术选型}
-后端服务基于Node.js技术栈构建，采用模块化设计思想，构建了完整的后端技术体系，主要包含以下核心组件：
+后端服务基于Node.js技术栈构建，采用微服务架构设计，构建了完整的后端技术体系，主要包含以下核心组件：
 \begin{itemize}
-    \item \textbf{运行时}: Node.js 20 + ES Module 规范，提供高效的JavaScript运行环境和模块化支持
-    \item \textbf{Web框架}: Express 4.21 构建RESTful API，提供简洁的路由和中间件支持
-    \item \textbf{数据存储}: MySQL 8.0 关系型数据库，提供可靠的数据持久化解决方案
-    \item \textbf{安全认证}: JWT + bcryptjs 实现接口鉴权，确保系统访问的安全性
-    \item \textbf{微服务通信}: HTTP Proxy Middleware 3.0 实现服务间调用，支持微服务架构下的服务通信
-    \item \textbf{API文档}: apidoc 自动生成API文档，提升接口开发效率和可维护性
+    \item \textbf{运行环境与框架}: Node.js 20 + Express构建RESTful API服务，支持ES Module规范
+    \item \textbf{数据与安全}: MySQL 8.0提供数据持久化，JWT + bcryptjs实现认证与加密
+    \item \textbf{微服务与通信}: HTTP Proxy Middleware实现API网关和服务间调用
+    \item \textbf{开发与测试}: Nodemon支持热重载，Vitest + Supertest提供测试框架
 \end{itemize}
 
 \subsubsection{接口设计}
 系统采用RESTful规范设计接口，主要特征包括：
 \begin{itemize}
-    \item \textbf{资源定位}: 使用/store/{id}/employees等层级URL结构
-    \item \textbf{状态码规范}: 200系列成功码与400系列错误码分离
-    \item \textbf{数据格式}: 请求/响应体统一使用JSON格式
-    \item \textbf{文档管理}: 基于Swagger UI维护API文档
-    \item \textbf{版本控制}: 通过/v1/前缀实现接口版本管理
+    \item \textbf{资源定位}: 使用/store/{id}/employees等层级URL结构，符合RESTful资源命名规范
+    \item \textbf{状态码规范}: 200系列成功码与400系列错误码分离，统一错误响应格式
+    \item \textbf{数据格式}: 请求/响应体统一使用JSON格式，支持跨平台数据交换
+    \item \textbf{文档管理}: 基于apidoc自动生成API文档，提供接口说明和示例
 \end{itemize}
+
 \subsection{微服务架构}
+系统采用轻量级微服务架构设计，将业务功能拆分为多个独立部署的服务模块，实现高内聚低耦合的系统结构。微服务架构主要包含以下几个核心组件：
+
+\begin{itemize}
+    \item \textbf{API网关层}：作为系统的统一入口，负责请求路由、负载均衡和安全认证，采用HTTP Proxy Middleware实现服务转发和跨域处理。网关层对外提供统一的RESTful API接口，屏蔽内部服务实现细节。
+    
+    \item \textbf{业务服务层}：按照业务领域划分为多个独立微服务，每个微服务负责特定的业务功能：
+    \begin{itemize}
+        \item \textbf{员工服务}：负责员工信息管理、技能档案维护和工作偏好设置，提供员工数据的CRUD操作接口
+        \item \textbf{门店服务}：管理门店基础信息、营业时间配置和岗位需求设置，支持多层级门店组织结构
+        \item \textbf{排班服务}：集成模拟退火算法引擎，处理自动排班请求，提供班次分配和调整功能
+        \item \textbf{规则服务}：维护排班规则库，提供规则校验和冲突检测能力，确保排班结果符合业务约束
+    \end{itemize}
+    
+    \item \textbf{数据持久层}：采用MySQL关系型数据库存储业务数据，按服务边界划分数据库schema，保证数据隔离性。每个微服务仅访问自身所需的数据表，避免跨库操作。
+    
+    \item \textbf{通信机制}：服务间采用RESTful API进行同步通信，关键业务事件通过消息队列实现异步通知，保证数据最终一致性。服务调用链路通过请求头传递上下文信息，支持分布式追踪。
+\end{itemize}
+
+微服务架构的采用为系统带来以下优势：首先，服务独立部署减少了模块间耦合，支持技术栈灵活选择；其次，按业务领域划分服务边界，提高了代码可维护性；最后，服务可独立扩展，针对高负载模块（如排班算法引擎）单独进行资源配置，优化系统整体性能。
+
 \subsection{算法设计}
 \subsubsection{智能排班算法}
 \subsubsection{预测引擎}
