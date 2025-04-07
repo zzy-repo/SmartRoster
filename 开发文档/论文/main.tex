@@ -2,6 +2,8 @@
 
 % 导入导言区设置
 \input{preamble}
+\raggedbottom % 禁止垂直拉伸填充
+
 \begin{document}
 
 % 封面页、陈诺书（无页码）
@@ -13,7 +15,7 @@
 % 摘要、目录（无页码）
 \pagenumbering{gobble} % 禁用页码
 \tableofcontents
-\newpage
+\clearpage
 
 % 中文摘要
 % 中文摘要内容为宋体小四号字，摘要内容后下空一行打印“关键词”为黑体小四号字，其后关键词为宋体小四号字；
@@ -28,7 +30,7 @@
     {\songti\zihao{-4}智能排班系统；模拟退火算法；前后端分离；微服务架构} % 关键词内容：宋体小四号字，用分号分隔
     }
 \end{abstract}
-\newpage
+\clearpage
 
 % 英文摘要
 % 英文摘要内容为Times New Roman小四号字，英文摘要内容后下空一行打印“Keywords”为Times New Roman加黑小四号字，其后关键词为小写Times New Roman小四号字。
@@ -44,10 +46,10 @@
     {\selectfont\zihao{-4}intelligent scheduling system; simulated annealing algorithm; front-end and back-end separation; microservices architecture} % 关键词内容：小写 Times New Roman 小四号字，用分号分隔
     }
 \end{abstract}
+\clearpage
 
 
 % 正文开始
-\clearpage
 \pagenumbering{arabic}
 \setcounter{page}{1} % 正文页码从1开始
 \pagestyle{plain} % 使用重定义的plain样式

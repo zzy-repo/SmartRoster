@@ -35,7 +35,6 @@
 \renewcommand{\appendixname}{\heiti\zihao{3}\centering 附录}
 \renewcommand{\refname}{\heiti\zihao{3}\centering 参考文献} % 添加参考文献标题样式
 
-
 % 配置页眉页脚样式
 % 全文除封面、封底无页眉外，均采用页眉“杭州电子科技大学本科毕业论文”或“杭州电子科技大学本科毕业设计”。宋体五号字，居中。
 % 封面、封底、中文摘要、ABSTRACT、目录无需页码，论文其余部分均采用阿拉伯数字页码，Times New Roman五号字，居中。
@@ -49,13 +48,6 @@
   \renewcommand{\headrulewidth}{0.5pt} % 保留页眉装饰线
 }
 
-% 配置正文标题样式
-% 正文第一级标题为黑体三号字，居中，单倍行距，段前2行，段后2行。第二级标题为黑体四号字，第三级标题为黑体小四号字、
-\titleformat{\section}{\heiti\zihao{3}\centering}{\thesection}{1em}{} % 第一级标题为黑体三号字，居中，单倍行距
-\titlespacing*{\section}{0pt}{2\baselineskip}{2\baselineskip} % 段前2行，段后2行
-\titleformat{\subsection}{\heiti\zihao{4}}{\thesubsection}{1em}{} % 第二级标题为黑体四号字
-\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{1em}{} % 第三级标题为黑体小四号字
-
 % 配置正文内容样式
 % 正文内容中文为宋体小四号字，英文为Times New Roman小四号字，行距20磅，标准字符间距。每一章内容均另起一页。
 \renewcommand{\normalsize}{\songti\zihao{-4}} % 设置正文默认字体为宋体小四号
@@ -63,3 +55,9 @@
 \let\originalsection\section
 \renewcommand{\section}{\clearpage\originalsection} % 设置每章另起一页
 \setlength{\parindent}{2em} % 设置首行缩进为2个汉字
+
+% 配置正文标题样式
+% 正文第一级标题为黑体三号字，居中，单倍行距，段前2行，段后2行。第二级标题为黑体四号字，第三级标题为黑体小四号字
+\titleformat{\section}{\heiti\zihao{3}\centering}{\thesection}{1em}{} % 第一级标题为黑体三号字，居中，单倍行距
+\titleformat{\subsection}{\heiti\zihao{4}}{\thesubsection}{1em}{} % 第二级标题为黑体四号字
+\titleformat{\subsubsection}{\heiti\zihao{-4}}{\thesubsubsection}{1em}{} % 第三级标题为黑体小四号字
