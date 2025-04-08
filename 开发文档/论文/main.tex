@@ -1,7 +1,7 @@
 \documentclass{ctexart}
 
 % 导入导言区设置
-\input{preamble}
+\input{style}
 \raggedbottom % 禁止垂直拉伸填充
 
 \begin{document}
@@ -11,11 +11,6 @@
 \includepdf[pages={2}]{./source/封面页.pdf}
 \setcounter{page}{0}   % 重置页码计数器
 
-
-% 摘要、目录（无页码）
-\pagenumbering{gobble} % 禁用页码
-\tableofcontents
-\clearpage
 
 % 中文摘要
 % 中文摘要内容为宋体小四号字，摘要内容后下空一行打印“关键词”为黑体小四号字，其后关键词为宋体小四号字；
@@ -48,6 +43,10 @@
 \end{abstract}
 \clearpage
 
+% 摘要、目录（无页码）
+\pagenumbering{gobble} % 禁用页码
+\tableofcontents
+\clearpage
 
 % 正文开始
 \pagenumbering{arabic}
@@ -74,7 +73,7 @@
 
 \section{需求分析}
 \subsection{功能分析}
-\subsubsection{功能概述}
+\subsubsection{概述}
 
 智能排班系统是为零售门店管理者设计的Web应用，基于前后端分离与微服务架构开发，支持自动化排班与人工调整。系统通过匹配员工岗位、时间可用性及偏好规则，一键生成周排班表。生成的排班表支持按日/周视图查看，可基于技能、岗位或员工分组展示，并提供手动修改功能，实现班次灵活分配。
 
@@ -105,11 +104,11 @@
             \item \textbf{智能排班}：基于模拟退火算法，综合考虑员工偏好、岗位匹配度和排班规则等多维度因素，生成最优化的排班方案
         \end{itemize}
     
-    % \item \textbf{业务预测引擎}：作为系统的核心计算模块，业务预测引擎负责根据历史数据和业务趋势，预测未来7日内各时段的客流规模，为智能排班提供基础数据支撑。
-    %     \begin{itemize}
-    %         \item \textbf{时序分析}：基于历史客流数据，利用ARIMA模型进行时间序列预测，生成未来7日内各时段的客流规模
-    %         \item \textbf{岗位需求预测}：基于预测客流数据，结合门店规模和岗位需求配置，生成未来7日内各岗位的需求规模
-    %     \end{itemize}
+    \item \textbf{业务预测引擎}：作为系统的核心计算模块，业务预测引擎负责根据历史数据和业务趋势，预测未来7日内各时段的客流规模，为智能排班提供基础数据支撑。
+        \begin{itemize}
+            \item \textbf{时序分析}：基于历史客流数据，利用ARIMA模型进行时间序列预测，生成未来7日内各时段的客流规模
+            \item \textbf{岗位需求预测}：基于预测客流数据，结合门店规模和岗位需求配置，生成未来7日内各岗位的需求规模
+        \end{itemize}
     
 \end{itemize}
 
@@ -204,7 +203,7 @@
 \end{itemize}
 
 \subsection{微服务架构}
-系统采用轻量级微服务架构设计，将业务功能拆分为多个独立部署的服务模块，实现高内聚低耦合的系统结构。微服务架构主要包含以下几个核心组件：
+系统采用轻量级微服务架构设计，将业务功能拆分为多个独立部署的服务模块，实现高内聚低耦合系统结构。微服务架构主要包含以下几个核心组件：
 
 \begin{itemize}
     \item \textbf{API网关层}：作为系统的统一入口，负责请求路由、负载均衡和安全认证，采用HTTP Proxy Middleware实现服务转发和跨域处理。网关层对外提供统一的RESTful API接口，屏蔽内部服务实现细节。
@@ -224,18 +223,183 @@
 
 微服务架构的采用为系统带来以下优势：首先，服务独立部署减少了模块间耦合，支持技术栈灵活选择；其次，按业务领域划分服务边界，提高了代码可维护性；最后，服务可独立扩展，针对高负载模块（如排班算法引擎）单独进行资源配置，优化系统整体性能。
 
-\subsection{算法设计}
-\subsubsection{智能排班算法}
-\subsubsection{预测引擎}
+\subsection{智能排班算法设计}
+本系统采用模拟退火算法（Simulated Annealing, SA）作为核心排班优化方法，结合启发式规则生成初始解，并通过邻域搜索逐步改进解的质量。算法设计主要包括以下几个关键步骤：
+
+\subsubsection{问题定义}
+给定一组员工和班次需求，设计一个排班方案，使得：
+\begin{itemize}
+    \item 满足班次对职位和人数的需求
+    \item 尽可能满足员工的工作日偏好、时间偏好以及工时限制
+    \item 最小化违规成本（如人员不足、违反工作日或时间偏好、超出工时限制等）
+\end{itemize}
+
+\subsubsection{算法步骤}
+\begin{enumerate}
+    \item \textbf{数据预处理}：对员工数据（包括姓名、职位、门店、工作偏好等）和班次数据（包括日期、时间段、所需职位及人数等）进行结构化处理，构建辅助数据结构，如按门店和职位分类员工，计算职位需求总量、供给总量及稀缺度。
+    
+    \item \textbf{初始解生成}：按职位稀缺度对班次进行排序，优先处理包含稀缺职位的班次。对每个班次，根据员工的工作日偏好、时间偏好和已分配工时，计算候选员工的评分，选择评分最高的员工进行分配。
+    
+    \item \textbf{成本计算}：评估排班方案的成本，包括人员不足、工作日偏好冲突、时间偏好冲突和工时限制冲突等违规成本。总成本计算公式为：
+    \begin{equation}
+    \begin{split}
+    \text{总成本} = & \sum_{i} \text{人员不足成本}_i + \sum_{j} \text{工作日偏好冲突成本}_j \\
+                   & + \sum_{k} \text{时间偏好冲突成本}_k + \sum_{l} \text{工时限制冲突成本}_l
+    \end{split}
+    \end{equation}
+    
+    \item \textbf{邻域搜索}：通过替换操作（从当前班次中移除一名员工，并随机选择一名未分配的候选员工进行替换）、交换操作（在两个不同的班次之间交换具有相同职位的员工）和移动操作（将一名员工从一个班次移动到另一个需要该职位的班次）生成新的排班方案。
+    
+    \item \textbf{模拟退火优化}：通过模拟退火算法逐步改进排班方案。初始化温度$T$和当前解，在当前温度下重复生成邻域解并计算新解成本。如果新解更优，则接受新解；如果新解较差，则以概率$\exp(-\Delta C / T)$接受新解（其中$\Delta C = \text{new\_cost} - \text{current\_cost}$）。降低温度$T = T \times \text{cooling\_rate}$，直至温度低于最小值。
+\end{enumerate}
+
+\subsubsection{关键模块设计}
+\begin{itemize}
+    \item \textbf{职位稀缺度计算}：优先处理稀缺职位，避免因职位短缺导致大面积违规。
+    \begin{equation}
+    \text{稀缺度}_{\text{职位}} = \frac{\text{供给量}_{\text{职位}}}{\text{需求量}_{\text{职位}}}
+    \end{equation}
+    
+    \item \textbf{候选员工评分}：根据员工偏好和已分配工时，合理选择候选员工。
+    \begin{equation}
+    \text{评分} = 3 \times \text{工作日偏好匹配度} + 2 \times \text{时间偏好匹配度} + \text{工时评分} - \text{当日任务惩罚}
+    \end{equation}
+    
+    \item \textbf{模拟退火参数控制}：初始温度设为100.0，最小温度为0.1，降温速率为0.95，每温度迭代次数为100。
+\end{itemize}
+
+\subsubsection{复杂度分析}
+\begin{itemize}
+    \item \textbf{时间复杂度}：初始解生成为$O(S \times P \times E)$，其中$S$是班次数量，$P$是职位种类数，$E$是员工数量；成本计算为$O(S \times E)$；模拟退火为$O(T \times \text{iter\_per\_temp})$，其中$T$是温度下降次数。
+    
+    \item \textbf{空间复杂度}：主要存储班次、员工及其分配信息，复杂度为$O(S + E)$。
+\end{itemize}
+
+\subsubsection{算法优势}
+该算法结合启发式规则和模拟退火优化方法，能够高效地生成高质量的排班方案。通过职位稀缺度排序、候选员工评分和邻域搜索策略，算法能够在满足约束条件的同时，尽可能降低违规成本，适用于零售行业复杂的实际排班场景。
+
+\subsection{业务预测算法设计}
 
 \section{程序设计与编码}
+\subsection{代码结构}
+系统代码采用模块化组织方式，主要分为以下核心模块：
+\begin{itemize}
+    \item \textbf{前端模块}：位于src/client目录，采用Vue 3组合式API开发
+    \begin{itemize}
+        \item components/: 通用UI组件库（门店选择器、员工卡片、排班日历等）
+        \item stores/: Pinia状态管理（员工状态、门店状态、排班状态）
+        \item routes/: 基于角色的路由配置（管理员/店长视图权限分离）
+        \item views/: 业务页面（员工管理页、排班调整页、报表页）
+    \end{itemize}
+
+    \item \textbf{后端模块}：位于src/server目录，采用微服务架构设计
+    \begin{itemize}
+        \item services/: 微服务实现（员工服务、门店服务、排班服务）
+        \item models/: 数据库模型定义（Sequelize ORM映射）
+        \item routes/: RESTful API路由（员工CRUD、排班生成接口）
+        \item middleware/: JWT认证、请求日志等中间件
+    \end{itemize}
+
+    \item \textbf{算法模块}：位于根目录scheduler.py，包含排班核心逻辑
+    \begin{itemize}
+        \item SimulatedAnnealing: 模拟退火算法实现类
+        \item ScheduleGenerator: 排班方案生成器，用于算法测试
+        \item utils/: 包含成本计算、邻域搜索等工具函数
+    \end{itemize}
+
+    \item \textbf{公共组件}：
+    \begin{itemize}
+        \item types/: 共享类型定义（员工实体、排班规则等TypeScript接口）
+        \item config/: 统一配置文件（数据库连接、算法参数）
+    \end{itemize}
+\end{itemize}
+代码仓库遵循标准化工程规范，包含ESLint代码检查、Vitest测试框架配置、API文档生成等基础设施。通过package.json和vite.config.ts实现跨环境构建配置，确保开发与生产环境一致性。
+
+\subsection{前端实现}
+前端系统基于Vue 3组合式API开发，主要实现以下核心功能模块：
+
+\begin{itemize}
+    \item \textbf{员工管理模块}：
+    \begin{itemize}
+        \item 使用Element Plus表格组件实现员工信息CRUD功能
+        \item 开发基于Vuex的状态管理，维护员工数据全局状态
+        \item 实现Excel导入导出功能，采用SheetJS库处理文件解析
+    \end{itemize}
+
+    \item \textbf{排班可视化模块}：
+    \begin{itemize}
+        \item 基于FullCalendar开发排班日历组件
+        \item 实现拖拽功能，使用HTML5 Drag \& Drop API
+        \item 开发实时校验逻辑，监控工时合规性
+    \end{itemize}
+
+    \item \textbf{权限控制模块}：
+    \begin{itemize}
+        \item 实现动态路由加载，根据用户角色过滤路由表
+        \item 开发指令级权限控制(v-permission)
+    \end{itemize}
+\end{itemize}
+
+\subsection{后端实现}
+后端采用Node.js + Express框架，核心服务实现如下：
+
+\begin{itemize}
+    \item \textbf{员工服务}：
+    \begin{itemize}
+        \item 实现JWT认证中间件，使用bcryptjs加密密码
+        \item 开发RESTful API，支持员工信息的增删改查
+        \item 使用Sequelize ORM实现MySQL数据持久化
+    \end{itemize}
+
+    \item \textbf{排班服务}：
+    \begin{itemize}
+        \item 封装模拟退火算法为独立服务
+        \item 实现排班规则校验引擎
+        \item 开发排班结果缓存机制
+    \end{itemize}
+
+    \item \textbf{API网关}：
+    \begin{itemize}
+        \item 实现请求路由和负载均衡
+        \item 开发统一错误处理中间件
+        \item 集成Swagger UI自动生成API文档
+    \end{itemize}
+\end{itemize}
+
+\subsection{算法实现}
+核心排班算法采用Python实现，主要模块包括：
+
+\begin{itemize}
+    \item \textbf{数据结构}：
+    \begin{itemize}
+        \item 定义Employee类封装员工属性和偏好
+        \item 定义Shift类表示班次需求
+        \item 使用NumPy数组存储排班矩阵
+    \end{itemize}
+
+    \item \textbf{核心算法}：
+    \begin{itemize}
+        \item 实现模拟退火算法主循环
+        \item 开发邻域搜索操作(替换、交换、移动)
+        \item 设计多目标成本函数
+    \end{itemize}
+
+    \item \textbf{性能优化}：
+    \begin{itemize}
+        \item 使用Numba加速数值计算
+        \item 实现并行化邻域搜索
+        \item 开发结果缓存机制
+    \end{itemize}
+\end{itemize}
+
+\section{结果展示}
 
 \section{结论}
+本文设计并实现了一套基于模拟退火算法的智能排班系统，针对零售行业排班场景中的复杂约束条件，提出了完整的解决方案。系统采用前后端分离架构与微服务技术，实现了员工管理、门店配置、智能排班等核心功能模块。通过模拟退火算法优化排班方案，在保证合规性的同时兼顾员工偏好，显著提升了排班效率。实际测试表明，系统能够快速生成高质量排班方案，有效降低人力成本并提高员工满意度。未来可进一步扩展预测算法精度和多目标优化能力，以适应更复杂的商业场景需求。
 
 % 致谢
 \section*{致谢}
 \addcontentsline{toc}{section}{致谢}
-在此感谢所有对本论文提供帮助和支持的老师、同学和家人。
 % 这里添加致谢内容
 
 % 参考文献
