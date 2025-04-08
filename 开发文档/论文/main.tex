@@ -138,39 +138,9 @@
 \end{itemize}
 \subsection{可行性分析}
 \begin{itemize}
-    \item \textbf{技术可行性}
-    \begin{itemize}
-        \item 采用微服务架构实现组件解耦，核心排班算法时间复杂度控制在多项式量级
-        \item 基于时间序列的预测模型实现90\%+的历史数据拟合度，支持7日内客流预测
-        \item 经压力测试验证，系统可支撑50+门店/500+员工规模的分钟级排班生成
-        \item 可视化引擎采用Canvas渲染技术，实现毫秒级视图刷新与千级班次实时渲染
-    \end{itemize}
-    
-    \item \textbf{经济可行性}
-    \begin{itemize}
-        \item 实施效益：自动化排班效率较人工提升300\%，单店年度节省管理工时约1500小时
-        \item 资源优化：通过智能匹配降低15\%-20\%冗余人力成本，减少用工纠纷风险
-        \item 硬件成本：采用容器化部署方案，单节点可支撑日均百万级API调用
-        \item ROI周期：中型连锁企业（10门店）预计6-8个月收回系统投入成本
-    \end{itemize}
-    
-    \item \textbf{操作可行性}
-    \begin{itemize}
-        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用数学模式
-        // 或者
-        \item 可视化工作台实现零代码排班调整，新用户培训周期$\leq$2小时 % 使用 textcomp 宏包
-        \item 多级权限体系支持总部-区域-门店三级管理视图，权限粒度控制到功能按钮
-        \item 系统可靠性：采用双活数据中心部署，业务中断恢复时间$\leq$5分钟
-        \item 数据安全性：符合GDPR标准，敏感数据全程加密，操作日志保留180天
-    \end{itemize}
+    \item \textbf{技术可行性}：系统采用Vue3、Node.js等成熟技术栈构建，模拟退火算法在排班领域的应用已得到多个学术研究验证（潘云龙, 2013; 熊静, 2020）。前后端分离架构和微服务技术在大中型系统中具有广泛应用实践，MySQL关系数据库可满足基础数据管理需求。通过分层架构设计和模块解耦，各技术组件整合难度处于可控范围。
 
-    \item \textbf{行业可行性}
-    \begin{itemize}
-        \item 适配零售行业特性：支持早晚班弹性配置、促销期临时扩编等场景
-        \item 合规性保障：内置各地劳动法规则引擎，自动校验工时合规性
-        \item 扩展能力：通过标准化接口支持与主流HR系统、考勤设备对接
-        \item 移动适配：管理端支持PAD/手机等多终端访问，员工端提供微信小程序
-    \end{itemize}
+    \item \textbf{经济可行性}：基于开源技术栈开发可节省软件许可费用，项目硬件投入仅需常规服务器设备。已有案例研究表明（林畅, 2019），智能排班系统可显著降低人工排班时间成本，预期系统上线后3-6个月内可通过效率提升收回开发投入。长期运维费用主要集中于服务器托管和日常维护人力。
 \end{itemize}
 
 \section{总体设计}
@@ -218,8 +188,15 @@
     
     \item \textbf{数据持久层}：采用MySQL关系型数据库存储业务数据，按服务边界划分数据库schema，保证数据隔离性。每个微服务仅访问自身所需的数据表，避免跨库操作。
     
-    \item \textbf{通信机制}：服务间采用RESTful API进行同步通信，关键业务事件通过消息队列实现异步通知，保证数据最终一致性。服务调用链路通过请求头传递上下文信息，支持分布式追踪。
 \end{itemize}
+
+%在这里导入图片
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{./source/微服务架构图.png}
+    \caption{系统微服务架构示意图}
+    \label{fig:microservice-arch}
+\end{figure}
 
 微服务架构的采用为系统带来以下优势：首先，服务独立部署减少了模块间耦合，支持技术栈灵活选择；其次，按业务领域划分服务边界，提高了代码可维护性；最后，服务可独立扩展，针对高负载模块（如排班算法引擎）单独进行资源配置，优化系统整体性能。
 
@@ -233,6 +210,50 @@
     \item 尽可能满足员工的工作日偏好、时间偏好以及工时限制
     \item 最小化违规成本（如人员不足、违反工作日或时间偏好、超出工时限制等）
 \end{itemize}
+
+\begin{table}[H]
+    \centering
+    \caption{算法输入输出规范}
+    \label{tab:io_spec}
+    \begin{tabularx}{\linewidth}{|l|X|X|}
+    \hline
+    \textbf{类别} & \textbf{数据结构} & \textbf{说明} \\ \hline
+    
+    \multirow{3}{*}{\textbf{输入}}
+        & \texttt{List[Employee]} & 员工属性包含：姓名、职位、所属门店、工作日偏好、时间偏好、每日/每周最大工时限制 \\ \cline{2-3}
+        & \texttt{List[Shift]}    & 班次属性包含：日期（0-6）、时间段、所需职位及人数、所属门店 \\ \cline{2-3}
+        & \texttt{Dict[str, Any]} & 算法参数（初始温度=100.0，降温速率=0.95） \\ \hline
+    
+    \multirow{2}{*}{\textbf{输出}}
+        & \texttt{List[Tuple[Shift, Dict[str, List[Employee]]]} & 排班方案包含班次和职位-员工分配映射 \\ \cline{2-3}
+        & \texttt{float} & 排班方案总成本（违规成本总和） \\ \hline
+    \end{tabularx}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{算法参数配置}
+    \label{tab:sa_params}
+    \begin{tabularx}{\linewidth}{|l|X|c|}
+    \hline
+    \textbf{参数类别} & \textbf{说明} & \textbf{默认值} \\ \hline
+    
+    \multirow{5}{*}{\textbf{模拟退火参数}} 
+        & 初始温度 & 100.0 \\ \cline{2-3}
+        & 最小终止温度 & 0.1 \\ \cline{2-3}
+        & 退火速率（每迭代步温度衰减系数） & 0.95 \\ \cline{2-3}
+        & 每温度迭代次数 & 100 \\ \cline{2-3}
+        & 最大迭代次数 & 50 \\ \hline
+    
+    \multirow{5}{*}{\textbf{成本参数}}
+        & 岗位缺员单位成本 & 100 \\ \cline{2-3}
+        & 工作日偏好冲突单位成本 & 10 \\ \cline{2-3}
+        & 时间偏好冲突单位成本 & 5 \\ \cline{2-3}
+        & 日超时工作单位成本 & 20 \\ \cline{2-3}
+        & 周超时工作单位成本 & 50 \\ \hline
+    \end{tabularx}
+\end{table}
+    
 
 \subsubsection{算法步骤}
 \begin{enumerate}
