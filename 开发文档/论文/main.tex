@@ -394,6 +394,62 @@
 \end{itemize}
 
 \subsection{数据库设计}
+\subsubsection{核心设计原则}
+\begin{itemize}
+    \item \textbf{范式遵循与数据原子性}
+    \begin{itemize}
+        \item 采用第三范式(3NF)设计，通过主外键约束保证数据原子性。例如：
+        \begin{itemize}
+            \item 员工技能表(\texttt{employee\_skills})使用复合主键(\texttt{employee\_id}, \texttt{skill\_id})解耦多值依赖
+            \item 技能表(\texttt{skills})字段\texttt{name}定义为不可再分的原子值（如"收银"/"导购"）
+        \end{itemize}
+        
+        \item 弱关联引用设计：
+        \begin{itemize}
+            \item 门店表(\texttt{stores})的\texttt{manager\_id}仅记录\texttt{users.id}数值关联
+            \item 通过应用层事务补偿机制确保数据一致性
+        \end{itemize}
+    \end{itemize}
+
+    \item \textbf{领域模型驱动的模块化架构}
+    \begin{table}[H]
+        \centering
+        \caption{业务模块与表结构映射关系}
+        \label{tab:db-modules}
+        \begin{tabularx}{\linewidth}{|l|l|X|}
+        \hline
+        \textbf{业务模块} & \textbf{数据库表} & \textbf{设计要点} \\ \hline
+        用户权限 & users & OpenID关联、RBAC角色字段、密码哈希存储 \\ \hline
+        组织架构 & stores & 层级结构字段、经理弱关联、门店属性聚合 \\ \hline
+        技能体系 & skills + employee\_skills & 技能熟练度分级、多对多关系解耦 \\ \hline
+        员工档案 & employees & 工时偏好(最大日/周工时)、岗位属性 \\ \hline
+        班次规则 & shifts + shift\_positions & 时间模板、岗位需求动态配置 \\ \hline
+        排班执行 & schedules + shift\_assignments & 排班周期管理、人工干预记录 \\ \hline
+        \end{tabularx}
+    \end{table}
+
+    \item \textbf{性能优化策略}
+    \begin{itemize}
+        \item \textbf{反规范化设计}：
+        \begin{itemize}
+            \item 排班记录表(\texttt{shift\_assignments})冗余存储\texttt{store\_id}
+            \item 减少通过\texttt{shift\_id}关联查询的开销
+        \end{itemize}
+        
+        \item \textbf{索引优化}：
+        \begin{itemize}
+            \item 为\texttt{employees(store\_id, position)}创建联合索引
+            \item 加速按门店和岗位筛选的高频操作
+        \end{itemize}
+        
+        \item \textbf{扩展性设计}：
+        \begin{itemize}
+            \item 使用Snowflake算法生成分布式主键
+            \item 预留\texttt{schedules\_history}表用于版本追溯
+        \end{itemize}
+    \end{itemize}
+\end{itemize}
+
 
 \subsection{算法实现}
 核心排班算法采用Python实现，主要模块包括：
