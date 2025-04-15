@@ -53,6 +53,9 @@ async function handleLogout() {
             <el-menu-item index="/employees">
               员工管理
             </el-menu-item>
+            <el-menu-item index="/schedules">
+              排班管理
+            </el-menu-item>
             <el-menu-item index="/rules">
               排班规则
             </el-menu-item>

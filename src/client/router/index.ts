@@ -45,14 +45,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/rule/RuleManagement.vue'),
     meta: { title: '排班规则', requiresAuth: true },
   },
-  {
+    {
     path: '/forecast',
     name: 'BusinessForecast',
     component: () => import('@/views/forecast/BusinessForecast.vue'),
     meta: { title: '业务预测', requiresAuth: true },
   },
-
-
+  {
+    path: '/schedules',
+    name: 'ScheduleManagement',
+    component: () => import('@/views/schedule/ScheduleManagement.vue'),
+    meta: { title: '排班管理', requiresAuth: true },
+  },
 ]
 
 // 创建路由实例
