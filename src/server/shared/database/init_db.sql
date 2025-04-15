@@ -91,7 +91,7 @@ CREATE TABLE IF NOT EXISTS shift_assignments (
   FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
 );
 
--- 排班规则表 - 存储排班系统的规则设置（简化版，只包含两种固定规则）
+-- 排班规则表 - 存储排班系统的规则设置
 CREATE TABLE IF NOT EXISTS schedule_rules (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '规则ID，自增主键',
   max_daily_hours INT DEFAULT 8 COMMENT '每日最大工作时长(小时)',
