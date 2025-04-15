@@ -9,7 +9,7 @@ import { employeeApi } from '../../api/employeeApi'
 // 修改类型定义
 interface EmployeePreference {
   availableDays: string[]
-  preferredShiftTypes: string[]
+  
   startTime: string
   endTime: string
   workday_pref: [number, number] // 改回 number 类型
@@ -41,16 +41,10 @@ const weekDays = [
   { label: '周日', value: 7 },
 ]
 
-const shiftTypes = [
-  { label: '早班', value: 'morning' },
-  { label: '中班', value: 'midday' },
-  { label: '晚班', value: 'night' },
-  { label: '通宵班', value: 'overnight' },
-]
+
 
 const preferences = ref<EmployeePreference>({
   availableDays: [],
-  preferredShiftTypes: [],
   startTime: '09:00',
   endTime: '18:00',
   workday_pref: [9, 17], // 使用数字
@@ -73,7 +67,7 @@ onMounted(async () => {
     // 创建一个完整的偏好设置对象
     preferences.value = {
       availableDays: prefRes.data.data.availableDays || [],
-      preferredShiftTypes: prefRes.data.data.preferredShiftTypes || [],
+      
       startTime: prefRes.data.data.startTime || '09:00',
       endTime: prefRes.data.data.endTime || '18:00',
       workday_pref: prefRes.data.data.workday_pref || [9, 17], // 使用数字类型的默认值
@@ -115,17 +109,7 @@ async function handleSubmit() {
         </el-select>
       </el-form-item>
 
-      <!-- 班次类型偏好 -->
-      <el-form-item label="偏好班次类型">
-        <el-select v-model="preferences.preferredShiftTypes" multiple>
-          <el-option
-            v-for="shift in shiftTypes"
-            :key="shift.value"
-            :label="shift.label"
-            :value="shift.value"
-          />
-        </el-select>
-      </el-form-item>
+      
 
       <!-- 时间区间选择 -->
       <el-form-item label="工作时间偏好">
