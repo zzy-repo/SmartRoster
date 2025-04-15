@@ -120,9 +120,9 @@ Fu等人系统分析了多工厂协同调度问题\cite{9409755}，发现遗传�
 
 第二章重点说明研究目标和整体规划。明确系统建设的主要方向和使用场景，着眼于解决企业日常排班中的具体困难，力求在现有技术条件下找到最合适的解决方案。
 
-第三章介绍系统开发涉及的关键技术。采用通俗易懂的语言解释模拟退火算法、前后端分离架构等核心技术原理，着重说明这些技术如何与排班场景相结合。避免深奥的理论推导，更多从实际应用角度分析技术选型的合理性。
+第三章介绍系统开发涉及的关键技术。解释模拟退火算法、前后端分离架构等核心技术原理，着重说明这些技术如何与排班场景相结合，更多从实际应用角度分析技术选型的合理性。
 
-第四章开展系统需求分析工作。通过与零售企业管理者和一线员工的深入交流，梳理排班业务的核心流程和关键需求。从用户角度出发，详细描述系统应具备的各项功能，分析系统建设的可行性和实施路径。
+第四章开展系统需求分析工作。梳理排班业务的核心流程和关键需求。从用户角度出发，详细描述系统应具备的各项功能，分析系统建设的可行性和实施路径。
 
 第五章重点研究模拟退火算法在排班系统中的应用。针对零售排班的特点，设计适合的算法模型，探讨如何将排班规则转化为算法可处理的约束条件。通过实际案例验证算法的有效性和适用性。
 
@@ -253,9 +253,9 @@ Node.js作为轻量级后端运行环境，其设计理念体现出对现代软�
     
     \item 第二，强化数据可靠性。采用事务机制与版本控制技术，构建从数据录入、存储到应用的全生命周期保障体系。在排班方案生成等关键操作中，通过数据库锁机制与操作日志追踪，有效防范并发场景下的数据不一致问题，为系统决策提供可信数据支撑。
     
-    \item 第三，注重使用体验。针对零售行业用户的信息化水平特点，在界面设计和操作流程中贯彻"最小学习成本"理念。通过可视化排班视图、智能冲突提示等交互设计，降低非技术用户的操作门槛，使店长等基层管理人员经过简短培训即可熟练完成日常排班工作。
+    \item 第三，注重使用体验。针对零售行业用户的信息化水平特点，在界面设计和操作流程中贯彻"最小学习成本"理念。通过可视化排班视图、智能冲突提示等交互设计，降低非技术用户的操作门槛，使基层管理人员经过简短培训即可熟练完成日常排班工作。
     
-    \item 第四，优化性能指标。在满足功能完备性的基础上，重点提升系统响应速度与稳定性。采用异步计算、缓存策略等技术手段，将大规模排班方案的生成时间控制在分钟级，确保系统在高并发访问场景下仍能保持流畅操作体验。
+    \item 第四，优化性能指标。在满足功能完备性的基础上，重点提升系统响应速度与稳定性。采用异步计算、缓存策略等技术手段，将大规模排班方案的生成时间控制在分钟级，确保流畅操作体验。
 \end{itemize}
 
 \subsection{系统设计方案}
@@ -430,21 +430,6 @@ Node.js作为轻量级后端运行环境，其设计理念体现出对现代软�
     \bottomrule
     \end{tabular}
 \end{table}
-
-输入输出接口采用JSON格式实现标准化数据交换，通过以下关键字段定义：
-\begin{verbatim}
-{
-  "input": {
-    "config": {"T0":100.0, "T_min":0.1, ...},
-    "employees": [{"id":"E001", "skills":["cashier"], ...}],
-    "requirements": [{"time":"08:00-12:00", "position":"cashier", ...}]
-  },
-  "output": {
-    "schedule": [{"employee":"E001", "shift":"morning", ...}],
-    "metrics": {"energy": 1500, "coverage": 0.85, ...}
-  }
-}
-\end{verbatim}
 
 \subsection{算法的设计以及构建}
 模拟退火算法在排班系统中的具体实现遵循标准算法流程，同时针对零售排班场景进行了适应性改进。算法核心流程如图\ref{fig:sa-flowchart}所示，主要包含以下关键环节：
@@ -671,20 +656,254 @@ P = \begin{cases}
     \includegraphics[width=0.8\linewidth]{./source/结构示意图.png}
     \caption{结构示意图}
 \end{figure}
+
 \subsubsection{门店管理模块结构设计}
+
+门店管理模块采用分层设计架构，通过清晰的业务流程实现门店信息的全生命周期管理。如图\ref{fig:store-add}所示，添加门店功能提供标准化的信息录入界面；图\ref{fig:store-flow}展示了模块的核心业务流程，主要包含以下关键环节：
 \begin{figure}[H]
     \centering
-    \includegraphics[width=0.5\linewidth]{./source/添加门店.png}
-    \caption{添加门店}
+    \includegraphics[width=0.5\linewidth]{./source/门店管理流程.png}
+    \caption{门店管理核心业务流程}
+    \label{fig:store-flow}
 \end{figure}
+
+\begin{itemize}
+    \item \textbf{列表加载}：初始化时从服务端获取门店数据，支持分页与条件筛选
+    \item \textbf{信息维护}：提供完整的CRUD操作，包括添加、编辑和删除功能
+    \item \textbf{数据验证}：对门店名称、地址等关键字段进行格式校验
+    \item \textbf{状态管理}：实时同步本地状态与服务端数据，确保一致性
+\end{itemize}
+
+系统采用响应式设计，在用户完成每个操作后立即更新界面显示，并通过可视化反馈提升操作体验。门店管理流程严格遵循业务逻辑，确保数据变更的完整性和可追溯性。模块实现充分考虑了零售连锁企业的实际需求，支持多门店的集中化管理和独立配置。
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{./source/添加门店.png}
+    \caption{添加门店界面}
+    \label{fig:store-add}
+\end{figure}
+
 \subsubsection{员工管理模块结构设计}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{./source/员工管理流程.png}
+    \caption{员工管理流程}
+    \label{fig:employee-flow}
+\end{figure} 
+员工管理模块采用分层架构设计，通过清晰的业务流程实现员工信息的全生命周期管理。如图\ref{fig:employee-flow}所示，模块核心流程包含以下关键环节：
+
+\begin{itemize}
+    \item \textbf{信息录入}：提供标准化的表单界面，支持员工基础信息、岗位资质等必填字段的录入，通过实时校验确保数据完整性
+    \item \textbf{偏好配置}：允许设置工作日范围、时段偏好等个性化参数，采用可视化控件提升操作体验
+    \item \textbf{状态管理}：维护员工在职/离职状态，确保排班操作仅针对有效员工执行
+    \item \textbf{关联控制}：自动同步门店-员工关联关系，支持跨门店调岗场景
+\end{itemize}
+
+系统采用响应式设计，在用户完成CRUD操作后立即更新界面显示。员工管理流程严格遵循业务规则，如删除在职员工需二次确认、编辑操作记录审计日志等，确保数据变更的可追溯性。模块实现充分考虑了零售企业人员流动频繁的特点，支持批量导入导出和快速复制功能。
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.3\linewidth]{./source/添加员工.png}
+    \caption{添加员工}
+\end{figure} 
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{./source/员工偏好设置.png}
+    \caption{员工偏好设置}
+\end{figure}
+
+\subsubsection{排班管理模块结构设计}
 \subsubsection{用户鉴权模块结构设计}
-\subsubsection{算法引擎模块结构设计}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{./source/用户认证流程.png}
+    \caption{用户认证流程示意图}
+    \label{fig:auth-flow}
+\end{figure}
+
+系统采用基于JWT(JSON Web Token)的无状态认证机制，通过三层架构实现完整的用户鉴权流程：
+
+\begin{itemize}
+    \item \textbf{注册流程}：用户提交用户名和密码后，前端通过加密通道将数据发送至认证服务。服务端使用bcrypt算法对密码进行加盐哈希存储，确保凭证安全性。注册成功后系统自动跳转至登录界面，避免直接授权带来的安全隐患。
+
+    \item \textbf{登录流程}：用户凭证验证通过后，认证服务生成包含用户ID、角色和过期时间的JWT令牌。令牌通过HTTP-only Cookie和响应体双通道返回前端，既防范XSS攻击又保障移动端兼容性。前端将令牌持久化存储，并为后续请求添加Authorization头实现无感认证。
+
+    \item \textbf{访问控制}：API网关作为统一入口拦截所有请求，通过令牌验证中间件校验签名有效性和过期时间。对于受保护路由，系统额外检查用户角色权限，实现基于RBAC模型的细粒度访问控制。令牌刷新机制通过滑动过期窗口保持会话连续性，同时定期强制重新认证提升安全性。
+\end{itemize}
+
+该设计通过前后端分离的认证架构，在保证系统安全性的同时，提供了良好的用户体验和扩展性。微服务间的内部通信采用服务账号机制，通过预置密钥实现服务身份认证，确保系统内部调用的可信度。
 
 \subsection{数据库设计}
-\subsubsection{数据库的设计原则}
-\subsubsection{数据库的设计流程}
-\subsubsection{数据表的设计}
+在总体设计中，数据库是非常重要的一个环节，本系统的设计是进行数据库的信息化管理，因此数据库的设计对于程序代码的编写起到了至关重要的作用，它直接影响了程序代码的运行效率。数据库的结构优化程度将影响值班编排算法的执行时间，为此，需要对数据库进行优化设计。下面将进行系统的结构设计，包括了 E-R 模型设计和数据库表结构设计两个部分。
+\subsubsection{数据库 E-R 模型设计}
+
+\subsubsection{数据库表结构设计}
+系统数据库采用关系型数据库设计，主要包含以下核心数据表：
+
+\begin{table}[H]
+    \centering
+    \caption{用户表(users)结构}
+    \label{tab:users-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增用户ID \\
+    username & VARCHAR(50) & 唯一键 & 登录用户名 \\
+    password & VARCHAR(100) & - & 加密密码 \\
+    role & VARCHAR(20) & - & 用户角色 \\
+    created\_at & DATETIME & - & 创建时间 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{门店表(stores)结构}
+    \label{tab:stores-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增门店ID \\
+    name & VARCHAR(50) & - & 门店名称 \\
+    address & VARCHAR(200) & - & 门店地址 \\
+    phone & VARCHAR(20) & - & 联系电话 \\
+    manager\_id & INT & 外键 & 关联users.id \\
+    created\_at & DATETIME & - & 创建时间 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{员工表(employees)结构}
+    \label{tab:employees-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增员工ID \\
+    name & VARCHAR(50) & - & 员工姓名 \\
+    phone & VARCHAR(20) & - & 联系电话 \\
+    email & VARCHAR(100) & - & 电子邮箱 \\
+    position & VARCHAR(50) & - & 职位 \\
+    store\_id & INT & 外键 & 关联stores.id \\
+    user\_id & INT & 外键 & 关联users.id \\
+    max\_daily\_hours & INT & - & 最大日工时(默认8) \\
+    max\_weekly\_hours & INT & - & 最大周工时(默认40) \\
+    workday\_pref\_start & INT & - & 偏好工作日开始(0-6) \\
+    workday\_pref\_end & INT & - & 偏好工作日结束(0-6) \\
+    time\_pref\_start & TIME & - & 偏好工作时间开始 \\
+    time\_pref\_end & TIME & - & 偏好工作时间结束 \\
+    created\_at & DATETIME & - & 创建时间 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{班次分配表(shift\_assignments)结构}
+    \label{tab:shift-assignments-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增分配ID \\
+    schedule\_id & INT & 外键 & 关联schedules.id \\
+    shift\_id & INT & 外键 & 关联shifts.id \\
+    employee\_id & INT & 外键 & 关联employees.id \\
+    position & VARCHAR(50) & - & 分配职位 \\
+    assigned\_by & INT & 外键 & 关联users.id \\
+    assigned\_at & DATETIME & - & 分配时间 \\
+    override\_reason & TEXT & - & 手动调整原因 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{技能表(skills)结构}
+    \label{tab:skills-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增技能ID \\
+    name & VARCHAR(50) & - & 技能名称（收银/导购/库房） \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{员工技能关联表(employee\_skills)结构}
+    \label{tab:employee-skills-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    employee\_id & INT & 外键 & 关联employees.id \\
+    skill\_id & INT & 外键 & 关联skills.id \\
+    proficiency & INT & - & 熟练度(1-5) \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{排班表(schedules)结构}
+    \label{tab:schedules-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增排班ID \\
+    store\_id & INT & 外键 & 关联stores.id \\
+    start\_date & DATE & - & 排班开始日期 \\
+    end\_date & DATE & - & 排班结束日期 \\
+    status & VARCHAR(20) & - & 状态(draft/published) \\
+    created\_by & INT & 外键 & 关联users.id \\
+    created\_at & DATETIME & - & 创建时间 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{班次表(shifts)结构}
+    \label{tab:shifts-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增班次ID \\
+    store\_id & INT & 外键 & 关联stores.id \\
+    day & INT & - & 星期几(0-6) \\
+    start\_time & TIME & - & 班次开始时间 \\
+    end\_time & TIME & - & 班次结束时间 \\
+    status & VARCHAR(20) & - & 状态(open/closed) \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{班次职位需求表(shift\_positions)结构}
+    \label{tab:shift-positions-table}
+    \begin{tabular}{llll}
+    \toprule
+    属性 & 数据类型 & 键类型 & 备注 \\
+    \midrule
+    id & INT & 主键 & 自增ID \\
+    shift\_id & INT & 外键 & 关联shifts.id \\
+    position & VARCHAR(50) & - & 职位名称 \\
+    count & INT & - & 需求人数 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
 
 
 \section{结果展示}
@@ -706,12 +925,27 @@ P = \begin{cases}
 \end{figure}
 \begin{figure}[H]
     \centering
+    \includegraphics[width=0.8\linewidth]{./source/门店管理.png}
+    \caption{门店管理}
+\end{figure}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{./source/员工管理.png}
+    \caption{员工管理}
+\end{figure}
+\begin{figure}[H]
+    \centering
     \includegraphics[width=0.8\linewidth]{./source/排班规则管理.png}
     \caption{排班规则管理}
 \end{figure}
 
 
 \section{结论}
+本研究通过构建智能排班系统，探索了零售行业人力资源管理的数字化转型路径。系统设计充分考虑了零售场景的多变特性，在技术实现上采用模块化架构确保扩展性，在算法层面通过改进的模拟退火算法处理复杂约束条件，在交互设计上保留传统排班模式的操作惯性。这种技术方案与业务需求深度契合的设计理念，使系统既具备智能化的排班效率，又保持了足够的管理灵活性，为不同规模的零售企业提供了实用化的解决方案。
+
+研究成果的核心价值体现在方法论层面的创新。不同于单纯追求算法性能优化的技术路线，本研究更注重排班系统在实际业务场景中的适用性。通过构建可配置的规则引擎和渐进式的优化策略，系统能够在保证排班合规性的基础上，逐步提升员工满意度和人力配置效率。特别是对突发调班需求的快速响应机制，以及多门店协同排班的技术实现，为连锁零售企业的人力资源共享提供了可行方案。这些探索为服务业排班系统的开发积累了有价值的实践经验。
+
+展望未来，智能排班系统的发展将更加注重技术融合与生态整合。随着人工智能技术的持续进步，算法模块有望进一步强化对非结构化需求的理解能力；而与企业其他管理系统的深度对接，则将推动排班工作从被动响应向主动预测转变。本研究建立的技术框架为这些演进方向奠定了基础，其设计思路对服务业其他运营管理系统的智能化改造也具有参考意义。最终，智能排班系统的价值不仅在于提升管理效率，更在于通过科学的人力资源配置，实现企业效益与员工福祉的双赢。
 
 
 % 致谢

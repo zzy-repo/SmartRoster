@@ -32,13 +32,13 @@ const route = useRoute()
 const employeeId = ref<string>(route.params.id as string)
 
 const weekDays = [
-  { label: '周一', value: '周一' },
-  { label: '周二', value: '周二' },
-  { label: '周三', value: '周三' },
-  { label: '周四', value: '周四' },
-  { label: '周五', value: '周五' },
-  { label: '周六', value: '周六' },
-  { label: '周日', value: '周日' },
+  { label: '周一', value: 1 },
+  { label: '周二', value: 2 },
+  { label: '周三', value: 3 },
+  { label: '周四', value: 4 },
+  { label: '周五', value: 5 },
+  { label: '周六', value: 6 },
+  { label: '周日', value: 7 },
 ]
 
 const shiftTypes = [
@@ -104,12 +104,15 @@ async function handleSubmit() {
 
     <el-form :model="preferences" label-width="120px">
       <!-- 可用时间设置 -->
-      <el-form-item label="可用工作日">
-        <el-checkbox-group v-model="preferences.availableDays">
-          <el-checkbox v-for="day in weekDays" :key="day.value" :label="day.value">
-            {{ day.label }}
-          </el-checkbox>
-        </el-checkbox-group>
+      <el-form-item label="工作日偏好">
+        <el-select v-model="preferences.workday_pref" style="width: 100%" multiple :multiple-limit="7">
+          <el-option
+            v-for="day in weekDays"
+            :key="day.value"
+            :label="day.label"
+            :value="day.value"
+          />
+        </el-select>
       </el-form-item>
 
       <!-- 班次类型偏好 -->
@@ -125,17 +128,23 @@ async function handleSubmit() {
       </el-form-item>
 
       <!-- 时间区间选择 -->
-      <el-form-item label="可用时间范围">
+      <el-form-item label="工作时间偏好">
         <el-time-select
-          v-model="preferences.startTime"
+          v-model="preferences.time_pref[0]"
           placeholder="开始时间"
-          :max-time="preferences.endTime"
+          :max-time="preferences.time_pref[1]"
         />
         <el-time-select
-          v-model="preferences.endTime"
+          v-model="preferences.time_pref[1]"
           placeholder="结束时间"
-          :min-time="preferences.startTime"
+          :min-time="preferences.time_pref[0]"
         />
+      </el-form-item>
+      <el-form-item label="每天工作时长">
+        <el-input-number v-model="preferences.max_daily_hours" :min="0" :max="24" />
+      </el-form-item>
+      <el-form-item label="每周工作时长">
+        <el-input-number v-model="preferences.max_weekly_hours" :min="0" :max="168" />
       </el-form-item>
 
       <el-button type="primary" @click="handleSubmit">

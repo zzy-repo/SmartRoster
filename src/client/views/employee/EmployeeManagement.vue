@@ -351,7 +351,7 @@ function prepareEditEmployee() {
             <span>{{ selectedEmployee.hireDate }}</span>
           </div>
           <div class="info-group">
-            <label>技能:</label>
+            <label>技能标签:</label>
             <div class="skills-list">
               <span v-for="skill in selectedEmployee.skills" :key="skill" class="skill-tag">{{ skill }}</span>
             </div>
@@ -436,7 +436,7 @@ function prepareEditEmployee() {
             <input id="hireDate" v-model="newEmployee.hireDate" type="date" required>
           </div>
           <div class="form-group">
-            <label>技能</label>
+            <label>技能标签</label>
             <div class="skills-checkboxes">
               <label v-for="skill in availableSkills" :key="skill">
                 <input v-model="newEmployee.skills" type="checkbox" :value="skill">
