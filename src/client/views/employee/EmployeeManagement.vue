@@ -14,6 +14,7 @@ interface Employee {
   storeId: string
   storeName: string
   phone: string
+  email: string
   hireDate: string
   skills: string[]
 }
@@ -57,6 +58,7 @@ const newEmployee = reactive({
   position: '',
   storeId: '',
   phone: '',
+  email: '',
   hireDate: '',
   skills: [] as string[],
 })
@@ -70,6 +72,7 @@ const editingEmployee = reactive({
   position: '',
   storeId: '',
   phone: '',
+  email: '',
   hireDate: '',
   skills: [] as string[],
 })
@@ -99,6 +102,7 @@ onMounted(async () => {
         storeId: emp.store || '', // 使用store字段作为storeId
         storeName: '', // 稍后会根据storeId查找
         phone: emp.phone || '',
+        email: emp.email || '',
         hireDate: emp.createdAt?.split('T')[0] || '', // 使用创建日期作为入职日期
         skills: [], // 默认空数组
       }
@@ -158,6 +162,7 @@ async function addEmployee() {
       storeId: newEmployee.storeId,
       storeName,
       phone: newEmployee.phone,
+      email: newEmployee.email,
       hireDate: newEmployee.hireDate,
       skills: [...newEmployee.skills],
     }
@@ -212,6 +217,7 @@ async function updateEmployee() {
         storeId: editingEmployee.storeId,
         storeName,
         phone: editingEmployee.phone,
+        email: editingEmployee.email,
         hireDate: editingEmployee.hireDate,
         skills: [...editingEmployee.skills],
       }
@@ -422,6 +428,10 @@ function prepareEditEmployee() {
             <input id="phone" v-model="newEmployee.phone" type="tel" required>
           </div>
           <div class="form-group">
+            <label for="email">电子邮箱</label>
+            <input id="email" v-model="newEmployee.email" type="email" required>
+          </div>
+          <div class="form-group">
             <label for="hireDate">入职日期</label>
             <input id="hireDate" v-model="newEmployee.hireDate" type="date" required>
           </div>
@@ -501,6 +511,10 @@ function prepareEditEmployee() {
           <div class="form-group">
             <label for="edit-phone">联系电话</label>
             <input id="edit-phone" v-model="editingEmployee.phone" type="tel" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-email">电子邮箱</label>
+            <input id="edit-email" v-model="editingEmployee.email" type="email" required>
           </div>
           <div class="form-group">
             <label for="edit-hireDate">入职日期</label>
