@@ -1,47 +1,21 @@
-import axios from 'axios'
 import type { Schedule } from '@/types/schedule'
+import { del, get, post, put } from './http'
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
-  timeout: 10000
-})
+export const scheduleApi = {
 
-export const fetchSchedules = async () => {
-  try {
-    const response = await api.get('/schedules')
-    return response
-  } catch (error) {
-    console.error('获取排班列表失败:', error)
-    throw error
-  }
-}
+  getSchedules: () => {
+    return get<{ data: Schedule[] }>('/schedule')
+  },
 
-export const createSchedule = async (newSchedule: Omit<Schedule, 'id'>) => {
-  try {
-    const response = await api.post('/schedules', newSchedule)
-    return response
-  } catch (error) {
-    console.error('创建排班失败:', error)
-    throw error
-  }
-}
+  createSchedule: (newSchedule: Omit<Schedule, 'id'>) => {
+    return post<{ data: Schedule }>('/schedule', newSchedule)
+  },
 
-export const updateSchedule = async (updatedSchedule: Schedule) => {
-  try {
-    const response = await api.put(`/schedules/${updatedSchedule.id}`, updatedSchedule)
-    return response
-  } catch (error) {
-    console.error('更新排班失败:', error)
-    throw error
-  }
-}
+  updateSchedule: (id: string, updatedSchedule: Partial<Schedule>) => {
+    return put<{ data: Schedule }>(`/schedule/${id}`, updatedSchedule)
+  },
 
-export const deleteSchedule = async (id: number) => {
-  try {
-    const response = await api.delete(`/schedules/${id}`)
-    return response
-  } catch (error) {
-    console.error('删除排班失败:', error)
-    throw error
+  deleteSchedule: (id: string) => {
+    return del<{ success: boolean }>(`/schedule/${id}`)
   }
 }

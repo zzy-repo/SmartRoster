@@ -10,6 +10,7 @@ const currentSchedule = ref({ id: 0, start_date: '', end_date: '', status: 'draf
 async function loadSchedules() {
   try {
     await scheduleStore.fetchSchedules()
+    console.log("guagua",scheduleStore.schedules)
     // 确保数据是数组
     if (!Array.isArray(scheduleStore.schedules)) {
       scheduleStore.schedules = []

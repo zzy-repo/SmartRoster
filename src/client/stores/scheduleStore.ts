@@ -9,7 +9,11 @@ import {
 } from '@/api/scheduleApi'
 
 export const useScheduleStore = defineStore('schedule', () => {
-  const schedules = ref<Schedule[]>([])
+  const schedules = ref<Schedule[]>([
+    { id: 1, start_date: '2024-03-01', end_date: '2024-03-07', status: 'published', store_id: 1 },
+    { id: 2, start_date: '2024-04-15', end_date: '2024-04-21', status: 'draft', store_id: 1 },
+    { id: 3, start_date: '2024-05-01', end_date: '2024-05-07', status: 'published', store_id: 1 }
+  ])
 
   async function fetchSchedules() {
     try {

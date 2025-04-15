@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS stores (
   area DECIMAL(10,2) COMMENT '工作场所面积(平方米)',
   manager_id INT COMMENT '店长ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表，设置店长'
+  FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 员工表 - 存储员工详细信息和工作偏好
@@ -38,8 +38,8 @@ CREATE TABLE IF NOT EXISTS employees (
   store_id INT COMMENT '所属门店ID，关联stores表',
   user_id INT COMMENT '关联用户ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE SET NULL COMMENT '关联门店表',
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
+  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE SET NULL,
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 排班表 - 存储排班计划
@@ -51,8 +51,8 @@ CREATE TABLE IF NOT EXISTS schedules (
   store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   created_by INT COMMENT '创建人ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE COMMENT '关联门店表，级联删除',
-  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
+  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+  FOREIGN KEY (created_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 班次表 - 定义班次模板
@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS shifts (
   end_time TIME NOT NULL COMMENT '班次结束时间',
   status VARCHAR(20) DEFAULT 'open' COMMENT '状态(open/closed)',
   store_id INT NOT NULL COMMENT '门店ID，关联stores表',
-  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE COMMENT '关联门店表，级联删除'
+  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
 );
 
 -- 班次职位需求表 - 定义每个班次需要的职位和人数
@@ -72,7 +72,7 @@ CREATE TABLE IF NOT EXISTS shift_positions (
   position VARCHAR(50) NOT NULL COMMENT '职位名称',
   count INT NOT NULL DEFAULT 1 COMMENT '需求人数',
   shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
-  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE COMMENT '关联班次表，级联删除'
+  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE
 );
 
 -- 班次分配表 - 记录员工班次分配情况
@@ -85,10 +85,10 @@ CREATE TABLE IF NOT EXISTS shift_assignments (
   employee_id INT NOT NULL COMMENT '员工ID，关联employees表',
   assigned_by INT COMMENT '分配人ID，关联users表',
   assigned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
-  FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE COMMENT '关联排班表，级联删除',
-  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE COMMENT '关联班次表，级联删除',
-  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE COMMENT '关联员工表，级联删除',
-  FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
+  FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE,
+  FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
+  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
 -- 排班规则表 - 存储排班系统的规则设置
@@ -99,5 +99,5 @@ CREATE TABLE IF NOT EXISTS schedule_rules (
   user_id INT NOT NULL COMMENT '用户ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE COMMENT '关联用户表，级联删除'
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
