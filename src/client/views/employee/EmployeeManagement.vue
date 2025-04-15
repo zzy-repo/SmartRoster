@@ -38,17 +38,7 @@ const showEditEmployeeForm = ref(false)
 const confirmDelete = ref(false)
 const stores = ref<Store[]>([])
 
-// 可用技能列表
-const availableSkills = [
-  '收银',
-  '理货',
-  '促销',
-  '客服',
-  '库存管理',
-  '食品加工',
-  '生鲜处理',
-  '团队管理',
-]
+
 
 // 新员工表单数据
 const newEmployee = reactive({
@@ -60,7 +50,7 @@ const newEmployee = reactive({
   phone: '',
   email: '',
   hireDate: '',
-  skills: [] as string[],
+  skills: [],
 })
 
 // 编辑员工表单数据
@@ -74,7 +64,7 @@ const editingEmployee = reactive({
   phone: '',
   email: '',
   hireDate: '',
-  skills: [] as string[],
+  skills: [],
 })
 
 // 加载员工和门店数据
@@ -104,7 +94,7 @@ onMounted(async () => {
         phone: emp.phone || '',
         email: emp.email || '',
         hireDate: emp.createdAt?.split('T')[0] || '', // 使用创建日期作为入职日期
-        skills: [], // 默认空数组
+        skills: [] // 初始化skills为空数组
       }
       
       // 查找门店名称
@@ -164,7 +154,8 @@ async function addEmployee() {
       phone: newEmployee.phone,
       email: newEmployee.email,
       hireDate: newEmployee.hireDate,
-      skills: [...newEmployee.skills],
+      skills: [], // 添加skills属性，初始化为空数组
+
     }
 
     employees.value.push(employeeToAdd)
@@ -219,7 +210,8 @@ async function updateEmployee() {
         phone: editingEmployee.phone,
         email: editingEmployee.email,
         hireDate: editingEmployee.hireDate,
-        skills: [...editingEmployee.skills],
+        skills: [...(employees.value[index].skills || [])], // 保留原有skills或初始化为空数组
+
       }
 
       employees.value[index] = updatedEmployee
@@ -350,12 +342,7 @@ function prepareEditEmployee() {
             <label>入职日期:</label>
             <span>{{ selectedEmployee.hireDate }}</span>
           </div>
-          <div class="info-group">
-            <label>技能标签:</label>
-            <div class="skills-list">
-              <span v-for="skill in selectedEmployee.skills" :key="skill" class="skill-tag">{{ skill }}</span>
-            </div>
-          </div>
+          
           <div class="actions">
             <button class="edit-btn" @click="prepareEditEmployee()">
               编辑
@@ -435,15 +422,7 @@ function prepareEditEmployee() {
             <label for="hireDate">入职日期</label>
             <input id="hireDate" v-model="newEmployee.hireDate" type="date" required>
           </div>
-          <div class="form-group">
-            <label>技能标签</label>
-            <div class="skills-checkboxes">
-              <label v-for="skill in availableSkills" :key="skill">
-                <input v-model="newEmployee.skills" type="checkbox" :value="skill">
-                {{ skill }}
-              </label>
-            </div>
-          </div>
+          
           <div class="form-actions">
             <button type="button" @click="showAddEmployeeForm = false">
               取消
@@ -520,15 +499,7 @@ function prepareEditEmployee() {
             <label for="edit-hireDate">入职日期</label>
             <input id="edit-hireDate" v-model="editingEmployee.hireDate" type="date" required>
           </div>
-          <div class="form-group">
-            <label>技能</label>
-            <div class="skills-checkboxes">
-              <label v-for="skill in availableSkills" :key="skill">
-                <input v-model="editingEmployee.skills" type="checkbox" :value="skill">
-                {{ skill }}
-              </label>
-            </div>
-          </div>
+          
           <div class="form-actions">
             <button type="button" @click="showEditEmployeeForm = false">
               取消
