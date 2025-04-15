@@ -9,7 +9,6 @@ interface Store {
   address: string
   area: number
   phone?: string
-  businessHours?: string
   employeeCount?: number
 }
 
@@ -29,7 +28,7 @@ const newStore = reactive({
   name: '',
   address: '',
   phone: '',
-  businessHours: '',
+  area: 0
 })
 
 // 编辑门店表单数据
@@ -37,8 +36,7 @@ const editingStore = reactive({
   id: '',
   name: '',
   address: '',
-  phone: '',
-  businessHours: '',
+  phone: ''
 })
 
 // 加载门店数据
@@ -64,8 +62,7 @@ async function addStore() {
       name: newStore.name,
       address: newStore.address,
       area: 0,
-      phone: newStore.phone,
-      businessHours: newStore.businessHours,
+      phone: newStore.phone
     }
 
     const response = await storeStore.createStore(storeToAdd)
@@ -77,7 +74,7 @@ async function addStore() {
       name: '',
       address: '',
       phone: '',
-      businessHours: '',
+
     })
   }
   catch (error) {
@@ -99,7 +96,7 @@ function prepareEditStore() {
       address: selectedStore.value.address,
       area: selectedStore.value.area,
       phone: selectedStore.value.phone,
-      businessHours: selectedStore.value.businessHours,
+
     })
     showEditStoreForm.value = true
   }
@@ -112,8 +109,7 @@ async function updateStore() {
       name: editingStore.name,
       address: editingStore.address,
       area: selectedStore.value?.area || 0,
-      phone: editingStore.phone,
-      businessHours: editingStore.businessHours,
+      phone: editingStore.phone
     } as Store)
 
     const index = stores.value.findIndex(s => s.id === editingStore.id)
@@ -205,10 +201,7 @@ async function deleteStore() {
             <label>联系电话:</label>
             <span>{{ selectedStore.phone }}</span>
           </div>
-          <div class="info-group">
-            <label>营业时间:</label>
-            <span>{{ selectedStore.businessHours }}</span>
-          </div>
+          
           <div class="info-group">
             <label>员工数量:</label>
             <span>{{ selectedStore.employeeCount }}</span>
@@ -244,9 +237,10 @@ async function deleteStore() {
             <input id="phone" v-model="newStore.phone" type="text" required>
           </div>
           <div class="form-group">
-            <label for="businessHours">营业时间</label>
-            <input id="businessHours" v-model="newStore.businessHours" type="text" required>
+            <label for="area">工作场所面积(m²)</label>
+            <input id="area" v-model="newStore.area" type="number" min="0" required>
           </div>
+          
           <div class="form-actions">
             <button type="button" @click="showAddStoreForm = false">
               取消
@@ -276,10 +270,7 @@ async function deleteStore() {
             <label for="edit-phone">联系电话</label>
             <input id="edit-phone" v-model="editingStore.phone" type="text" required>
           </div>
-          <div class="form-group">
-            <label for="edit-businessHours">营业时间</label>
-            <input id="edit-businessHours" v-model="editingStore.businessHours" type="text" required>
-          </div>
+          
           <div class="form-actions">
             <button type="button" @click="showEditStoreForm = false">
               取消
