@@ -45,10 +45,10 @@ CREATE TABLE IF NOT EXISTS employees (
 -- 排班表 - 存储排班计划
 CREATE TABLE IF NOT EXISTS schedules (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排班ID，自增主键',
-  store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   start_date DATE NOT NULL COMMENT '排班开始日期',
   end_date DATE NOT NULL COMMENT '排班结束日期',
   status VARCHAR(20) NOT NULL DEFAULT 'draft' COMMENT '状态(draft/published/archived)',
+  store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   created_by INT COMMENT '创建人ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE COMMENT '关联门店表，级联删除',

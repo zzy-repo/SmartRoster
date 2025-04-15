@@ -12,7 +12,7 @@ interface EmployeePreference {
   
   startTime: string
   endTime: string
-  workday_pref: [number, number] // 改回 number 类型
+  workday_pref: [number, number] // 工作日偏好，如 [1, 5] 表示周二到周六
   time_pref: [string, string]
   max_daily_hours: number
   max_weekly_hours: number
@@ -47,7 +47,7 @@ const preferences = ref<EmployeePreference>({
   availableDays: [],
   startTime: '09:00',
   endTime: '18:00',
-  workday_pref: [9, 17], // 使用数字
+  workday_pref: [0, 6], // 默认周一至周日
   time_pref: ['09:00', '17:00'],
   max_daily_hours: 8,
   max_weekly_hours: 40,
@@ -70,7 +70,7 @@ onMounted(async () => {
       
       startTime: prefRes.data.data.startTime || '09:00',
       endTime: prefRes.data.data.endTime || '18:00',
-      workday_pref: prefRes.data.data.workday_pref || [9, 17], // 使用数字类型的默认值
+      workday_pref: prefRes.data.data.workday_pref || [0, 6], // 默认周一至周日
       time_pref: prefRes.data.data.time_pref || ['09:00', '17:00'],
       max_daily_hours: prefRes.data.data.max_daily_hours || 8,
       max_weekly_hours: prefRes.data.data.max_weekly_hours || 40,
@@ -99,12 +99,20 @@ async function handleSubmit() {
     <el-form :model="preferences" label-width="120px">
       <!-- 可用时间设置 -->
       <el-form-item label="工作日偏好">
-        <el-select v-model="preferences.workday_pref" style="width: 100%" multiple :multiple-limit="7">
+        <el-select v-model="preferences.workday_pref[0]" style="width: 100%">
           <el-option
             v-for="day in weekDays"
             :key="day.value"
             :label="day.label"
-            :value="day.value"
+            :value="day.value - 1"
+          />
+        </el-select>
+        <el-select v-model="preferences.workday_pref[1]" style="width: 100%; margin-top: 10px">
+          <el-option
+            v-for="day in weekDays"
+            :key="day.value"
+            :label="day.label"
+            :value="day.value - 1"
           />
         </el-select>
       </el-form-item>
