@@ -115,11 +115,11 @@ onMounted(() => {
             <el-button text @click="goToRules">
               排班规则
             </el-button>
-            <el-button text @click="goToForecast">
-              业务预测
-            </el-button>
             <el-button text @click="goToRoster">
               排班表
+            </el-button>
+            <el-button text @click="goToForecast">
+              业务预测
             </el-button>
           </div>
         </el-card>

@@ -71,6 +71,12 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
+  {
+    path: '/shifts',
+    name: 'ShiftManagement',
+    component: () => import('@/views/shift/ShiftManagement.vue'),
+    meta: { title: '班次管理', requiresAuth: true },
+  },
 ]
 
 // 创建路由实例
