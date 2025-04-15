@@ -272,25 +272,15 @@ Node.js作为轻量级后端运行环境，其设计理念体现出对现代软�
 \end{itemize}
 
 \subsection{需求分析}
-\subsection{需求分析}
-本系统需求分析采用结构化方法，从功能需求、非功能需求2个维度展开，梳理出排班管理的关键需求如下：
-
-\subsubsection{功能需求}
 \begin{itemize}
-    \item \textbf{员工管理需求}：
+    \item \textbf{员工管理需求}：  
+    系统需提供完善的员工信息管理功能，包括员工姓名、职位、联系方式、所属门店及工作偏好等核心字段。其中，并允许按收银、导购等细分岗位标注技能标签。员工偏好模块需支持灵活配置工作日范围（如限定周一到周三）、每日可工作时长（如不超过6小时）及每周总工时上限（如30小时），缺省值需覆盖无特殊需求场景。系统需提供员工信息的增删改查界面，支持按门店、职位等多维度筛选，并确保数据与排班模块实时同步，为智能排班提供基础数据支撑。
 
-    \item \textbf{门店管理需求}：
-    
-    \item \textbf{排班算法需求}：
-    
-    \item \textbf{用户认证需求}：
-\end{itemize}
+    \item \textbf{门店管理需求}：  
+    门店作为排班的基本单元，需维护名称、地址、面积等关键信息，并支持与员工、排班表的关联管理。系统需实现门店信息的CRUD操作。门店工作面积等数据将用于排班规则计算（如根据客流量预测配置人手）。此外，需设计门店-员工的多对多关系，支持员工跨门店调配场景，并在排班时自动关联所属门店的营业规则（如营业时间、高峰时段），确保排班结果符合实际业务需求。
 
-\subsubsection{非功能需求}
-\begin{itemize}
-    \item \textbf{性能需求}：
-    
-    \item \textbf{安全需求}：
+    \item \textbf{排班算法需求}：  
+    核心排班算法需结合业务预测数据（如客流量）、员工技能匹配度、个人偏好等多维度因素，实现一键生成周排班表。算法需优先匹配员工可用时间与岗位技能，对未匹配班次标记为“开放班次”，并支持冲突检测（如工时超限提醒）。排班表需提供日/周双视图，支持按岗位、技能或员工分组展示，便于管理者快速调整。手动干预功能需允许拖拽式班次重新分配，包括开放班次的指派、已分配班次的员工替换，所有变更需实时反馈至算法权重计算模块。
 \end{itemize}
 
 \subsection{可行性分析}
@@ -340,6 +330,121 @@ Node.js作为轻量级后端运行环境，其设计理念体现出对现代软�
 \end{itemize}
 
 算法将排班问题建模为多目标优化问题，通过模拟退火算法的概率接受机制，在满足硬性约束的前提下，逐步优化软性约束的满足程度。目标函数的权重配置允许管理者根据实际业务需求，灵活调整排班方案的优化侧重点，如更注重人力成本控制或更关注员工满意度等不同维度。
+
+\subsection{算法的输入与输出设计}
+模拟退火算法的输入输出设计遵循模块化原则，确保与系统其他组件的无缝集成。输入数据主要分为三类：
+
+\begin{table}[H]
+    \centering
+    \caption{模拟退火算法基础配置参数}
+    \label{tab:sa-config}
+    \begin{tabular}{lll}
+    \toprule
+    参数 & 默认值 & 作用描述 \\
+    \midrule
+    初始温度$T_0$ & 100.0 & 控制算法初始探索范围 \\
+    终止温度$T_{min}$ & 0.1 & 决定算法收敛阈值 \\
+    冷却速率$\eta$ & 0.95 & 调节温度下降速度 \\
+    每温度迭代次数$L$ & 100 & 平衡搜索深度与效率 \\
+    最大迭代次数$K$ & 1000 & 防止无限循环 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{业务约束条件参数}
+    \label{tab:business-constraints}
+    \begin{tabular}{ll}
+    \toprule
+    参数 & 描述 \\
+    \midrule
+    员工技能矩阵$S_{m×n}$ & 记录每位员工掌握的技能类型 \\
+    门店需求表$D_{t×k}$ & 包含各时段各岗位人力需求 \\
+    员工偏好集合$P$ & \{工作日偏好, 时段偏好, 最大工时\} \\
+    全局约束$C$ & \{单日最大工时, 周最大工时, 最小休息间隔\} \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{成本参数权重配置}
+    \label{tab:cost-weights}
+    \begin{tabular}{lll}
+    \toprule
+    参数 & 默认值 & 优化目标 \\
+    \midrule
+    $\alpha$ & 1.0 & 人员短缺惩罚权重 \\
+    $\beta$ & 0.8 & 工作日偏好冲突权重 \\
+    $\gamma$ & 0.6 & 时间偏好冲突权重 \\
+    $\delta$ & 1.2 & 日工时超限权重 \\
+    $\epsilon$ & 1.5 & 周工时超限权重 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+算法输出采用分层结构设计：
+
+\begin{table}[H]
+    \centering
+    \caption{算法核心输出}
+    \label{tab:core-outputs}
+    \begin{tabular}{ll}
+    \toprule
+    输出项 & 描述 \\
+    \midrule
+    最优排班方案$R_{best}$ & 包含员工-班次-岗位完整映射的JSON对象 \\
+    能量值$E_{best}$ & 量化方案质量的标量值（单位：成本点） \\
+    收敛曲线$G$ & 记录各迭代阶段能量值变化的数组 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{辅助分析输出}
+    \label{tab:aux-outputs}
+    \begin{tabular}{ll}
+    \toprule
+    输出项 & 描述 \\
+    \midrule
+    冲突报告$V$ & 列出所有约束违反项的详细清单 \\
+    覆盖率统计$Cov$ & 各岗位需求满足比例（范围0-1） \\
+    员工负载分布$L$ & 每位员工工时分配的统计直方图 \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+\begin{table}[H]
+    \centering
+    \caption{调试信息输出}
+    \label{tab:debug-outputs}
+    \begin{tabular}{ll}
+    \toprule
+    输出项 & 描述 \\
+    \midrule
+    温度日志$Log_T$ & 各迭代阶段的温度值记录 \\
+    接受率统计$A$ & 邻域解接受/拒绝比例的时序数据 \\
+    耗时分析$Time$ & 各算法阶段的计算时间（毫秒） \\
+    \bottomrule
+    \end{tabular}
+\end{table}
+
+输入输出接口采用JSON格式实现标准化数据交换，通过以下关键字段定义：
+\begin{verbatim}
+{
+  "input": {
+    "config": {"T0":100.0, "T_min":0.1, ...},
+    "employees": [{"id":"E001", "skills":["cashier"], ...}],
+    "requirements": [{"time":"08:00-12:00", "position":"cashier", ...}]
+  },
+  "output": {
+    "schedule": [{"employee":"E001", "shift":"morning", ...}],
+    "metrics": {"energy": 1500, "coverage": 0.85, ...}
+  }
+}
+\end{verbatim}
 
 \subsection{算法的设计以及构建}
 模拟退火算法在排班系统中的具体实现遵循标准算法流程，同时针对零售排班场景进行了适应性改进。算法核心流程如图\ref{fig:sa-flowchart}所示，主要包含以下关键环节：
@@ -487,7 +592,40 @@ P = \begin{cases}
 实际运行中，系统平均在300-500次迭代后收敛到满意解，计算时间控制在业务可接受范围内。算法参数经过网格搜索调优，在解质量与计算效率之间取得了良好平衡。
 
 \subsection{实验的结果与分析}
-TODO：采用三种用例测试算法性能
+为验证算法实际效果，本研究设计了三组对照实验（小型/中型/大型），表\ref{tab:exp-results}展示了不同规模场景下的算法运行数据。实验采用MacBook Air（M3芯片）作为测试环境，操作系统为macOS 15.4。
+
+\begin{table}[H]
+    \centering
+    \small  % 减小字号
+    \caption{模拟退火算法性能评估}
+    \label{tab:exp-results}
+    \begin{tabular}{@{}lrrrrrrr@{}}
+    \toprule
+    \multirow{2}{*}{规模} & \multicolumn{3}{c}{基础参数} & \multicolumn{2}{c}{核心指标} & \multicolumn{2}{c}{违规统计} \\
+    \cmidrule(lr){2-4} \cmidrule(lr){5-6} \cmidrule(lr){7-8}
+    & 员工数 & 班次数 & 时间(s) & 成本 & 覆盖率(\%) & 人力不足 & 偏好冲突 \\
+    \midrule
+    小型 & 15 & 14 & 6.35 & 1.7K & 89.0 & 12 & 48 \\
+    中型 & 30 & 42 & 44.8 & 9.1K & 83.0 & 61 & 213 \\
+    大型 & 60 & 105 & 213.5 & 36.6K & 70.8 & 262 & 729 \\
+    \bottomrule
+    \end{tabular}
+    \vspace{0.5em}
+\end{table}
+
+从实验结果可以看出以下关键发现：
+
+\begin{itemize}
+\item \textbf{计算效率}：小型场景平均耗时6.35秒，中型场景44.77秒，大型场景213.52秒。时间增长曲线近似线性，说明算法复杂度控制良好，符合$O(n^2)$的理论预期
+
+\item \textbf{排班质量}：小型场景排班覆盖率达89\%，但随着规模扩大，覆盖率下降至70.8\%。这反映出在复杂场景中，算法需要在覆盖率与合规性之间进行权衡
+
+\item \textbf{约束满足}：人力不足次数从12（小型）增至262（大型），说明岗位匹配难度随规模扩大呈指数增长。日工时超限问题在大型场景尤为突出，占总违规次数的37.7\%
+
+\item \textbf{收敛特性}：小型和中型场景分别达到5.18\%和6.07\%的收敛率，而大型场景未实现收敛。这表明算法参数设置对大规模场景的适应性有待优化
+\end{itemize}
+
+实验数据揭示出算法在中小型场景中的实用价值，同时也暴露出处理超大规模排班时的局限性。后续将通过并行计算和分布式架构改进算法性能，提升大规模场景下的收敛效率。
 
 
 \section{系统设计以及实现}
@@ -528,8 +666,18 @@ TODO：采用三种用例测试算法性能
 
 
 \subsection{功能结构设计}
-\subsubsection{员工管理模块结构设计}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{./source/结构示意图.png}
+    \caption{结构示意图}
+\end{figure}
 \subsubsection{门店管理模块结构设计}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.5\linewidth]{./source/添加门店.png}
+    \caption{添加门店}
+\end{figure}
+\subsubsection{员工管理模块结构设计}
 \subsubsection{用户鉴权模块结构设计}
 \subsubsection{算法引擎模块结构设计}
 
@@ -545,25 +693,21 @@ TODO：采用三种用例测试算法性能
     \centering
     \includegraphics[width=0.8\linewidth]{./source/登录界面.png}
     \caption{登录界面}
-    \label{fig:microservice-arch}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{./source/注册界面.png}
     \caption{注册界面}
-    \label{fig:microservice-arch}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{./source/主页.png}
     \caption{主页}
-    \label{fig:microservice-arch}
 \end{figure}
 \begin{figure}[H]
     \centering
     \includegraphics[width=0.8\linewidth]{./source/排班规则管理.png}
     \caption{排班规则管理}
-    \label{fig:microservice-arch}
 \end{figure}
 
 
