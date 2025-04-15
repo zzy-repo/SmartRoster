@@ -51,32 +51,8 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/forecast/BusinessForecast.vue'),
     meta: { title: '业务预测', requiresAuth: true },
   },
-  {
-    path: '/roster',
-    name: 'RosterView',
-    component: () => import('@/views/roster/RosterView.vue'),
-    meta: { title: '排班表', requiresAuth: true },
-    children: [
-      {
-        path: 'day',
-        name: 'DayView',
-        component: () => import('@/views/roster/DayView.vue'),
-        meta: { title: '日视图', requiresAuth: true },
-      },
-      {
-        path: 'week',
-        name: 'WeekView',
-        component: () => import('@/views/roster/WeekView.vue'),
-        meta: { title: '周视图', requiresAuth: true },
-      },
-    ],
-  },
-  {
-    path: '/shifts',
-    name: 'ShiftManagement',
-    component: () => import('@/views/shift/ShiftManagement.vue'),
-    meta: { title: '班次管理', requiresAuth: true },
-  },
+
+
 ]
 
 // 创建路由实例
