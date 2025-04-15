@@ -22,8 +22,6 @@ CREATE TABLE IF NOT EXISTS stores (
   FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表，设置店长'
 );
 
-
-
 -- 员工表 - 存储员工详细信息和工作偏好
 CREATE TABLE IF NOT EXISTS employees (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '员工ID，自增主键',
@@ -31,20 +29,18 @@ CREATE TABLE IF NOT EXISTS employees (
   phone VARCHAR(20) COMMENT '联系电话',
   email VARCHAR(100) COMMENT '电子邮箱',
   position VARCHAR(50) NOT NULL COMMENT '职位名称',
-  store_id INT COMMENT '所属门店ID，关联stores表',
-  user_id INT COMMENT '关联用户ID，关联users表',
   max_daily_hours INT DEFAULT 8 COMMENT '每日最大工作时长(小时)',
   max_weekly_hours INT DEFAULT 40 COMMENT '每周最大工作时长(小时)',
   workday_pref_start INT DEFAULT 0 COMMENT '偏好工作日开始(0=周一)',
   workday_pref_end INT DEFAULT 6 COMMENT '偏好工作日结束(6=周日)',
   time_pref_start TIME DEFAULT '00:00:00' COMMENT '偏好工作时间段开始',
   time_pref_end TIME DEFAULT '23:59:59' COMMENT '偏好工作时间段结束',
+  store_id INT COMMENT '所属门店ID，关联stores表',
+  user_id INT COMMENT '关联用户ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE SET NULL COMMENT '关联门店表',
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
 );
-
-
 
 -- 排班表 - 存储排班计划
 CREATE TABLE IF NOT EXISTS schedules (
@@ -62,35 +58,46 @@ CREATE TABLE IF NOT EXISTS schedules (
 -- 班次表 - 定义班次模板
 CREATE TABLE IF NOT EXISTS shifts (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '班次ID，自增主键',
-  store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   day INT NOT NULL COMMENT '0-6 表示周一到周日',
   start_time TIME NOT NULL COMMENT '班次开始时间',
   end_time TIME NOT NULL COMMENT '班次结束时间',
   status VARCHAR(20) DEFAULT 'open' COMMENT '状态(open/closed)',
+  store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE COMMENT '关联门店表，级联删除'
 );
 
 -- 班次职位需求表 - 定义每个班次需要的职位和人数
 CREATE TABLE IF NOT EXISTS shift_positions (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '需求ID，自增主键',
-  shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
   position VARCHAR(50) NOT NULL COMMENT '职位名称',
   count INT NOT NULL DEFAULT 1 COMMENT '需求人数',
+  shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
   FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE COMMENT '关联班次表，级联删除'
 );
 
 -- 班次分配表 - 记录员工班次分配情况
 CREATE TABLE IF NOT EXISTS shift_assignments (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '分配ID，自增主键',
+  position VARCHAR(50) NOT NULL COMMENT '分配的职位',
+  override_reason TEXT COMMENT '特殊分配原因',
   schedule_id INT NOT NULL COMMENT '排班ID，关联schedules表',
   shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
   employee_id INT NOT NULL COMMENT '员工ID，关联employees表',
-  position VARCHAR(50) NOT NULL COMMENT '分配的职位',
   assigned_by INT COMMENT '分配人ID，关联users表',
   assigned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
-  override_reason TEXT COMMENT '特殊分配原因',
   FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE COMMENT '关联排班表，级联删除',
   FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE COMMENT '关联班次表，级联删除',
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE COMMENT '关联员工表，级联删除',
   FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
+);
+
+-- 排班规则表 - 存储排班系统的规则设置（简化版，只包含两种固定规则）
+CREATE TABLE IF NOT EXISTS schedule_rules (
+  id INT PRIMARY KEY AUTO_INCREMENT COMMENT '规则ID，自增主键',
+  max_daily_hours INT DEFAULT 8 COMMENT '每日最大工作时长(小时)',
+  max_weekly_hours INT DEFAULT 40 COMMENT '每周最大工作时长(小时)',
+  user_id INT NOT NULL COMMENT '用户ID，关联users表',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE COMMENT '关联用户表，级联删除'
 );
