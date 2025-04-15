@@ -22,11 +22,7 @@ CREATE TABLE IF NOT EXISTS stores (
   FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表，设置店长'
 );
 
--- 技能表 - 存储员工技能类型
-CREATE TABLE IF NOT EXISTS skills (
-  id INT PRIMARY KEY AUTO_INCREMENT COMMENT '技能ID，自增主键',
-  name VARCHAR(50) NOT NULL COMMENT '技能名称（收银/导购/库房）'
-);
+
 
 -- 员工表 - 存储员工详细信息和工作偏好
 CREATE TABLE IF NOT EXISTS employees (
@@ -48,15 +44,7 @@ CREATE TABLE IF NOT EXISTS employees (
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
 );
 
--- 员工技能关联表 - 记录员工掌握的技能
-CREATE TABLE IF NOT EXISTS employee_skills (
-  employee_id INT NOT NULL COMMENT '员工ID，关联employees表',
-  skill_id INT NOT NULL COMMENT '技能ID，关联skills表',
-  proficiency INT DEFAULT 1 COMMENT '熟练度 1-5(1=初级,5=专家)',
-  PRIMARY KEY (employee_id, skill_id) COMMENT '复合主键',
-  FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE COMMENT '关联员工表，级联删除',
-  FOREIGN KEY (skill_id) REFERENCES skills(id) ON DELETE CASCADE COMMENT '关联技能表，级联删除'
-);
+
 
 -- 排班表 - 存储排班计划
 CREATE TABLE IF NOT EXISTS schedules (
@@ -106,10 +94,3 @@ CREATE TABLE IF NOT EXISTS shift_assignments (
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE COMMENT '关联员工表，级联删除',
   FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL COMMENT '关联用户表'
 );
-
--- 初始化基础数据 - 预置系统必需的技能类型
-INSERT INTO skills (name) VALUES 
-  ('收银') COMMENT '收银员技能',
-  ('导购') COMMENT '商品导购技能',
-  ('库房') COMMENT '库存管理技能'
-ON DUPLICATE KEY UPDATE name = VALUES(name);
