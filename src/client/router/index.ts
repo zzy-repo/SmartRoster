@@ -5,6 +5,11 @@ import { useAuthStore } from '../stores/authStore'
 // 定义路由
 const routes: RouteRecordRaw[] = [
   {
+    path: '/scheduleView',
+    name: 'Schedules',
+    component: () => import('@/views/schedules/SchedulesView.vue')
+  },
+  {
     path: '/login',
     name: 'Login',
     component: () => import('@/views/auth/Login.vue'),
@@ -52,7 +57,7 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '业务预测', requiresAuth: true },
   },
   {
-    path: '/schedules',
+    path: '/scheduleManagement',
     name: 'ScheduleManagement',
     component: () => import('@/views/schedule/ScheduleManagement.vue'),
     meta: { title: '排班管理', requiresAuth: true },

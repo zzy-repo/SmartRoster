@@ -6,4 +6,9 @@ export interface Schedule {
   store_id: number
   created_by?: number
   created_at: string
+  position: string
+  employee_name: string
+  start_time: string
+  end_time: string
+  override_reason?: string
 }
