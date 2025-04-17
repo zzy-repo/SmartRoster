@@ -11,18 +11,18 @@ export const useEmployeeStore = defineStore('employee', () => {
 
   // 计算属性
   const employeeCount = computed(() => employees.value.length)
-  const employeesByStore = computed(() => (storeId: string) => {
-    return employees.value.filter(employee => employee.store === storeId)
+  const employeesByStore = computed(() => (store_id: string) => {
+    return employees.value.filter(employee => employee.store_id === store_id)
   })
   const employeesByPosition = computed(() => (position: string) => {
     return employees.value.filter(employee => employee.position === position)
   })
 
   // 方法
-  const fetchEmployees = async (storeId?: string) => {
+  const fetchEmployees = async (store_id?: string) => {
     loading.value = true
     try {
-      const { data } = await employeeApi.getEmployees(storeId)
+      const { data } = await employeeApi.getEmployees(store_id)
       employees.value = data.data
     }
     catch (error) {

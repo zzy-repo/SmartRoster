@@ -8,15 +8,12 @@ import { ElMessage } from 'element-plus'
 interface Employee {
   id: string
   name: string
-  gender: string
-  age: number
   position: string
-  storeId: string
+  store_id: string
   storeName: string
   phone: string
   email: string
   hireDate: string
-  skills: string[]
 }
 
 // 定义门店类型
@@ -43,28 +40,22 @@ const stores = ref<Store[]>([])
 // 新员工表单数据
 const newEmployee = reactive({
   name: '',
-  gender: '男',
-  age: 25,
   position: '',
   storeId: '',
   phone: '',
   email: '',
   hireDate: '',
-  skills: [],
 })
 
 // 编辑员工表单数据
 const editingEmployee = reactive({
   id: '',
   name: '',
-  gender: '',
-  age: 0,
   position: '',
   storeId: '',
   phone: '',
   email: '',
   hireDate: '',
-  skills: [],
 })
 
 // 加载员工和门店数据
@@ -86,19 +77,18 @@ onMounted(async () => {
       const employee: Employee = {
         id: emp.id,
         name: emp.name,
-        gender: '男', // 默认值，因为API返回的数据可能没有这个字段
-        age: 25, // 默认值
         position: emp.position,
-        storeId: emp.store || '', // 使用store字段作为storeId
+        store_id: emp.store_id || '', // 使用store字段作为storeId
         storeName: '', // 稍后会根据storeId查找
         phone: emp.phone || '',
         email: emp.email || '',
-        hireDate: emp.createdAt?.split('T')[0] || '', // 使用创建日期作为入职日期
-        skills: [] // 初始化skills为空数组
+        hireDate: emp.createdAt?.split('T')[0] || '' // 使用创建日期作为入职日期
       }
       
       // 查找门店名称
-      const store = stores.value.find(s => s.id === employee.storeId)
+      const store = stores.value.find(s => s.id === employee.store_id)
+      console.log('storeId', employee.store_id)
+
       if (store) {
         employee.storeName = store.name
       }
@@ -129,7 +119,7 @@ async function addEmployee() {
       position: newEmployee.position,
       phone: newEmployee.phone,
       email: `${newEmployee.name}@example.com`, // 添加必要的email字段
-      store: newEmployee.storeId, // 使用storeId作为store
+      store_id: newEmployee.storeId, // 使用storeId作为store
       preferences: {
         workday_pref: [9, 17] as [number, number], // 修复类型为元组
         time_pref: ['09:00', '17:00'] as [string, string], // 修复类型为元组
@@ -137,25 +127,24 @@ async function addEmployee() {
         max_weekly_hours: 40, // 默认每周最大工作时间
       }
     }
+    console.log('employeeData', employeeData)
 
     // 调用API创建员工
     const response = await employeeStore.createEmployee(employeeData)
+
+    console.log('response', response)
     
     // 添加到本地列表
     const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
     const employeeToAdd: Employee = {
-      id: response.data.id, // 修复：正确访问返回数据中的id
+      id: response.data.id,
       name: newEmployee.name,
-      gender: newEmployee.gender,
-      age: newEmployee.age,
       position: newEmployee.position,
-      storeId: newEmployee.storeId,
+      store_id: newEmployee.storeId,
       storeName,
       phone: newEmployee.phone,
       email: newEmployee.email,
-      hireDate: newEmployee.hireDate,
-      skills: [], // 添加skills属性，初始化为空数组
-
+      hireDate: newEmployee.hireDate
     }
 
     employees.value.push(employeeToAdd)
@@ -170,8 +159,7 @@ async function addEmployee() {
       position: '',
       storeId: '',
       phone: '',
-      hireDate: '',
-      skills: [],
+      hireDate: ''
     })
   }
   catch (error) {
@@ -202,16 +190,12 @@ async function updateEmployee() {
       const updatedEmployee = {
         ...employees.value[index],
         name: editingEmployee.name,
-        gender: editingEmployee.gender,
-        age: editingEmployee.age,
         position: editingEmployee.position,
         storeId: editingEmployee.storeId,
         storeName,
         phone: editingEmployee.phone,
         email: editingEmployee.email,
-        hireDate: editingEmployee.hireDate,
-        skills: [...(employees.value[index].skills || [])], // 保留原有skills或初始化为空数组
-
+        hireDate: editingEmployee.hireDate
       }
 
       employees.value[index] = updatedEmployee
@@ -252,13 +236,11 @@ function prepareEditEmployee() {
     Object.assign(editingEmployee, {
       id: selectedEmployee.value.id,
       name: selectedEmployee.value.name,
-      gender: selectedEmployee.value.gender,
-      age: selectedEmployee.value.age,
       position: selectedEmployee.value.position,
-      storeId: selectedEmployee.value.storeId,
+      store_id: selectedEmployee.value.store_id,
       phone: selectedEmployee.value.phone,
-      hireDate: selectedEmployee.value.hireDate,
-      skills: [...selectedEmployee.value.skills],
+      email: selectedEmployee.value.email,
+      hireDate: selectedEmployee.value.hireDate
     })
     showEditEmployeeForm.value = true
   }
@@ -319,14 +301,6 @@ function prepareEditEmployee() {
             <span>{{ selectedEmployee.name }}</span>
           </div>
           <div class="info-group">
-            <label>性别:</label>
-            <span>{{ selectedEmployee.gender }}</span>
-          </div>
-          <div class="info-group">
-            <label>年龄:</label>
-            <span>{{ selectedEmployee.age }}</span>
-          </div>
-          <div class="info-group">
             <label>职位:</label>
             <span>{{ selectedEmployee.position }}</span>
           </div>
@@ -337,10 +311,6 @@ function prepareEditEmployee() {
           <div class="info-group">
             <label>联系电话:</label>
             <span>{{ selectedEmployee.phone }}</span>
-          </div>
-          <div class="info-group">
-            <label>入职日期:</label>
-            <span>{{ selectedEmployee.hireDate }}</span>
           </div>
           
           <div class="actions">
@@ -366,21 +336,6 @@ function prepareEditEmployee() {
           <div class="form-group">
             <label for="name">姓名</label>
             <input id="name" v-model="newEmployee.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="gender">性别</label>
-            <select id="gender" v-model="newEmployee.gender" required>
-              <option value="男">
-                男
-              </option>
-              <option value="女">
-                女
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="age">年龄</label>
-            <input id="age" v-model="newEmployee.age" type="number" required min="18" max="65">
           </div>
           <div class="form-group">
             <label for="position">职位</label>
@@ -418,10 +373,6 @@ function prepareEditEmployee() {
             <label for="email">电子邮箱</label>
             <input id="email" v-model="newEmployee.email" type="email" required>
           </div>
-          <div class="form-group">
-            <label for="hireDate">入职日期</label>
-            <input id="hireDate" v-model="newEmployee.hireDate" type="date" required>
-          </div>
           
           <div class="form-actions">
             <button type="button" @click="showAddEmployeeForm = false">
@@ -443,21 +394,6 @@ function prepareEditEmployee() {
           <div class="form-group">
             <label for="edit-name">姓名</label>
             <input id="edit-name" v-model="editingEmployee.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-gender">性别</label>
-            <select id="edit-gender" v-model="editingEmployee.gender" required>
-              <option value="男">
-                男
-              </option>
-              <option value="女">
-                女
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit-age">年龄</label>
-            <input id="edit-age" v-model="editingEmployee.age" type="number" required min="18" max="65">
           </div>
           <div class="form-group">
             <label for="edit-position">职位</label>
@@ -494,10 +430,6 @@ function prepareEditEmployee() {
           <div class="form-group">
             <label for="edit-email">电子邮箱</label>
             <input id="edit-email" v-model="editingEmployee.email" type="email" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-hireDate">入职日期</label>
-            <input id="edit-hireDate" v-model="editingEmployee.hireDate" type="date" required>
           </div>
           
           <div class="form-actions">
@@ -650,19 +582,7 @@ function prepareEditEmployee() {
   color: #555;
 }
 
-.skills-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 5px;
-}
 
-.skill-tag {
-  background-color: #e3f2fd;
-  color: #2196f3;
-  padding: 3px 8px;
-  border-radius: 4px;
-  font-size: 12px;
-}
 
 .actions {
   margin-top: 30px;
@@ -732,22 +652,7 @@ function prepareEditEmployee() {
   border-radius: 4px;
 }
 
-.skills-checkboxes {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
 
-.skills-checkboxes label {
-  display: flex;
-  align-items: center;
-  font-weight: normal;
-}
-
-.skills-checkboxes input {
-  margin-right: 5px;
-  width: auto;
-}
 
 .form-actions {
   display: flex;

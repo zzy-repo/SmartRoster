@@ -6,16 +6,12 @@ import { useRoute } from 'vue-router'
 import { employeeApi } from '../../api/employeeApi'
 
 // 定义员工偏好类型
-// 修改类型定义
+// 修改类型定义，与数据库结构保持一致
 interface EmployeePreference {
-  availableDays: string[]
-  
-  startTime: string
-  endTime: string
-  workday_pref: [number, number] // 工作日偏好，如 [1, 5] 表示周二到周六
-  time_pref: [string, string]
-  max_daily_hours: number
-  max_weekly_hours: number
+  workday_pref: [number, number] // 工作日偏好，对应数据库中的workday_pref_start和workday_pref_end
+  time_pref: [string, string] // 工作时间偏好，对应数据库中的time_pref_start和time_pref_end
+  max_daily_hours: number // 每天最大工作时长
+  max_weekly_hours: number // 每周最大工作时长
 }
 
 // 定义API响应类型
@@ -44,9 +40,6 @@ const weekDays = [
 
 
 const preferences = ref<EmployeePreference>({
-  availableDays: [],
-  startTime: '09:00',
-  endTime: '18:00',
   workday_pref: [0, 6], // 默认周一至周日
   time_pref: ['09:00', '17:00'],
   max_daily_hours: 8,
@@ -64,12 +57,8 @@ onMounted(async () => {
     // 获取现有偏好设置
     const prefRes = await employeeApi.getEmployeePreferences(employeeId.value) as unknown as AxiosResponse<ApiResponse<EmployeePreference>>
 
-    // 创建一个完整的偏好设置对象
+    // 创建一个完整的偏好设置对象，只保留数据库中存在的字段
     preferences.value = {
-      availableDays: prefRes.data.data.availableDays || [],
-      
-      startTime: prefRes.data.data.startTime || '09:00',
-      endTime: prefRes.data.data.endTime || '18:00',
       workday_pref: prefRes.data.data.workday_pref || [0, 6], // 默认周一至周日
       time_pref: prefRes.data.data.time_pref || ['09:00', '17:00'],
       max_daily_hours: prefRes.data.data.max_daily_hours || 8,

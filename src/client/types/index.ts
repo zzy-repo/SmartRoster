@@ -18,7 +18,7 @@ export interface Employee {
   position: string // 职位：门店经理，副经理，小组长，店员（收银，导购，库房）
   phone: string
   email: string
-  store: string // 所属门店ID
+  store_id: string // 所属门店ID
   preferences: EmployeePreference
   createdAt?: string
   updatedAt?: string
