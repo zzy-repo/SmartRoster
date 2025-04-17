@@ -29,7 +29,7 @@ async function loadData() {
 
 // 跳转到排班表页面
 function goToRoster() {
-  router.push('/roster')
+  router.push('/scheduleManagement')
 }
 
 // 跳转到员工管理页面
