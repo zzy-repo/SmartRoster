@@ -15,13 +15,19 @@ export interface Store {
 export interface Employee {
   id: string
   name: string
-  position: string // 职位：门店经理，副经理，小组长，店员（收银，导购，库房）
+  position: string
   phone: string
   email: string
-  store_id: string // 所属门店ID
-  preferences: EmployeePreference
-  createdAt?: string
-  updatedAt?: string
+  store_id: string | null
+  store_name: string | null
+  max_daily_hours: number
+  max_weekly_hours: number
+  workday_pref_start: number
+  workday_pref_end: number
+  time_pref_start: string
+  time_pref_end: string
+  created_at?: string
+  updated_at?: string
 }
 
 // 员工偏好设置

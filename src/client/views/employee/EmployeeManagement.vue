@@ -3,18 +3,8 @@ import { onMounted, reactive, ref } from 'vue'
 import { useEmployeeStore } from '../../stores/employeeStore'
 import { useStoreStore } from '../../stores/storeStore'
 import { ElMessage } from 'element-plus'
+import type { Employee } from '../../types/index'
 
-// 定义员工类型
-interface Employee {
-  id: string
-  name: string
-  position: string
-  store_id: string
-  storeName: string
-  phone: string
-  email: string
-  hireDate: string
-}
 
 // 定义门店类型
 interface Store {
@@ -41,10 +31,18 @@ const stores = ref<Store[]>([])
 const newEmployee = reactive({
   name: '',
   position: '',
-  storeId: '',
   phone: '',
   email: '',
-  hireDate: '',
+  store_id: null,
+  user_id: null,
+  max_daily_hours: 8,
+  max_weekly_hours: 40,
+  workday_pref_start: 9,
+  workday_pref_end: 17,
+  time_pref_start: '09:00',
+  time_pref_end: '17:00',
+  created_at: '',
+  updated_at: ''
 })
 
 // 编辑员工表单数据
@@ -52,10 +50,18 @@ const editingEmployee = reactive({
   id: '',
   name: '',
   position: '',
-  storeId: '',
   phone: '',
   email: '',
-  hireDate: '',
+  store_id: null,
+  user_id: null,
+  max_daily_hours: 8,
+  max_weekly_hours: 40,
+  workday_pref_start: 9,
+  workday_pref_end: 17,
+  time_pref_start: '09:00',
+  time_pref_end: '17:00',
+  created_at: '',
+  updated_at: ''
 })
 
 // 加载员工和门店数据
@@ -74,23 +80,14 @@ onMounted(async () => {
     // 将employeeStore中的数据格式转换为当前组件需要的格式
     employees.value = employeeStore.employees.map(emp => {
       // 创建符合本地Employee接口的对象
-      const employee: Employee = {
-        id: emp.id,
-        name: emp.name,
-        position: emp.position,
-        store_id: emp.store_id || '', // 使用store字段作为storeId
-        storeName: '', // 稍后会根据storeId查找
-        phone: emp.phone || '',
-        email: emp.email || '',
-        hireDate: emp.createdAt?.split('T')[0] || '' // 使用创建日期作为入职日期
-      }
+      const employee: Employee = {...emp}
       
       // 查找门店名称
       const store = stores.value.find(s => s.id === employee.store_id)
-      console.log('storeId', employee.store_id)
+      console.log('store_id', employee.store_id)
 
       if (store) {
-        employee.storeName = store.name
+        employee.store_name = store.name
       }
       
       return employee
@@ -118,14 +115,15 @@ async function addEmployee() {
       name: newEmployee.name,
       position: newEmployee.position,
       phone: newEmployee.phone,
-      email: `${newEmployee.name}@example.com`, // 添加必要的email字段
-      store_id: newEmployee.storeId, // 使用storeId作为store
-      preferences: {
-        workday_pref: [9, 17] as [number, number], // 修复类型为元组
-        time_pref: ['09:00', '17:00'] as [string, string], // 修复类型为元组
-        max_daily_hours: 8, // 默认每日最大工作时间
-        max_weekly_hours: 40, // 默认每周最大工作时间
-      }
+      email: newEmployee.email,
+      store_id: newEmployee.store_id,
+      store_name: '',
+      max_daily_hours: 8,
+      max_weekly_hours: 40,
+      workday_pref_start: 9,
+      workday_pref_end: 17,
+      time_pref_start: '09:00',
+      time_pref_end: '17:00',
     }
     console.log('employeeData', employeeData)
 
@@ -135,16 +133,21 @@ async function addEmployee() {
     console.log('response', response)
     
     // 添加到本地列表
-    const storeName = stores.value.find(s => s.id === newEmployee.storeId)?.name || ''
+    const store_name = stores.value.find(s => s.id === newEmployee.store_id)?.name || ''
     const employeeToAdd: Employee = {
       id: response.data.id,
       name: newEmployee.name,
       position: newEmployee.position,
-      store_id: newEmployee.storeId,
-      storeName,
+      store_id: newEmployee.store_id,
+      store_name,
       phone: newEmployee.phone,
       email: newEmployee.email,
-      hireDate: newEmployee.hireDate
+      max_daily_hours: newEmployee.max_daily_hours,
+      max_weekly_hours: newEmployee.max_weekly_hours,
+      workday_pref_start: newEmployee.workday_pref_start,
+      workday_pref_end: newEmployee.workday_pref_end,
+      time_pref_start: newEmployee.time_pref_start,
+      time_pref_end: newEmployee.time_pref_end
     }
 
     employees.value.push(employeeToAdd)
@@ -154,12 +157,17 @@ async function addEmployee() {
     // 重置表单
     Object.assign(newEmployee, {
       name: '',
-      gender: '男',
-      age: 25,
       position: '',
-      storeId: '',
       phone: '',
-      hireDate: ''
+      email: '',
+      store_id: null,
+      user_id: null,
+      max_daily_hours: 8,
+      max_weekly_hours: 40,
+      workday_pref_start: 9,
+      workday_pref_end: 17,
+      time_pref_start: '09:00',
+      time_pref_end: '17:00',
     })
   }
   catch (error) {
@@ -176,7 +184,7 @@ async function updateEmployee() {
       name: editingEmployee.name,
       position: editingEmployee.position,
       phone: editingEmployee.phone,
-      store: editingEmployee.storeId, // 使用storeId作为store
+      store_id: editingEmployee.store_id
     }
 
     // 调用API更新员工
@@ -185,17 +193,23 @@ async function updateEmployee() {
     // 更新本地列表
     const index = employees.value.findIndex(e => e.id === editingEmployee.id)
     if (index !== -1) {
-      const storeName = stores.value.find(s => s.id === editingEmployee.storeId)?.name || ''
+      const store_name = stores.value.find(s => s.id === editingEmployee.store_id)?.name || ''
 
       const updatedEmployee = {
         ...employees.value[index],
         name: editingEmployee.name,
         position: editingEmployee.position,
-        storeId: editingEmployee.storeId,
-        storeName,
+        store_id: editingEmployee.store_id,
+        store_name,
         phone: editingEmployee.phone,
         email: editingEmployee.email,
-        hireDate: editingEmployee.hireDate
+        user_id: editingEmployee.user_id,
+        max_daily_hours: editingEmployee.max_daily_hours,
+        max_weekly_hours: editingEmployee.max_weekly_hours,
+        workday_pref_start: editingEmployee.workday_pref_start,
+        workday_pref_end: editingEmployee.workday_pref_end,
+        time_pref_start: editingEmployee.time_pref_start,
+        time_pref_end: editingEmployee.time_pref_end
       }
 
       employees.value[index] = updatedEmployee
@@ -240,7 +254,6 @@ function prepareEditEmployee() {
       store_id: selectedEmployee.value.store_id,
       phone: selectedEmployee.value.phone,
       email: selectedEmployee.value.email,
-      hireDate: selectedEmployee.value.hireDate
     })
     showEditEmployeeForm.value = true
   }
@@ -306,7 +319,7 @@ function prepareEditEmployee() {
           </div>
           <div class="info-group">
             <label>所属门店:</label>
-            <span>{{ selectedEmployee.storeName }}</span>
+            <span>{{ selectedEmployee.store_name }}</span>
           </div>
           <div class="info-group">
             <label>联系电话:</label>
@@ -359,7 +372,7 @@ function prepareEditEmployee() {
           </div>
           <div class="form-group">
             <label for="store">所属门店</label>
-            <select id="store" v-model="newEmployee.storeId" required>
+            <select id="store" v-model="newEmployee.store_id" required>
               <option v-for="store in stores" :key="store.id" :value="store.id">
                 {{ store.name }}
               </option>
@@ -417,7 +430,7 @@ function prepareEditEmployee() {
           </div>
           <div class="form-group">
             <label for="edit-store">所属门店</label>
-            <select id="edit-store" v-model="editingEmployee.storeId" required>
+            <select id="edit-store" v-model="editingEmployee.store_id" required>
               <option v-for="store in stores" :key="store.id" :value="store.id">
                 {{ store.name }}
               </option>

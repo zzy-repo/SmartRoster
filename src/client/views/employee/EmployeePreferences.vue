@@ -2,21 +2,16 @@
 import type { AxiosResponse } from 'axios'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { employeeApi } from '../../api/employeeApi'
 
 // 定义员工偏好类型
 // 修改类型定义，与数据库结构保持一致
 interface EmployeePreference {
-  workday_pref: [number, number] // 工作日偏好，对应数据库中的workday_pref_start和workday_pref_end
-  time_pref: [string, string] // 工作时间偏好，对应数据库中的time_pref_start和time_pref_end
-  max_daily_hours: number // 每天最大工作时长
-  max_weekly_hours: number // 每周最大工作时长
-}
-
-// 定义API响应类型
-interface EmployeeApiResponse {
-  name: string
+  workday_pref: [number, number] 
+  time_pref: [string, string] 
+  max_daily_hours: number
+  max_weekly_hours: number
 }
 
 // 修改API响应结构定义
@@ -25,6 +20,7 @@ interface ApiResponse<T> {
 }
 
 const route = useRoute()
+const router = useRouter()
 const employeeId = ref<string>(route.params.id as string)
 
 const weekDays = [
@@ -50,19 +46,24 @@ const employeeName = ref('')
 
 onMounted(async () => {
   try {
-    // 获取员工基本信息
-    const empRes = await employeeApi.getEmployeeById(employeeId.value) as unknown as AxiosResponse<ApiResponse<EmployeeApiResponse>>
-    employeeName.value = empRes.data.data.name
+    // 获取员工完整信息（包含偏好设置）
+    const empRes = await employeeApi.getEmployeeById(employeeId.value) as unknown as AxiosResponse<ApiResponse<any>>
+    const employee = empRes.data.data
+    
+    employeeName.value = employee.name
 
-    // 获取现有偏好设置
-    const prefRes = await employeeApi.getEmployeePreferences(employeeId.value) as unknown as AxiosResponse<ApiResponse<EmployeePreference>>
-
-    // 创建一个完整的偏好设置对象，只保留数据库中存在的字段
+    // 从员工数据中提取偏好设置
     preferences.value = {
-      workday_pref: prefRes.data.data.workday_pref || [0, 6], // 默认周一至周日
-      time_pref: prefRes.data.data.time_pref || ['09:00', '17:00'],
-      max_daily_hours: prefRes.data.data.max_daily_hours || 8,
-      max_weekly_hours: prefRes.data.data.max_weekly_hours || 40,
+      workday_pref: [
+        employee.workday_pref_start ?? 0, 
+        employee.workday_pref_end ?? 6
+      ],
+      time_pref: [
+        employee.time_pref_start || '08:00:00',
+        employee.time_pref_end || '20:00:00'
+      ],
+      max_daily_hours: employee.max_daily_hours || 8,
+      max_weekly_hours: employee.max_weekly_hours || 40,
     }
   }
   catch (error) {
@@ -72,12 +73,34 @@ onMounted(async () => {
 
 async function handleSubmit() {
   try {
-    await employeeApi.updateEmployeePreferences(employeeId.value, preferences.value)
+    // 获取当前员工完整信息
+    const empRes = await employeeApi.getEmployeeById(employeeId.value) as unknown as AxiosResponse<ApiResponse<any>>
+    const employee = empRes.data.data
+    // 将前端的 preferences 对象转换为后端需要的格式
+    const employeeDataToUpdate = {
+      ...employee, // 保留原有员工数据
+      workday_pref_start: preferences.value.workday_pref[0],
+      workday_pref_end: preferences.value.workday_pref[1],
+      time_pref_start: preferences.value.time_pref[0],
+      time_pref_end: preferences.value.time_pref[1],
+      max_daily_hours: preferences.value.max_daily_hours,
+      max_weekly_hours: preferences.value.max_weekly_hours,
+    }
+    
+    // 调用更新员工信息的API，只传递偏好设置相关的字段
+    await employeeApi.updateEmployee(employeeId.value, employeeDataToUpdate)
     ElMessage.success('偏好设置已保存')
+    returnPage()
   }
   catch (error) {
+    console.error('保存偏好设置失败:', error) // 添加更详细的错误日志
     ElMessage.error('保存失败')
   }
+}
+
+
+function returnPage() {
+  router.push('/employees')
 }
 </script>
 
@@ -130,6 +153,9 @@ async function handleSubmit() {
 
       <el-button type="primary" @click="handleSubmit">
         保存设置
+      </el-button>
+      <el-button @click="returnPage">
+        返回
       </el-button>
     </el-form>
   </div>

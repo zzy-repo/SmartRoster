@@ -27,14 +27,4 @@ export const employeeApi = {
   deleteEmployee: (id: string) => {
     return del<{ success: boolean }>(`/employee/${id}`)
   },
-
-  // 获取员工偏好设置
-  getEmployeePreferences: (id: string) => {
-    return get<{ data: Employee['preferences'] }>(`/employee/${id}/preferences`)
-  },
-
-  // 更新员工偏好设置
-  updateEmployeePreferences: (id: string, preferences: Employee['preferences']) => {
-    return put<{ data: Employee['preferences'] }>(`/employee/${id}/preferences`, preferences)
-  },
 }
