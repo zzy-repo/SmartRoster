@@ -1,46 +1,51 @@
 <script setup lang="ts">
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
+import { getRuleSettings, updateRuleSettings } from '../../api/ruleApi'
 
 // 全局设置
 const loading = ref(false)
 const globalSettings = ref({
-  dailyMaxHours: 8,
-  weeklyMaxHours: 40
+  max_daily_hours: 8,
+  max_weekly_hours: 40
 })
 
 // 保存设置
 async function saveRule() {
-  // 保存全局设置
-  // 这里应该是调用API保存全局设置数据
-  // const response = await fetch('/api/settings', {
-  //   method: 'PUT',
-  //   headers: { 'Content-Type': 'application/json' },
-  //   body: JSON.stringify(globalSettings.value)
-  // })
-
-  // 模拟保存成功
-  setTimeout(() => {
+  try {
+    loading.value = true
+    await updateRuleSettings(globalSettings.value)
     ElMessage.success('设置已保存')
-  }, 300)
+  } catch (error) {
+    ElMessage.error('保存失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 // 重置设置
 function resetSettings() {
   globalSettings.value = {
-    dailyMaxHours: 8,
-    weeklyMaxHours: 40
+    max_daily_hours: 8,
+    max_weekly_hours: 40
   }
   ElMessage.success('设置已重置')
 }
 
 // 初始化
-onMounted(() => {
-  // 这里可以加载全局设置
-  loading.value = true
-  setTimeout(() => {
+onMounted(async () => {
+  try {
+    loading.value = true
+    const settings = await getRuleSettings()
+    console.log(settings)
+    if (settings) {
+      globalSettings.value = settings
+    }
+  } catch (error) {
+    ElMessage.error('加载设置失败')
+  } finally {
     loading.value = false
-  }, 300)
+  }
 })
 </script>
 
@@ -60,12 +65,12 @@ onMounted(() => {
       <!-- 全局设置 -->
         <el-form label-width="150px">
           <el-form-item label="每日最大工作时长">
-            <el-input-number v-model="globalSettings.dailyMaxHours" :min="1" :max="24" />
+            <el-input-number v-model="globalSettings.max_daily_hours" :min="1" :max="24" />
             <span class="ml-2">小时</span>
           </el-form-item>
           
           <el-form-item label="每周最大工作时长">
-            <el-input-number v-model="globalSettings.weeklyMaxHours" :min="1" :max="168" />
+            <el-input-number v-model="globalSettings.max_weekly_hours" :min="1" :max="168" />
             <span class="ml-2">小时</span>
           </el-form-item>
         </el-form>
