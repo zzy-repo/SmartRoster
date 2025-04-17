@@ -36,7 +36,8 @@ const editingStore = reactive({
   id: '',
   name: '',
   address: '',
-  phone: ''
+  phone: '',
+  area: 0
 })
 
 // 加载门店数据
@@ -61,12 +62,12 @@ async function addStore() {
     const storeToAdd = {
       name: newStore.name,
       address: newStore.address,
-      area: 0,
+      area: newStore.area,
       phone: newStore.phone
     }
 
-    const response = await storeStore.createStore(storeToAdd)
-    stores.value.push(response.data)
+    const { data } = await storeStore.createStore(storeToAdd)
+    stores.value.push(data)
     showAddStoreForm.value = false
 
     // 重置表单
@@ -74,7 +75,7 @@ async function addStore() {
       name: '',
       address: '',
       phone: '',
-
+      area: '',
     })
   }
   catch (error) {
@@ -105,7 +106,7 @@ function prepareEditStore() {
 // 更新门店
 async function updateStore() {
   try {
-    const response = await storeStore.updateStore(editingStore.id, {
+    const { data } = await storeStore.updateStore(editingStore.id, {
       name: editingStore.name,
       address: editingStore.address,
       area: selectedStore.value?.area || 0,
@@ -114,8 +115,8 @@ async function updateStore() {
 
     const index = stores.value.findIndex(s => s.id === editingStore.id)
     if (index !== -1) {
-      stores.value[index] = response.data
-      selectedStore.value = response.data
+      stores.value[index] = data
+      selectedStore.value = data
       showEditStoreForm.value = false
     }
   }
@@ -201,6 +202,10 @@ async function deleteStore() {
             <label>联系电话:</label>
             <span>{{ selectedStore.phone }}</span>
           </div>
+          <div class="info-group">
+            <label>门店面积:</label>
+            <span>{{ Math.floor(selectedStore.area) }}(m²)</span>
+          </div>
           
           <div class="info-group">
             <label>员工数量:</label>
@@ -237,8 +242,8 @@ async function deleteStore() {
             <input id="phone" v-model="newStore.phone" type="text" required>
           </div>
           <div class="form-group">
-            <label for="area">工作场所面积(m²)</label>
-            <input id="area" v-model="newStore.area" type="number" min="0" required>
+            <label for="area">门店面积(m²)</label>
+            <input id="area" v-model="newStore.area" type="number" step="1" min="0" required>
           </div>
           
           <div class="form-actions">
@@ -269,6 +274,10 @@ async function deleteStore() {
           <div class="form-group">
             <label for="edit-phone">联系电话</label>
             <input id="edit-phone" v-model="editingStore.phone" type="text" required>
+          </div>
+          <div class="form-group">
+            <label for="edit-area">门店面积(m²)</label>
+            <input id="edit-area" v-model="editingStore.area" type="number" required>
           </div>
           
           <div class="form-actions">

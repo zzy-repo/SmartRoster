@@ -17,6 +17,7 @@ app.use(express.json())
  * @apiSuccess {Object[]} data.stores 门店列表
  * @apiSuccess {Number} data.stores.id 门店ID
  * @apiSuccess {String} data.stores.name 门店名称
+ * @apiSuccess {String} data.stores.area 门店区域
  * @apiSuccess {String} data.stores.address 门店地址
  * @apiSuccess {String} data.stores.phone 联系电话
  * @apiSuccess {Number} data.stores.manager_id 店长ID
@@ -25,7 +26,7 @@ app.use(express.json())
  */
 app.get('/', async (req, res) => {
   try {
-    const [stores] = await pool.query('SELECT * FROM stores')
+    const [stores] = await pool.query('SELECT id, name, area, address, phone, manager_id FROM stores')
     res.json({ data: stores }) // 修改为统一格式
   }
   catch (error) {
@@ -45,6 +46,7 @@ app.get('/', async (req, res) => {
  * @apiSuccess {Object} data 响应数据
  * @apiSuccess {Number} data.id 门店ID
  * @apiSuccess {String} data.name 门店名称
+ * @apiSuccess {String} data.area 门店区域
  * @apiSuccess {String} data.address 门店地址
  * @apiSuccess {String} data.phone 联系电话
  * @apiSuccess {Number} data.manager_id 店长ID
@@ -60,7 +62,7 @@ app.get('/', async (req, res) => {
 app.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const [stores] = await pool.query('SELECT * FROM stores WHERE id = ?', [id])
+    const [stores] = await pool.query('SELECT id, name, area, address, phone, manager_id FROM stores WHERE id = ?', [id])
 
     if (stores.length === 0) {
       return res.status(404).json({ error: '门店不存在' })
@@ -81,6 +83,7 @@ app.get('/:id', async (req, res) => {
  * @apiDescription 创建新的门店
  * 
  * @apiBody {String} name 门店名称
+ * @apiBody {String} [area] 门店区域
  * @apiBody {String} [address] 门店地址
  * @apiBody {String} [phone] 联系电话
  * @apiBody {Number} [manager_id] 店长ID
@@ -98,15 +101,15 @@ app.get('/:id', async (req, res) => {
  */
 app.post('/', async (req, res) => {
   try {
-    const { name, address, phone, manager_id } = req.body
+    const { name, area, address, phone, manager_id } = req.body
 
     if (!name) {
       return res.status(400).json({ error: '门店名称不能为空' })
     }
 
     const [result] = await pool.query(
-      'INSERT INTO stores (name, address, phone, manager_id) VALUES (?, ?, ?, ?)',
-      [name, address, phone, manager_id],
+      'INSERT INTO stores (name, area, address, phone, manager_id) VALUES (?, ?, ?, ?, ?)',
+      [name, area, address, phone, manager_id],
     )
 
     res.status(201).json({
@@ -129,6 +132,7 @@ app.post('/', async (req, res) => {
  * @apiParam {Number} id 门店ID
  * 
  * @apiBody {String} name 门店名称
+ * @apiBody {String} [area] 门店区域
  * @apiBody {String} [address] 门店地址
  * @apiBody {String} [phone] 联系电话
  * @apiBody {Number} [manager_id] 店长ID
@@ -146,15 +150,15 @@ app.post('/', async (req, res) => {
 app.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { name, address, phone, manager_id } = req.body
+    const { name, area, address, phone, manager_id } = req.body
 
     if (!name) {
       return res.status(400).json({ error: '门店名称不能为空' })
     }
 
     const [result] = await pool.query(
-      'UPDATE stores SET name = ?, address = ?, phone = ?, manager_id = ? WHERE id = ?',
-      [name, address, phone, manager_id, id],
+      'UPDATE stores SET name = ?, area = ?, address = ?, phone = ?, manager_id = ? WHERE id = ?',
+      [name, area, address, phone, manager_id, id],
     )
 
     if (result.affectedRows === 0) {
