@@ -4,6 +4,7 @@ import { ElCalendar } from 'element-plus'
 
 import ShiftItem from './ShiftItem.vue'
 import { useScheduleStore } from '@/stores/scheduleStore'
+import initialScheduleData from '@/assets/data/schedules.json'
 
 const scheduleStore = useScheduleStore()
 const currentView = ref<'day' | 'week' | 'month'>('month')
@@ -21,7 +22,8 @@ const getWeekRange = (date: Date): [Date, Date] => {
 scheduleStore.fetchSchedules()
 
 const scheduleData = computed(() => {
-  return scheduleStore.schedules.map(schedule => ({
+  const data = scheduleStore.schedules.length > 0 ? scheduleStore.schedules : initialScheduleData
+  return data.map(schedule => ({
     date: new Date(schedule.start_date),
     content: {
       shiftId: schedule.id,

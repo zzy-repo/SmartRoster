@@ -1,0 +1,102 @@
+[
+    {
+      "id": 6,
+      "start_date": "2025-04-19",
+      "end_date": "2025-04-19",
+      "start_time": "08:00",
+      "end_time": "16:00",
+      "position": "收银员",
+      "employee_name": "孙八",
+      "override_reason": ""
+    },
+    {
+      "id": 7,
+      "start_date": "2025-04-19",
+      "end_date": "2025-04-19",
+      "start_time": "12:00",
+      "end_time": "20:00",
+      "position": "理货员",
+      "employee_name": "李九",
+      "override_reason": ""
+    },
+    {
+      "id": 8,
+      "start_date": "2025-04-20",
+      "end_date": "2025-04-20",
+      "start_time": "10:00",
+      "end_time": "18:00",
+      "position": "客服专员",
+      "employee_name": "周十",
+      "override_reason": ""
+    },
+    {
+      "id": 9,
+      "start_date": "2025-04-21",
+      "end_date": "2025-04-21",
+      "start_time": "09:30",
+      "end_time": "17:30",
+      "position": "仓库管理员",
+      "employee_name": "吴十一",
+      "override_reason": ""
+    },
+    {
+      "id": 10,
+      "start_date": "2025-04-22",
+      "end_date": "2025-04-22",
+      "start_time": "07:00",
+      "end_time": "15:00",
+      "position": "保洁员",
+      "employee_name": "郑十二",
+      "override_reason": ""
+    },
+    {
+      "id": 11,
+      "start_date": "2025-04-23",
+      "end_date": "2025-04-23",
+      "start_time": "14:00",
+      "end_time": "22:00",
+      "position": "保安",
+      "employee_name": "王十三",
+      "override_reason": ""
+    },
+    {
+      "id": 12,
+      "start_date": "2025-04-24",
+      "end_date": "2025-04-24",
+      "start_time": "11:00",
+      "end_time": "19:00",
+      "position": "销售顾问",
+      "employee_name": "冯十四",
+      "override_reason": ""
+    },
+    {
+      "id": 13,
+      "start_date": "2025-04-25",
+      "end_date": "2025-04-25",
+      "start_time": "08:30",
+      "end_time": "16:30",
+      "position": "前台接待",
+      "employee_name": "陈十五",
+      "override_reason": ""
+    },
+    {
+      "id": 14,
+      "start_date": "2025-04-26",
+      "end_date": "2025-04-26",
+      "start_time": "09:00",
+      "end_time": "17:00",
+      "position": "市场推广",
+      "employee_name": "刘十六",
+      "override_reason": ""
+    },
+    {
+      "id": 15,
+      "start_date": "2025-04-27",
+      "end_date": "2025-04-27",
+      "start_time": "13:00",
+      "end_time": "21:00",
+      "position": "技术员",
+      "employee_name": "杨十七",
+      "override_reason": ""
+    }
+  ]
