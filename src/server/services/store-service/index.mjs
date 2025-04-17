@@ -26,8 +26,16 @@ app.use(express.json())
  */
 app.get('/', async (req, res) => {
   try {
-    const [stores] = await pool.query('SELECT id, name, area, address, phone, manager_id FROM stores')
-    res.json({ data: stores }) // 修改为统一格式
+    // 联表查询，计算每个门店的员工数量
+    const [stores] = await pool.query(`
+      SELECT 
+        s.id, s.name, s.area, s.address, s.phone, s.manager_id, 
+        COUNT(e.id) AS employeeCount
+      FROM stores s
+      LEFT JOIN employees e ON s.id = e.store_id
+      GROUP BY s.id
+    `)
+    res.json({ data: stores })
   }
   catch (error) {
     console.error('获取门店列表失败:', error)
@@ -62,13 +70,22 @@ app.get('/', async (req, res) => {
 app.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const [stores] = await pool.query('SELECT id, name, area, address, phone, manager_id FROM stores WHERE id = ?', [id])
+    // 联表查询，计算指定门店的员工数量
+    const [stores] = await pool.query(`
+      SELECT 
+        s.id, s.name, s.area, s.address, s.phone, s.manager_id, 
+        COUNT(e.id) AS employeeCount
+      FROM stores s
+      LEFT JOIN employees e ON s.id = e.store_id
+      WHERE s.id = ?
+      GROUP BY s.id
+    `, [id])
 
     if (stores.length === 0) {
       return res.status(404).json({ error: '门店不存在' })
     }
 
-    res.json({ data: stores[0] }) // 修改为统一格式
+    res.json({ data: stores[0] })
   }
   catch (error) {
     console.error('获取门店详情失败:', error)
@@ -114,7 +131,9 @@ app.post('/', async (req, res) => {
 
     res.status(201).json({
       message: '门店创建成功',
-      storeId: result.insertId,
+      data: {
+        id: result.insertId,
+      },
     })
   }
   catch (error) {

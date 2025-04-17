@@ -14,8 +14,10 @@ export const storeApi = {
   },
 
   // 创建门店
-  createStore: (storeData: Omit<Store, 'id'>) => {
-    return post<{ data: Store }>('/store', storeData)
+  createStore: async (storeData: Omit<Store, 'id'>) => {
+    const res = await post<{ data: Store }>('/store', storeData)
+    const id = res.data.data.id
+    return id
   },
 
   // 更新门店

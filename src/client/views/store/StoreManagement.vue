@@ -45,7 +45,6 @@ onMounted(async () => {
   try {
     loading.value = true
     await storeStore.fetchStores()
-    console.log(storeStore.stores)
     stores.value = storeStore.stores
   }
   catch (error) {
@@ -65,17 +64,15 @@ async function addStore() {
       area: newStore.area,
       phone: newStore.phone
     }
-
-    const { data } = await storeStore.createStore(storeToAdd)
+    const data = await storeStore.createStore(storeToAdd)
     stores.value.push(data)
     showAddStoreForm.value = false
-
     // 重置表单
     Object.assign(newStore, {
       name: '',
       address: '',
       phone: '',
-      area: '',
+      area: 0,
     })
   }
   catch (error) {
@@ -109,9 +106,9 @@ async function updateStore() {
     const { data } = await storeStore.updateStore(editingStore.id, {
       name: editingStore.name,
       address: editingStore.address,
-      area: selectedStore.value?.area || 0,
+      area: editingStore.area, // 使用 editingStore 中的 area
       phone: editingStore.phone
-    } as Store)
+    } as Partial<Store>) // 使用 Partial<Store> 因为 employeeCount 不在此处更新
 
     const index = stores.value.findIndex(s => s.id === editingStore.id)
     if (index !== -1) {

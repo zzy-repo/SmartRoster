@@ -45,9 +45,10 @@ export const useStoreStore = defineStore('store', () => {
 
   const createStore = async (storeData: Omit<Store, 'id'>) => {
     try {
-      const { data } = await storeApi.createStore(storeData)
-      stores.value.push(data.data)
-      return data
+      const id = await storeApi.createStore(storeData)
+      const newStore = { ...storeData, id }
+      stores.value.push(newStore)
+      return newStore
     }
     catch (error) {
       console.error('创建门店失败:', error)
