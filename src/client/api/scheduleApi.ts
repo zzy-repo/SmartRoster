@@ -1,4 +1,4 @@
-import type { Schedule } from '@/types/schedule'
+import type { Schedule } from '@/types/index'
 import { del, get, post, put } from './http'
 
 export const scheduleApi = {

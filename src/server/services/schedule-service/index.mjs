@@ -2,6 +2,8 @@ import express from 'express'
 import { config } from '../../config/index.mjs'
 import scheduleRulesRouter from './schedule-rules.mjs'
 import shiftAssignmentsRouter from './shift-assignments.mjs'
+import schedulesRouter from './schedules.mjs'
+import shiftsRouter from './shifts.mjs'
 
 const app = express()
 const PORT = config.services.schedule.port
@@ -12,6 +14,10 @@ app.use(express.json())
 app.use('/rules', scheduleRulesRouter)
 // 注册班次分配路由
 app.use('/assignments', shiftAssignmentsRouter)
+// 注册排班表路由
+app.use('/schedules', schedulesRouter)
+// 注册班次表路由
+app.use('/shifts', shiftsRouter)
 
 // 启动服务器
 app.listen(PORT, () => {
