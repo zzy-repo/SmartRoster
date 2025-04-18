@@ -2,10 +2,36 @@
 import { useScheduleStore } from '@/stores/scheduleStore'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
+import { useStoreStore } from '@/stores/storeStore'
 
+const storeStore = useStoreStore()
 const scheduleStore = useScheduleStore()
 const dialogVisible = ref(false)
-const currentSchedule = ref({ id: 0, start_date: '', end_date: '', status: 'draft', store_id: 0 })
+const formatStore = (row: any) => {
+  const store = storeStore.stores.find(s => s.id === row.store_id)
+  return store?.name || '未知门店'
+}
+
+const formatDate = (row: any, column: any, value: string) => {
+  return value ? value.split('T')[0] : ''
+}
+
+interface Schedule {
+  id: number
+  start_date: string
+  end_date: string
+  status: string
+  store_id?: string
+}
+
+const formRef = ref()
+const rules = {
+  start_date: [{ required: true, message: '请选择开始日期', trigger: 'blur' }],
+  end_date: [{ required: true, message: '请选择结束日期', trigger: 'blur' }],
+  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }]
+}
+
+const currentSchedule = ref<Schedule>({ id: 0, start_date: '', end_date: '', status: 'draft', store_id: '0' })
 
 async function loadSchedules() {
   try {
@@ -24,23 +50,49 @@ async function loadSchedules() {
 }
 
 function openEditDialog(schedule?: any) {
-  currentSchedule.value = schedule ? { ...schedule } : { id: 0, start_date: '', end_date: '', status: 'draft', store_id: 0 }
+  if (!schedule) {
+    const today = new Date()
+    const endDate = new Date(today)
+    endDate.setDate(today.getDate() + 7)
+    currentSchedule.value = {
+      id: 0,
+      start_date: today.toISOString().split('T')[0],
+      end_date: endDate.toISOString().split('T')[0],
+      status: 'draft',
+      store_id: storeStore.currentStore?.id
+    }
+  } else {
+    currentSchedule.value = { ...schedule }
+  }
   dialogVisible.value = true
 }
 
 async function submitSchedule() {
   try {
+    await formRef.value.validate()
+    // 转换日期格式为YYYY-MM-DD
+    const scheduleToSubmit = {
+      ...currentSchedule.value,
+      start_date: currentSchedule.value.start_date,
+      end_date: currentSchedule.value.end_date
+    }
+
+    console.log('正在提交排班数据：', scheduleToSubmit)
+
     if (currentSchedule.value.id) {
-      await scheduleStore.updateSchedule(currentSchedule.value)
+      await scheduleStore.updateSchedule(scheduleToSubmit)
     }
     else {
-      await scheduleStore.createSchedule(currentSchedule.value)
+      await scheduleStore.createSchedule(scheduleToSubmit)
     }
+    
+    console.log('排班操作成功，更新后的数据：', scheduleToSubmit)
     ElMessage.success('操作成功')
     dialogVisible.value = false
     await loadSchedules()
   }
   catch (error) {
+    console.error('排班操作发生错误：', error)
     ElMessage.error('操作失败')
   }
 }
@@ -57,7 +109,10 @@ async function deleteSchedule(id: number) {
 }
 
 onMounted(async () => {
-  await loadSchedules()
+  await Promise.all([
+    loadSchedules(),
+    storeStore.fetchStores()
+  ])
 })
 </script>
 
@@ -68,9 +123,11 @@ onMounted(async () => {
     </el-button>
 
     <el-table v-if="Array.isArray(scheduleStore.schedules)" :data="scheduleStore.schedules" border>
-      <el-table-column prop="start_date" label="开始日期" />
-      <el-table-column prop="end_date" label="结束日期" />
-      <el-table-column prop="status" label="状态">
+      <el-table-column prop="start_date" label="开始日期" :formatter="formatDate" />
+      <el-table-column prop="end_date" label="结束日期" :formatter="formatDate" />
+      <el-table-column prop="store_id" label="门店" :formatter="formatStore">
+</el-table-column>
+<el-table-column prop="status" label="状态">
         <template #default="{ row }">
           <el-tag :type="row.status === 'published' ? 'success' : 'info'">
             {{ row.status === 'published' ? '已发布' : '草稿' }}
@@ -90,17 +147,21 @@ onMounted(async () => {
     </el-table>
 
     <el-dialog v-model="dialogVisible" :title="currentSchedule.id ? '编辑排班' : '新建排班'">
-      <el-form label-width="100px">
-        <el-form-item label="开始日期">
-          <el-date-picker v-model="currentSchedule.start_date" type="date" />
+      <el-form ref="formRef" :model="currentSchedule" :rules="rules" label-width="100px">
+        <el-form-item prop="start_date" label="开始日期" required>
+          <el-date-picker v-model="currentSchedule.start_date" type="date" value-format="YYYY-MM-DD" />
         </el-form-item>
-        <el-form-item label="结束日期">
-          <el-date-picker v-model="currentSchedule.end_date" type="date" />
+        <el-form-item prop="end_date" label="结束日期" required>
+          <el-date-picker v-model="currentSchedule.end_date" type="date" value-format="YYYY-MM-DD" />
         </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="currentSchedule.status">
-            <el-option label="草稿" value="draft" />
-            <el-option label="已发布" value="published" />
+        <el-form-item prop="store_id" label="门店" required>
+          <el-select v-model="currentSchedule.store_id" filterable>
+            <el-option
+              v-for="store in storeStore.stores"
+              :key="store.id"
+              :label="store.name"
+              :value="store.id"
+            />
           </el-select>
         </el-form-item>
       </el-form>

@@ -68,7 +68,7 @@ export interface Schedule {
   id: number // 排班表ID
   start_date: string // 开始日期，格式YYYY-MM-DD
   end_date: string // 结束日期，格式YYYY-MM-DD
-  store_id: number // 所属门店ID
+  store_id: string // 所属门店ID
   shifts: ScheduleShift[] // 该排班表包含的所有班次
   cost_detail?: CostDetail // 排班成本计算结果
   created_at: string // 创建时间
