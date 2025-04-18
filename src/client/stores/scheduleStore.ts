@@ -17,7 +17,10 @@ export const useScheduleStore = defineStore('schedule', {
       this.loading = true
       try {
         const response = await scheduleApi.getSchedules()
-        this.schedules = response.data || []
+        if(!response.data) {
+          throw new Error('获取排班表失败,未获取到数据')
+        }
+        this.schedules = response.data
         return this.schedules
       } catch (err) {
         this.error = '获取排班表失败'

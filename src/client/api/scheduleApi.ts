@@ -4,7 +4,6 @@ import { del, get, post, put } from './http'
 export const scheduleApi = {
 
   getSchedules: () => {
-    console.log('getSchedules')
     return get<Schedule[]>('/schedules')
   },
 
