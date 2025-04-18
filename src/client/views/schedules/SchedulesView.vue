@@ -23,7 +23,8 @@ const getWeekRange = (date: Date): [Date, Date] => {
 scheduleStore.fetchSchedules()
 
 const scheduleData = computed(() => {
-  const data = scheduleStore.schedules.length > 0 ? scheduleStore.schedules : initialScheduleData
+    const data = initialScheduleData
+//   const data = scheduleStore.schedules.length > 0 ? scheduleStore.schedules : initialScheduleData
   return data.map(schedule => ({
     date: new Date(schedule.start_date),
     content: {
