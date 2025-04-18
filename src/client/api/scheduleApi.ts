@@ -3,8 +3,9 @@ import { del, get, post, put } from './http'
 
 export const scheduleApi = {
 
-  getSchedules: () => {
-    return get<Schedule[]>('/schedules')
+  getSchedules: async () => {
+    const res = await get<{ data: Schedule[] }>('/schedules')
+    return res.data
   },
 
   createSchedule: (newSchedule: Omit<Schedule, 'id'>) => {

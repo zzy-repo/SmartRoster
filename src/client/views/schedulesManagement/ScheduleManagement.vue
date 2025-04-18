@@ -67,7 +67,7 @@ onMounted(async () => {
       新建排班
     </el-button>
 
-    <el-table :data="scheduleStore.schedules" border>
+    <el-table v-if="Array.isArray(scheduleStore.schedules)" :data="scheduleStore.schedules" border>
       <el-table-column prop="start_date" label="开始日期" />
       <el-table-column prop="end_date" label="结束日期" />
       <el-table-column prop="status" label="状态">

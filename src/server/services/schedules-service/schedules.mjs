@@ -29,7 +29,7 @@ router.post('/', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const [schedules] = await pool.query('SELECT * FROM schedules')
-    res.json({ schedules })
+    res.json({ data:schedules })
   }
   catch (error) {
     console.error('获取排班列表失败:', error)
