@@ -17,5 +17,5 @@ export const scheduleApi = {
 
   deleteSchedule: (id: string) => {
     return del<{ success: boolean }>(`/schedule/${id}`)
-  }
+  },
 }

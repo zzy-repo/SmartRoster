@@ -9,14 +9,18 @@ export interface Shift {
   storeId: number
 }
 
-export const fetchShifts = (storeId: number) =>
-  http.get<Shift[]>(`/shifts?storeId=${storeId}`).then(res => res.data)
+export function fetchShifts(storeId: number) {
+  return http.get<Shift[]>(`/shifts?storeId=${storeId}`).then(res => res.data)
+}
 
-export const createShift = (data: Omit<Shift, 'id'>) =>
-  http.post<Shift>('/shifts', data).then(res => res.data)
+export function createShift(data: Omit<Shift, 'id'>) {
+  return http.post<Shift>('/shifts', data).then(res => res.data)
+}
 
-export const updateShift = (id: number, data: Partial<Shift>) =>
-  http.patch<Shift>(`/shifts/${id}`, data).then(res => res.data)
+export function updateShift(id: number, data: Partial<Shift>) {
+  return http.patch<Shift>(`/shifts/${id}`, data).then(res => res.data)
+}
 
-export const deleteShift = (id: number) =>
-  http.delete(`/shifts/${id}`)
+export function deleteShift(id: number) {
+  return http.delete(`/shifts/${id}`)
+}

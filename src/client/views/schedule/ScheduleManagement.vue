@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ElMessage } from 'element-plus'
-import { ref, onMounted } from 'vue'
 import { useScheduleStore } from '@/stores/scheduleStore'
+import { ElMessage } from 'element-plus'
+import { onMounted, ref } from 'vue'
 
 const scheduleStore = useScheduleStore()
 const dialogVisible = ref(false)
@@ -10,13 +10,14 @@ const currentSchedule = ref({ id: 0, start_date: '', end_date: '', status: 'draf
 async function loadSchedules() {
   try {
     await scheduleStore.fetchSchedules()
-    console.log("guagua",scheduleStore.schedules)
+    console.log('guagua', scheduleStore.schedules)
     // 确保数据是数组
     if (!Array.isArray(scheduleStore.schedules)) {
       scheduleStore.schedules = []
       ElMessage.warning('获取排班数据格式不正确')
     }
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('获取排班数据失败')
     scheduleStore.schedules = []
   }
@@ -31,13 +32,15 @@ async function submitSchedule() {
   try {
     if (currentSchedule.value.id) {
       await scheduleStore.updateSchedule(currentSchedule.value)
-    } else {
+    }
+    else {
       await scheduleStore.createSchedule(currentSchedule.value)
     }
     ElMessage.success('操作成功')
     dialogVisible.value = false
     await loadSchedules()
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('操作失败')
   }
 }
@@ -47,7 +50,8 @@ async function deleteSchedule(id: number) {
     await scheduleStore.deleteSchedule(id)
     ElMessage.success('删除成功')
     await loadSchedules()
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('删除失败')
   }
 }
@@ -62,7 +66,7 @@ onMounted(() => {
     <el-button type="primary" @click="openEditDialog()">
       新建排班
     </el-button>
-    
+
     <el-table :data="scheduleStore.schedules" border>
       <el-table-column prop="start_date" label="开始日期" />
       <el-table-column prop="end_date" label="结束日期" />
@@ -101,7 +105,9 @@ onMounted(() => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
         <el-button type="primary" @click="submitSchedule">
           确认
         </el-button>

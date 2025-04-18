@@ -1,16 +1,12 @@
-import { spawn } from 'node:child_process'
 import express from 'express'
 import { config } from '../../config/index.mjs'
-import { pool } from '../../shared/database/index.mjs'
 import scheduleRulesRouter from './schedule-rules.mjs'
 import shiftAssignmentsRouter from './shift-assignments.mjs'
-
 
 const app = express()
 const PORT = config.services.schedule.port
 
 app.use(express.json())
-
 
 // 注册排班规则路由
 app.use('/rules', scheduleRulesRouter)

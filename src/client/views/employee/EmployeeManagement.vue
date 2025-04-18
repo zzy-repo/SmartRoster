@@ -1,10 +1,9 @@
 <script setup lang="ts">
+import type { Employee } from '../../types/index'
+import { ElMessage } from 'element-plus'
 import { onMounted, reactive, ref } from 'vue'
 import { useEmployeeStore } from '../../stores/employeeStore'
 import { useStoreStore } from '../../stores/storeStore'
-import { ElMessage } from 'element-plus'
-import type { Employee } from '../../types/index'
-
 
 // 定义门店类型
 interface Store {
@@ -25,8 +24,6 @@ const showEditEmployeeForm = ref(false)
 const confirmDelete = ref(false)
 const stores = ref<Store[]>([])
 
-
-
 // 新员工表单数据
 const newEmployee = reactive({
   name: '',
@@ -42,7 +39,7 @@ const newEmployee = reactive({
   time_pref_start: '09:00',
   time_pref_end: '17:00',
   created_at: '',
-  updated_at: ''
+  updated_at: '',
 })
 
 // 编辑员工表单数据
@@ -61,7 +58,7 @@ const editingEmployee = reactive({
   time_pref_start: '09:00',
   time_pref_end: '17:00',
   created_at: '',
-  updated_at: ''
+  updated_at: '',
 })
 
 // 加载员工和门店数据
@@ -71,17 +68,17 @@ onMounted(async () => {
     // 使用真实API调用获取数据
     await Promise.all([
       storeStore.fetchStores(),
-      employeeStore.fetchEmployees()
+      employeeStore.fetchEmployees(),
     ])
-    
+
     // 从store中获取数据
     stores.value = storeStore.stores
-    
+
     // 将employeeStore中的数据格式转换为当前组件需要的格式
-    employees.value = employeeStore.employees.map(emp => {
+    employees.value = employeeStore.employees.map((emp) => {
       // 创建符合本地Employee接口的对象
-      const employee: Employee = {...emp}
-      
+      const employee: Employee = { ...emp }
+
       // 查找门店名称
       const store = stores.value.find(s => s.id === employee.store_id)
       console.log('store_id', employee.store_id)
@@ -89,7 +86,7 @@ onMounted(async () => {
       if (store) {
         employee.store_name = store.name
       }
-      
+
       return employee
     })
   }
@@ -131,7 +128,7 @@ async function addEmployee() {
     const response = await employeeStore.createEmployee(employeeData)
 
     console.log('response', response)
-    
+
     // 添加到本地列表
     const store_name = stores.value.find(s => s.id === newEmployee.store_id)?.name || ''
     const employeeToAdd: Employee = {
@@ -147,7 +144,7 @@ async function addEmployee() {
       workday_pref_start: newEmployee.workday_pref_start,
       workday_pref_end: newEmployee.workday_pref_end,
       time_pref_start: newEmployee.time_pref_start,
-      time_pref_end: newEmployee.time_pref_end
+      time_pref_end: newEmployee.time_pref_end,
     }
 
     employees.value.push(employeeToAdd)
@@ -184,12 +181,12 @@ async function updateEmployee() {
       name: editingEmployee.name,
       position: editingEmployee.position,
       phone: editingEmployee.phone,
-      store_id: editingEmployee.store_id
+      store_id: editingEmployee.store_id,
     }
 
     // 调用API更新员工
     await employeeStore.updateEmployee(editingEmployee.id, employeeData)
-    
+
     // 更新本地列表
     const index = employees.value.findIndex(e => e.id === editingEmployee.id)
     if (index !== -1) {
@@ -209,7 +206,7 @@ async function updateEmployee() {
         workday_pref_start: editingEmployee.workday_pref_start,
         workday_pref_end: editingEmployee.workday_pref_end,
         time_pref_start: editingEmployee.time_pref_start,
-        time_pref_end: editingEmployee.time_pref_end
+        time_pref_end: editingEmployee.time_pref_end,
       }
 
       employees.value[index] = updatedEmployee
@@ -230,7 +227,7 @@ async function deleteEmployee() {
     if (selectedEmployee.value) {
       // 调用API删除员工
       await employeeStore.deleteEmployee(selectedEmployee.value.id)
-      
+
       // 更新本地列表
       employees.value = employees.value.filter(e => e.id !== selectedEmployee.value?.id)
       selectedEmployee.value = null
@@ -325,7 +322,7 @@ function prepareEditEmployee() {
             <label>联系电话:</label>
             <span>{{ selectedEmployee.phone }}</span>
           </div>
-          
+
           <div class="actions">
             <button class="edit-btn" @click="prepareEditEmployee()">
               编辑
@@ -386,7 +383,7 @@ function prepareEditEmployee() {
             <label for="email">电子邮箱</label>
             <input id="email" v-model="newEmployee.email" type="email" required>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="showAddEmployeeForm = false">
               取消
@@ -444,7 +441,7 @@ function prepareEditEmployee() {
             <label for="edit-email">电子邮箱</label>
             <input id="edit-email" v-model="editingEmployee.email" type="email" required>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="showEditEmployeeForm = false">
               取消
@@ -595,8 +592,6 @@ function prepareEditEmployee() {
   color: #555;
 }
 
-
-
 .actions {
   margin-top: 30px;
   display: flex;
@@ -664,8 +659,6 @@ function prepareEditEmployee() {
   border: 1px solid #ddd;
   border-radius: 4px;
 }
-
-
 
 .form-actions {
   display: flex;

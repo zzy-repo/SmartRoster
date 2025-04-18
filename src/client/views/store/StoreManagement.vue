@@ -28,7 +28,7 @@ const newStore = reactive({
   name: '',
   address: '',
   phone: '',
-  area: 0
+  area: 0,
 })
 
 // 编辑门店表单数据
@@ -37,7 +37,7 @@ const editingStore = reactive({
   name: '',
   address: '',
   phone: '',
-  area: 0
+  area: 0,
 })
 
 // 加载门店数据
@@ -62,7 +62,7 @@ async function addStore() {
       name: newStore.name,
       address: newStore.address,
       area: newStore.area,
-      phone: newStore.phone
+      phone: newStore.phone,
     }
     const data = await storeStore.createStore(storeToAdd)
     stores.value.push(data)
@@ -107,7 +107,7 @@ async function updateStore() {
       name: editingStore.name,
       address: editingStore.address,
       area: editingStore.area, // 使用 editingStore 中的 area
-      phone: editingStore.phone
+      phone: editingStore.phone,
     } as Partial<Store>) // 使用 Partial<Store> 因为 employeeCount 不在此处更新
 
     const index = stores.value.findIndex(s => s.id === editingStore.id)
@@ -203,7 +203,7 @@ async function deleteStore() {
             <label>门店面积:</label>
             <span>{{ Math.floor(selectedStore.area) }}(m²)</span>
           </div>
-          
+
           <div class="info-group">
             <label>员工数量:</label>
             <span>{{ selectedStore.employeeCount }}</span>
@@ -242,7 +242,7 @@ async function deleteStore() {
             <label for="area">门店面积(m²)</label>
             <input id="area" v-model="newStore.area" type="number" step="1" min="0" required>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="showAddStoreForm = false">
               取消
@@ -276,7 +276,7 @@ async function deleteStore() {
             <label for="edit-area">门店面积(m²)</label>
             <input id="edit-area" v-model="editingStore.area" type="number" required>
           </div>
-          
+
           <div class="form-actions">
             <button type="button" @click="showEditStoreForm = false">
               取消

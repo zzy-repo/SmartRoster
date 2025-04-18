@@ -12,17 +12,17 @@ app.use(express.json())
  * @apiName GetStores
  * @apiGroup Store
  * @apiDescription 获取系统中所有门店的列表
- * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {Object[]} data.stores 门店列表
- * @apiSuccess {Number} data.stores.id 门店ID
- * @apiSuccess {String} data.stores.name 门店名称
- * @apiSuccess {String} data.stores.area 门店区域
- * @apiSuccess {String} data.stores.address 门店地址
- * @apiSuccess {String} data.stores.phone 联系电话
- * @apiSuccess {Number} data.stores.manager_id 店长ID
- * 
- * @apiError {String} error 错误信息
+ *
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {object[]} data.stores 门店列表
+ * @apiSuccess {number} data.stores.id 门店ID
+ * @apiSuccess {string} data.stores.name 门店名称
+ * @apiSuccess {string} data.stores.area 门店区域
+ * @apiSuccess {string} data.stores.address 门店地址
+ * @apiSuccess {string} data.stores.phone 联系电话
+ * @apiSuccess {number} data.stores.manager_id 店长ID
+ *
+ * @apiError {string} error 错误信息
  */
 app.get('/', async (req, res) => {
   try {
@@ -48,19 +48,19 @@ app.get('/', async (req, res) => {
  * @apiName GetStore
  * @apiGroup Store
  * @apiDescription 根据ID获取指定门店的详细信息
- * 
- * @apiParam {Number} id 门店ID
- * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {Number} data.id 门店ID
- * @apiSuccess {String} data.name 门店名称
- * @apiSuccess {String} data.area 门店区域
- * @apiSuccess {String} data.address 门店地址
- * @apiSuccess {String} data.phone 联系电话
- * @apiSuccess {Number} data.manager_id 店长ID
- * 
- * @apiError {String} error 错误信息
- * 
+ *
+ * @apiParam {number} id 门店ID
+ *
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {number} data.id 门店ID
+ * @apiSuccess {string} data.name 门店名称
+ * @apiSuccess {string} data.area 门店区域
+ * @apiSuccess {string} data.address 门店地址
+ * @apiSuccess {string} data.phone 联系电话
+ * @apiSuccess {number} data.manager_id 店长ID
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 门店不存在:
  *     HTTP/1.1 404 Not Found
  *     {
@@ -98,18 +98,18 @@ app.get('/:id', async (req, res) => {
  * @apiName CreateStore
  * @apiGroup Store
  * @apiDescription 创建新的门店
- * 
- * @apiBody {String} name 门店名称
- * @apiBody {String} [area] 门店区域
- * @apiBody {String} [address] 门店地址
- * @apiBody {String} [phone] 联系电话
- * @apiBody {Number} [manager_id] 店长ID
- * 
- * @apiSuccess {String} message 成功消息
- * @apiSuccess {Number} storeId 新创建的门店ID
- * 
- * @apiError {String} error 错误信息
- * 
+ *
+ * @apiBody {string} name 门店名称
+ * @apiBody {string} [area] 门店区域
+ * @apiBody {string} [address] 门店地址
+ * @apiBody {string} [phone] 联系电话
+ * @apiBody {number} [manager_id] 店长ID
+ *
+ * @apiSuccess {string} message 成功消息
+ * @apiSuccess {number} storeId 新创建的门店ID
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 请求无效:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -147,19 +147,19 @@ app.post('/', async (req, res) => {
  * @apiName UpdateStore
  * @apiGroup Store
  * @apiDescription 更新指定门店的信息
- * 
- * @apiParam {Number} id 门店ID
- * 
- * @apiBody {String} name 门店名称
- * @apiBody {String} [area] 门店区域
- * @apiBody {String} [address] 门店地址
- * @apiBody {String} [phone] 联系电话
- * @apiBody {Number} [manager_id] 店长ID
- * 
- * @apiSuccess {String} message 成功消息
- * 
- * @apiError {String} error 错误信息
- * 
+ *
+ * @apiParam {number} id 门店ID
+ *
+ * @apiBody {string} name 门店名称
+ * @apiBody {string} [area] 门店区域
+ * @apiBody {string} [address] 门店地址
+ * @apiBody {string} [phone] 联系电话
+ * @apiBody {number} [manager_id] 店长ID
+ *
+ * @apiSuccess {string} message 成功消息
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 门店不存在:
  *     HTTP/1.1 404 Not Found
  *     {
@@ -197,19 +197,19 @@ app.put('/:id', async (req, res) => {
  * @apiName DeleteStore
  * @apiGroup Store
  * @apiDescription 删除指定的门店
- * 
- * @apiParam {Number} id 门店ID
- * 
- * @apiSuccess {String} message 成功消息
- * 
- * @apiError {String} error 错误信息
- * 
+ *
+ * @apiParam {number} id 门店ID
+ *
+ * @apiSuccess {string} message 成功消息
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 门店不存在:
  *     HTTP/1.1 404 Not Found
  *     {
  *       "error": "门店不存在"
  *     }
- * 
+ *
  * @apiErrorExample {json} 删除失败:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -246,16 +246,16 @@ app.delete('/:id', async (req, res) => {
  * @apiName GetStoreEmployees
  * @apiGroup Store
  * @apiDescription 获取指定门店的所有员工列表
- * 
- * @apiParam {Number} id 门店ID
- * 
- * @apiSuccess {Object[]} employees 员工列表
- * @apiSuccess {Number} employees.id 员工ID
- * @apiSuccess {String} employees.name 员工姓名
- * @apiSuccess {String} employees.position 职位
- * @apiSuccess {Number} employees.store_id 所属门店ID
- * 
- * @apiError {String} error 错误信息
+ *
+ * @apiParam {number} id 门店ID
+ *
+ * @apiSuccess {object[]} employees 员工列表
+ * @apiSuccess {number} employees.id 员工ID
+ * @apiSuccess {string} employees.name 员工姓名
+ * @apiSuccess {string} employees.position 职位
+ * @apiSuccess {number} employees.store_id 所属门店ID
+ *
+ * @apiError {string} error 错误信息
  */
 app.get('/:id/employees', async (req, res) => {
   try {

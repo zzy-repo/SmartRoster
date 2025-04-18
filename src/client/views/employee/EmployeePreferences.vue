@@ -8,8 +8,8 @@ import { employeeApi } from '../../api/employeeApi'
 // 定义员工偏好类型
 // 修改类型定义，与数据库结构保持一致
 interface EmployeePreference {
-  workday_pref: [number, number] 
-  time_pref: [string, string] 
+  workday_pref: [number, number]
+  time_pref: [string, string]
   max_daily_hours: number
   max_weekly_hours: number
 }
@@ -33,8 +33,6 @@ const weekDays = [
   { label: '周日', value: 7 },
 ]
 
-
-
 const preferences = ref<EmployeePreference>({
   workday_pref: [0, 6], // 默认周一至周日
   time_pref: ['09:00', '17:00'],
@@ -49,18 +47,18 @@ onMounted(async () => {
     // 获取员工完整信息（包含偏好设置）
     const empRes = await employeeApi.getEmployeeById(employeeId.value) as unknown as AxiosResponse<ApiResponse<any>>
     const employee = empRes.data.data
-    
+
     employeeName.value = employee.name
 
     // 从员工数据中提取偏好设置
     preferences.value = {
       workday_pref: [
-        employee.workday_pref_start ?? 0, 
-        employee.workday_pref_end ?? 6
+        employee.workday_pref_start ?? 0,
+        employee.workday_pref_end ?? 6,
       ],
       time_pref: [
         employee.time_pref_start || '08:00:00',
-        employee.time_pref_end || '20:00:00'
+        employee.time_pref_end || '20:00:00',
       ],
       max_daily_hours: employee.max_daily_hours || 8,
       max_weekly_hours: employee.max_weekly_hours || 40,
@@ -86,7 +84,7 @@ async function handleSubmit() {
       max_daily_hours: preferences.value.max_daily_hours,
       max_weekly_hours: preferences.value.max_weekly_hours,
     }
-    
+
     // 调用更新员工信息的API，只传递偏好设置相关的字段
     await employeeApi.updateEmployee(employeeId.value, employeeDataToUpdate)
     ElMessage.success('偏好设置已保存')
@@ -97,7 +95,6 @@ async function handleSubmit() {
     ElMessage.error('保存失败')
   }
 }
-
 
 function returnPage() {
   router.push('/employees')
@@ -128,8 +125,6 @@ function returnPage() {
           />
         </el-select>
       </el-form-item>
-
-      
 
       <!-- 时间区间选择 -->
       <el-form-item label="工作时间偏好">

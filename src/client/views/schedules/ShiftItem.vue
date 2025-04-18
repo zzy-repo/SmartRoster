@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ElTag } from 'element-plus'
 import type { PropType } from 'vue'
+import { ElTag } from 'element-plus'
 
 const shift = defineProps({
   shift: {
@@ -11,25 +11,31 @@ const shift = defineProps({
       time: string
       overrideReason?: string
     }>,
-    required: true
-  }
+    required: true,
+  },
 })
 
-const handleDragStart = (e: DragEvent) => {
+function handleDragStart(e: DragEvent) {
   e.dataTransfer?.setData('shift', JSON.stringify(shift))
 }
 </script>
 
 <template>
-  <div 
+  <div
     class="shift-item"
     draggable="true"
     @dragstart="handleDragStart"
     @dragend="$emit('drag-end', shift)"
   >
-    <ElTag type="info">{{ shift.shift.position }}</ElTag>
-    <div class="employee">{{ shift.shift.employee || '未分配' }}</div>
-    <div class="time">{{ shift.shift.time }}</div>
+    <ElTag type="info">
+      {{ shift.shift.position }}
+    </ElTag>
+    <div class="employee">
+      {{ shift.shift.employee || '未分配' }}
+    </div>
+    <div class="time">
+      {{ shift.shift.time }}
+    </div>
     <div v-if="shift.shift.overrideReason" class="remark">
       <el-icon><Warning /></el-icon>
       {{ shift.shift.overrideReason }}

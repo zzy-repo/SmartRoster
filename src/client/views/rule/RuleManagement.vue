@@ -7,7 +7,7 @@ import { getRuleSettings, updateRuleSettings } from '../../api/ruleApi'
 const loading = ref(false)
 const globalSettings = ref({
   max_daily_hours: 8,
-  max_weekly_hours: 40
+  max_weekly_hours: 40,
 })
 
 // 保存设置
@@ -16,9 +16,11 @@ async function saveRule() {
     loading.value = true
     await updateRuleSettings(globalSettings.value)
     ElMessage.success('设置已保存')
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('保存失败')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 }
@@ -27,7 +29,7 @@ async function saveRule() {
 function resetSettings() {
   globalSettings.value = {
     max_daily_hours: 8,
-    max_weekly_hours: 40
+    max_weekly_hours: 40,
   }
   ElMessage.success('设置已重置')
 }
@@ -41,9 +43,11 @@ onMounted(async () => {
     if (settings) {
       globalSettings.value = settings
     }
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载设置失败')
-  } finally {
+  }
+  finally {
     loading.value = false
   }
 })
@@ -56,24 +60,28 @@ onMounted(async () => {
         <div class="card-header">
           <span>排班规则管理</span>
           <div>
-            <el-button type="primary" @click="saveRule">保存</el-button>
-            <el-button @click="resetSettings">重置</el-button>
+            <el-button type="primary" @click="saveRule">
+              保存
+            </el-button>
+            <el-button @click="resetSettings">
+              重置
+            </el-button>
           </div>
         </div>
       </template>
 
       <!-- 全局设置 -->
-        <el-form label-width="150px">
-          <el-form-item label="每日最大工作时长">
-            <el-input-number v-model="globalSettings.max_daily_hours" :min="1" :max="24" />
-            <span class="ml-2">小时</span>
-          </el-form-item>
-          
-          <el-form-item label="每周最大工作时长">
-            <el-input-number v-model="globalSettings.max_weekly_hours" :min="1" :max="168" />
-            <span class="ml-2">小时</span>
-          </el-form-item>
-        </el-form>
+      <el-form label-width="150px">
+        <el-form-item label="每日最大工作时长">
+          <el-input-number v-model="globalSettings.max_daily_hours" :min="1" :max="24" />
+          <span class="ml-2">小时</span>
+        </el-form-item>
+
+        <el-form-item label="每周最大工作时长">
+          <el-input-number v-model="globalSettings.max_weekly_hours" :min="1" :max="168" />
+          <span class="ml-2">小时</span>
+        </el-form-item>
+      </el-form>
 
       <!-- 规则列表部分已移除 -->
     </el-card>

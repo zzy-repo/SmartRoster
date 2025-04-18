@@ -7,7 +7,7 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/scheduleView',
     name: 'Schedules',
-    component: () => import('@/views/schedules/SchedulesView.vue')
+    component: () => import('@/views/schedules/SchedulesView.vue'),
   },
   {
     path: '/login',
@@ -50,7 +50,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/rule/RuleManagement.vue'),
     meta: { title: '排班规则', requiresAuth: true },
   },
-    {
+  {
     path: '/forecast',
     name: 'BusinessForecast',
     component: () => import('@/views/forecast/BusinessForecast.vue'),

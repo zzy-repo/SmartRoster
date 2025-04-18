@@ -13,17 +13,17 @@ app.use(express.json())
  * @apiGroup Employee
  * @apiDescription 获取系统中所有员工的列表，包括其所属门店信息
  * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {Object[]} data.employees 员工列表
- * @apiSuccess {Number} data.employees.id 员工ID
- * @apiSuccess {String} data.employees.name 员工姓名
- * @apiSuccess {String} data.employees.phone 联系电话
- * @apiSuccess {String} data.employees.email 电子邮箱
- * @apiSuccess {String} data.employees.position 职位
- * @apiSuccess {Number} data.employees.store_id 所属门店ID
- * @apiSuccess {String} data.employees.store_name 门店名称
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {object[]} data.employees 员工列表
+ * @apiSuccess {number} data.employees.id 员工ID
+ * @apiSuccess {string} data.employees.name 员工姓名
+ * @apiSuccess {string} data.employees.phone 联系电话
+ * @apiSuccess {string} data.employees.email 电子邮箱
+ * @apiSuccess {string} data.employees.position 职位
+ * @apiSuccess {number} data.employees.store_id 所属门店ID
+ * @apiSuccess {string} data.employees.store_name 门店名称
  * 
- * @apiError {String} error 错误信息
+ * @apiError {string} error 错误信息
  */
 app.get('/', async (req, res) => {
   try {
@@ -48,17 +48,17 @@ app.get('/', async (req, res) => {
  * @apiGroup Employee
  * @apiDescription 根据ID获取指定员工的详细信息
  * 
- * @apiParam {Number} id 员工ID
+ * @apiParam {number} id 员工ID
  * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {Number} data.id 员工ID
- * @apiSuccess {String} data.name 员工姓名
- * @apiSuccess {String} data.phone 联系电话
- * @apiSuccess {String} data.email 电子邮箱
- * @apiSuccess {String} data.position 职位
- * @apiSuccess {Number} data.store_id 所属门店ID
- * @apiSuccess {String} data.store_name 门店名称
- * @apiSuccess {Number} data.max_daily_hours 每日最大工作时数
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {number} data.id 员工ID
+ * @apiSuccess {string} data.name 员工姓名
+ * @apiSuccess {string} data.phone 联系电话
+ * @apiSuccess {string} data.email 电子邮箱
+ * @apiSuccess {string} data.position 职位
+ * @apiSuccess {number} data.store_id 所属门店ID
+ * @apiSuccess {string} data.store_name 门店名称
+ * @apiSuccess {number} data.max_daily_hours 每日最大工作时数
  * @apiSuccess {Number} data.max_weekly_hours 每周最大工作时数
  * @apiSuccess {Number} data.workday_pref_start 偏好工作日起始值
  * @apiSuccess {Number} data.workday_pref_end 偏好工作日结束值
@@ -106,16 +106,16 @@ app.get('/:id', async (req, res) => {
  * @apiGroup Employee
  * @apiDescription 创建新的员工记录，包括基本信息
  * 
- * @apiBody {String} name 员工姓名
- * @apiBody {String} [phone] 联系电话
- * @apiBody {String} [email] 电子邮箱
- * @apiBody {String} position 职位
- * @apiBody {Number} [store_id] 所属门店ID
- * @apiBody {Number} [user_id] 关联用户ID
- * @apiBody {Number} [max_daily_hours=8] 每日最大工作时数
- * @apiBody {Number} [max_weekly_hours=40] 每周最大工作时数
- * @apiBody {Number} [workday_pref_start=0] 偏好工作日起始值
- * @apiBody {Number} [workday_pref_end=6] 偏好工作日结束值
+ * @apiBody {string} name 员工姓名
+ * @apiBody {string} [phone] 联系电话
+ * @apiBody {string} [email] 电子邮箱
+ * @apiBody {string} position 职位
+ * @apiBody {number} [store_id] 所属门店ID
+ * @apiBody {number} [user_id] 关联用户ID
+ * @apiBody {number} [max_daily_hours=8] 每日最大工作时数
+ * @apiBody {number} [max_weekly_hours=40] 每周最大工作时数
+ * @apiBody {number} [workday_pref_start=0] 偏好工作日起始值
+ * @apiBody {number} [workday_pref_end=6] 偏好工作日结束值
  * @apiBody {String} [time_pref_start="08:00:00"] 偏好工作时间起始值
  * @apiBody {String} [time_pref_end="20:00:00"] 偏好工作时间结束值
  * 
@@ -197,17 +197,17 @@ app.post('/', async (req, res) => {
  * @apiGroup Employee
  * @apiDescription 更新指定员工的信息，包括基本信息
  * 
- * @apiParam {Number} id 员工ID
+ * @apiParam {number} id 员工ID
  * 
- * @apiBody {String} name 员工姓名
- * @apiBody {String} [phone] 联系电话
- * @apiBody {String} [email] 电子邮箱
- * @apiBody {String} position 职位
- * @apiBody {Number} [store_id] 所属门店ID
- * @apiBody {Number} [user_id] 关联用户ID
- * @apiBody {Number} [max_daily_hours] 每日最大工作时数
- * @apiBody {Number} [max_weekly_hours] 每周最大工作时数
- * @apiBody {Number} [workday_pref_start] 偏好工作日起始值
+ * @apiBody {string} name 员工姓名
+ * @apiBody {string} [phone] 联系电话
+ * @apiBody {string} [email] 电子邮箱
+ * @apiBody {string} position 职位
+ * @apiBody {number} [store_id] 所属门店ID
+ * @apiBody {number} [user_id] 关联用户ID
+ * @apiBody {number} [max_daily_hours] 每日最大工作时数
+ * @apiBody {number} [max_weekly_hours] 每周最大工作时数
+ * @apiBody {number} [workday_pref_start] 偏好工作日起始值
  * @apiBody {Number} [workday_pref_end] 偏好工作日结束值
  * @apiBody {String} [time_pref_start] 偏好工作时间起始值
  * @apiBody {String} [time_pref_end] 偏好工作时间结束值
@@ -305,8 +305,6 @@ app.delete('/:id', async (req, res) => {
     res.status(500).json({ error: '服务器错误' })
   }
 })
-
-
 
 // 启动服务器
 app.listen(PORT, () => {
