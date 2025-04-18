@@ -4,7 +4,7 @@ import { useScheduleStore } from '@/stores/scheduleStore'
 
 import { ElCalendar, ElCard } from 'element-plus'
 import { computed, ref } from 'vue'
-import ShiftItem from '@/views/schedules/ShiftItem.vue'
+import ShiftItem from '@/views/schedulesView/ShiftItem.vue'
 
 const scheduleStore = useScheduleStore()
 const currentView = ref<'year' | 'month' | 'week' | 'day'>('month')
