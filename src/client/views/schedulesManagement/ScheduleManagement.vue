@@ -18,6 +18,7 @@ async function loadSchedules() {
   }
   catch (error) {
     ElMessage.error('获取排班数据失败')
+    console.log(scheduleStore.schedules)
     scheduleStore.schedules = []
   }
 }
@@ -55,8 +56,8 @@ async function deleteSchedule(id: number) {
   }
 }
 
-onMounted(() => {
-  loadSchedules()
+onMounted(async () => {
+  await loadSchedules()
 })
 </script>
 

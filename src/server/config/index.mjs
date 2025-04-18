@@ -27,7 +27,7 @@ export const config = {
       port: 3003,
     },
     schedule: {
-      name: 'schedule-service',
+      name: 'schedules-service',
       port: 3004,
     },
     forecast: {

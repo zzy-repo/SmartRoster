@@ -5,6 +5,7 @@ import { scheduleApi } from '@/api/scheduleApi'
 export const useScheduleStore = defineStore('schedule', {
   state: () => ({
     currentSchedule: null as Schedule | null,
+    schedules: [] as Schedule[],
     loading: false,
     error: null as string | null,
     scheduleRules: [],
@@ -12,10 +13,26 @@ export const useScheduleStore = defineStore('schedule', {
   }),
 
   actions: {
-    async fetchSchedule(scheduleId: number) {
+    async fetchSchedules() {
       this.loading = true
       try {
         const response = await scheduleApi.getSchedules()
+        this.schedules = response.data || []
+        return this.schedules
+      } catch (err) {
+        this.error = '获取排班表失败'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async fetchSchedule(scheduleId: number) {
+      this.loading = true
+      try {
+        console.log(scheduleId)
+        const response = await scheduleApi.getSchedules()
+        console.log(response)
         this.currentSchedule = response.data.find((s: Schedule) => s.id === scheduleId) || null
       } catch (err) {
         this.error = '获取排班表失败'
@@ -32,6 +49,45 @@ export const useScheduleStore = defineStore('schedule', {
         // await api.put(`/schedules/${this.currentSchedule.id}`, this.currentSchedule)
       } catch (err) {
         this.error = '保存排班表失败'
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async createSchedule(schedule: any) {
+      this.loading = true
+      try {
+        const response = await scheduleApi.createSchedule(schedule)
+        return response.data
+      } catch (err) {
+        this.error = '创建排班表失败'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async updateSchedule(schedule: any) {
+      this.loading = true
+      try {
+        const response = await scheduleApi.updateSchedule(String(schedule.id), schedule)
+        return response.data
+      } catch (err) {
+        this.error = '更新排班表失败'
+        throw err
+      } finally {
+        this.loading = false
+      }
+    },
+    
+    async deleteSchedule(id: number) {
+      this.loading = true
+      try {
+        await scheduleApi.deleteSchedule(String(id))
+        this.schedules = this.schedules.filter(s => s.id !== id)
+      } catch (err) {
+        this.error = '删除排班表失败'
+        throw err
       } finally {
         this.loading = false
       }

@@ -39,7 +39,6 @@ onMounted(async () => {
   try {
     loading.value = true
     const settings = await getRuleSettings()
-    console.log(settings)
     if (settings) {
       globalSettings.value = settings
     }

@@ -4,18 +4,19 @@ import { del, get, post, put } from './http'
 export const scheduleApi = {
 
   getSchedules: () => {
-    return get<{ data: Schedule[] }>('/schedule')
+    console.log('getSchedules')
+    return get<Schedule[]>('/schedules')
   },
 
   createSchedule: (newSchedule: Omit<Schedule, 'id'>) => {
-    return post<{ data: Schedule }>('/schedule', newSchedule)
+    return post<{ data: Schedule }>('/schedules', newSchedule)
   },
 
   updateSchedule: (id: string, updatedSchedule: Partial<Schedule>) => {
-    return put<{ data: Schedule }>(`/schedule/${id}`, updatedSchedule)
+    return put<{ data: Schedule }>(`/schedules/${id}`, updatedSchedule)
   },
 
   deleteSchedule: (id: string) => {
-    return del<{ success: boolean }>(`/schedule/${id}`)
+    return del<{ success: boolean }>(`/schedules/${id}`)
   },
 }
