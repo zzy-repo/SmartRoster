@@ -48,7 +48,7 @@ const monthlyScheduleCount = computed(() => {
 
 // 按日统计排班人数（用于月视图）
 const weeklyPositionCount = computed(() => {
-  const counts = {};
+  const counts: Record<string, Record<string, number>> = {};
   scheduleData.value.forEach(item => {
     const dateStr = item.date.toISOString().slice(0, 10);
     if (!counts[dateStr]) {
