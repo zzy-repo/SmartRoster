@@ -33,7 +33,7 @@ const scheduleData = computed(() => {
 
 // 按月统计排班人数（用于年视图）
 const monthlyScheduleCount = computed(() => {
-  const counts = Array.from({ length: 12 }).fill(0)
+  const counts: number[] = Array.from({ length: 12 }).fill(0) as number[]
   scheduleData.value.forEach((item) => {
     const month = item.date.getMonth()
     counts[month]++
