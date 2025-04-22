@@ -3,22 +3,15 @@ import initialScheduleData from '@/assets/data/schedules.json'
 import { useScheduleStore } from '@/stores/scheduleStore'
 
 import DayScheduleView from '@/views/schedulesView/DayScheduleView.vue'
-import ShiftItem from '@/views/schedulesView/ShiftItem.vue'
-import { ElCalendar, ElCard } from 'element-plus'
 import { computed, ref } from 'vue'
+
+import YearView from './YearView.vue'
+import MonthView from './MonthView.vue'
 
 const scheduleStore = useScheduleStore()
 const currentView = ref<'year' | 'month' | 'week' | 'day'>('month')
 const currentDate = ref(new Date())
 const currentYear = ref(new Date().getFullYear())
-
-function getWeekRange(date: Date): [Date, Date] {
-  const start = new Date(date)
-  start.setDate(date.getDate() - date.getDay())
-  const end = new Date(date)
-  end.setDate(date.getDate() + (6 - date.getDay()))
-  return [start, end]
-}
 
 // 获取排班数据
 scheduleStore.fetchSchedules()
@@ -61,19 +54,10 @@ const weeklyPositionCount = computed(() => {
   return counts
 })
 
-function handleDragEnd(updatedShift: any) {
-  scheduleStore.updateShiftAssignment(updatedShift)
-}
-
 // 获取月份名称
 function handleMonthClick(monthIndex: number) {
   currentView.value = 'month'
   currentDate.value = new Date(currentYear.value, monthIndex, 1)
-}
-
-function getMonthName(index: number): string {
-  const monthNames = ['一月', '二月', '三月', '四月', '五月', '六月', '七月', '八月', '九月', '十月', '十一月', '十二月']
-  return monthNames[index]
 }
 </script>
 
@@ -93,92 +77,21 @@ function getMonthName(index: number): string {
       </el-radio-group>
     </div>
 
-    <!-- 年视图 -->
-    <div v-if="currentView === 'year'" class="year-view">
-      <div class="year-header">
-        <el-button @click="currentYear--">
-          上一年
-        </el-button>
-        <h2>{{ currentYear }}年排班统计</h2>
-        <el-button @click="currentYear++">
-          下一年
-        </el-button>
-      </div>
-      <div class="months-grid">
-        <ElCard v-for="(count, index) in monthlyScheduleCount" :key="index" class="month-card" style="padding: 8px;" @click="handleMonthClick(index)">
-          <template #header>
-            <div class="month-header">
-              {{ getMonthName(index) }}
-            </div>
-          </template>
-          <div class="month-count">
-            排班总人数: {{ count }}
-          </div>
-        </ElCard>
-      </div>
-    </div>
+    <YearView
+      v-if="currentView === 'year'"
+      :current-year="currentYear"
+      :monthly-schedule-count="monthlyScheduleCount"
+      @prev-year="currentYear--"
+      @next-year="currentYear++"
+      @month-click="handleMonthClick"
+    />
 
-    <!-- 月视图 -->
-    <div v-else-if="currentView === 'month'">
-      <ElCalendar v-model="currentDate">
-        <template #date-cell="{ data }">
-          <div class="calendar-cell" @click="() => { currentView = 'day'; currentDate = new Date(data.day); }">
-            <div class="date-count">
-              <el-tag
-                v-for="(count, position) in weeklyPositionCount[new Date(data.day).toISOString().slice(0, 10)] || {}"
-                :key="position"
-                size="small"
-                class="position-tag"
-                :style="{ marginRight: '4px', marginBottom: '4px' }"
-              >
-                {{ position }}: {{ count }}
-              </el-tag>
-            </div>
-          </div>
-        </template>
-      </ElCalendar>
-    </div>
+    <MonthView
+      v-else-if="currentView === 'month'"
+      :weekly-position-count="weeklyPositionCount"
+      @day-click="(date) => { currentView = 'day'; currentDate = date; }"
+    />
 
-    <!-- 周视图 -->
-    <div v-else-if="currentView === 'week'">
-      <div class="week-header">
-        <el-button @click="currentDate = new Date(currentDate.getTime() - 604800000)">
-          上一周
-        </el-button>
-        <h3>{{ currentDate.toISOString().slice(0, 10) }} 所在周</h3>
-        <el-button @click="currentDate = new Date(currentDate.getTime() + 604800000)">
-          下一周
-        </el-button>
-      </div>
-      <ElCalendar v-model="currentDate" :range="getWeekRange(currentDate)">
-        <template #date-cell="{ data }">
-          <div class="calendar-cell" @click="() => { currentView = 'day'; currentDate = new Date(data.day); }">
-            <div class="date-count">
-              <el-tag
-                v-for="(count, position) in weeklyPositionCount[new Date(data.day).toISOString().slice(0, 10)] || {}"
-                :key="position"
-                size="small"
-                class="position-tag"
-                :style="{ marginRight: '4px', marginBottom: '4px' }"
-              >
-                {{ position }}: {{ count }}
-              </el-tag>
-            </div>
-            <div
-              v-for="(item, index) in scheduleData.filter(d =>
-                new Date(d.date).toISOString().slice(0, 10) === new Date(data.day).toISOString().slice(0, 10))" :key="index"
-            >
-              <ShiftItem
-                :shift="item.content"
-                @drag-end="handleDragEnd"
-              />
-            </div>
-          </div>
-        </template>
-      </ElCalendar>
-    </div>
-
-    <!-- 日视图 -->
     <div v-else-if="currentView === 'day'" class="day-view">
       <DayScheduleView
         v-model:date="currentDate"

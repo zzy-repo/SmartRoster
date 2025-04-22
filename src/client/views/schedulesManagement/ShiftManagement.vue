@@ -15,8 +15,21 @@ const storeId = Number(route.params.storeId)
 const dialogVisible = ref(false)
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
+/**
+ * 班次基础类型定义
+ */
+ export interface ShiftTemp {
+  id?: number;               // 班次ID (可选，新建时可能没有)
+  day: number;               // 工作日 (0-6 对应周一到周日)
+  start_time: string;        // 开始时间 (格式: "HH:mm")
+  end_time: string;          // 结束时间 (格式: "HH:mm")
+  status: 'open' | 'closed'; // 班次状态
+  store_id: number;          // 所属门店ID
+  positions: string[];       // 关联的职位数组
+}
+
 // 当前编辑的班次
-const currentShift = ref<Partial<Shift>>({
+const currentShift = ref<ShiftTemp>({
   day: 0,
   start_time: '09:00',
   end_time: '17:00',
