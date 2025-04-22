@@ -51,15 +51,24 @@ async function loadSchedules() {
   }
 }
 
+// 新增：计算最近周一的日期
+function getNearestMonday(date = new Date()) {
+  const day = date.getDay();
+  const diff = day >= 1 ? date.getDate() - (day - 1) : date.getDate() - 6;
+  return new Date(date.setDate(diff));
+}
+
+// 修改后的 openEditDialog 函数
 function openEditDialog(schedule?: any) {
   if (!schedule) {
-    const today = new Date()
-    const endDate = new Date(today)
-    endDate.setDate(today.getDate() + 7)
+    const monday = getNearestMonday();
+    const sunday = new Date(monday);
+    sunday.setDate(monday.getDate() + 6);
+    
     currentSchedule.value = {
       id: 0,
-      start_date: today.toISOString().split('T')[0],
-      end_date: endDate.toISOString().split('T')[0],
+      start_date: monday.toISOString().split('T')[0],
+      end_date: sunday.toISOString().split('T')[0],
       status: 'draft',
       store_id: storeStore.currentStore?.id,
     }
@@ -197,3 +206,38 @@ onMounted(async () => {
   padding: 20px;
 }
 </style>
+
+// 更新验证规则
+const rules = {
+  start_date: [
+    { required: true, message: '请选择开始日期', trigger: 'blur' },
+    {
+      validator: (_, value) => {
+        const day = new Date(value).getDay();
+        if (day !== 1) return Promise.reject('开始日期必须为周一');
+        return Promise.resolve();
+      },
+      trigger: 'change'
+    }
+  ],
+  end_date: [
+    { required: true, message: '请选择结束日期', trigger: 'blur' },
+    {
+      validator: (_, value, { start_date }) => {
+        const startDate = new Date(start_date);
+        const endDate = new Date(value);
+        endDate.setHours(0, 0, 0, 0);
+        
+        const expectedEnd = new Date(startDate);
+        expectedEnd.setDate(startDate.getDate() + 6);
+        
+        if (endDate.getTime() !== expectedEnd.getTime()) {
+          return Promise.reject('排班周期必须为完整周（7天）');
+        }
+        return Promise.resolve();
+      },
+      trigger: 'change'
+    }
+  ],
+  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
+}
