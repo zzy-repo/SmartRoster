@@ -31,17 +31,14 @@ const currentDate = ref(props.date)
 const employeeList = ref<EmployeeShift[]>([])
 const showGrouping = ref(false)
 
-// 按部门分组的员工列表
+// 按岗位分组的员工列表
+// 按岗位分组逻辑
 const groupedEmployees = computed(() => {
   const groups: Record<string, EmployeeShift[]> = {}
-
-  employeeList.value.forEach((employee) => {
-    if (!groups[employee.department]) {
-      groups[employee.department] = []
-    }
-    groups[employee.department].push(employee)
+  employeeList.value.forEach(emp => {
+    const groupKey = emp.position // 改为按岗位分组
+    groups[groupKey] = [...(groups[groupKey] || []), emp]
   })
-
   return groups
 })
 
@@ -73,18 +70,18 @@ const timeSlots = computed(() => {
   const endHour = 22
 
   for (let hour = startHour; hour < endHour; hour++) {
-    // 整点时间段
+    // 整点时间段（显示小时标签）
     slots.push({
       key: `${hour.toString().padStart(2, '0')}:00`,
-      label: `${hour}:00`, // 显示所有整点时间
+      label: `${hour}:00`,
       start: `${hour.toString().padStart(2, '0')}:00`,
       end: `${hour.toString().padStart(2, '0')}:30`,
     })
 
-    // 半点时间段
+    // 半点时间段（空标签）
     slots.push({
       key: `${hour.toString().padStart(2, '0')}:30`,
-      label: '', // 半点不显示标签
+      label: '',
       start: `${hour.toString().padStart(2, '0')}:30`,
       end: `${(hour + 1).toString().padStart(2, '0')}:00`,
     })
@@ -98,21 +95,9 @@ function getShiftForTimeSlot(employee: EmployeeShift, timeSlotKey: string): stri
   return employee.shifts[timeSlotKey] || null
 }
 
-// 根据班次类型获取样式类
+// 根据班次状态获取样式类
 function getShiftClass(shiftType: string | null): string {
-  if (!shiftType)
-    return ''
-
-  const classMap: Record<string, string> = {
-    早班: 'shift-morning',
-    中班: 'shift-mid',
-    晚班: 'shift-evening',
-    夜班: 'shift-night',
-    培训: 'shift-training',
-    休息: 'shift-rest',
-  }
-
-  return classMap[shiftType] || 'shift-default'
+  return shiftType ? 'shift-active' : ''
 }
 
 // 获取单元格样式
@@ -159,14 +144,14 @@ async function loadScheduleData() {
 
     // 模拟班次数据
     const mockShifts: Record<string, Record<string, string>> = {
-      1: { '08:00': '早班', '08:30': '早班', '09:00': '休息', '09:30': '早班', '10:00': '早班' },
-      2: { '09:00': '培训', '09:30': '培训', '10:00': '培训', '10:30': '中班', '11:00': '中班' },
-      3: { '12:00': '中班', '12:30': '中班', '13:00': '中班', '13:30': '休息', '14:00': '中班' },
-      4: { '16:00': '晚班', '16:30': '晚班', '17:00': '晚班', '17:30': '晚班', '18:00': '晚班' },
-      5: { '20:00': '夜班', '20:30': '夜班', '21:00': '夜班', '21:30': '夜班' },
-      6: { '08:00': '早班', '08:30': '早班', '09:00': '早班', '09:30': '早班', '10:00': '休息' },
-      7: { '14:00': '中班', '14:30': '中班', '15:00': '中班', '15:30': '中班', '16:00': '中班' },
-      8: { '11:00': '中班', '11:30': '中班', '12:00': '休息', '12:30': '中班', '13:00': '中班' },
+      1: { '08:00': 'shift-active', '08:30': 'shift-active', '09:00': 'shift-active', '09:30': 'shift-active', '10:00': 'shift-active' },
+      2: { '09:00': 'shift-active', '09:30': 'shift-active', '10:00': 'shift-active', '10:30': 'shift-active', '11:00': 'shift-active' },
+      3: { '12:00': 'shift-active', '12:30': 'shift-active', '13:00': 'shift-active', '13:30': 'shift-active', '14:00': 'shift-active' },
+      4: { '16:00': 'shift-active', '16:30': 'shift-active', '17:00': 'shift-active', '17:30': 'shift-active', '18:00': 'shift-active' },
+      5: { '20:00': 'shift-active', '20:30': 'shift-active', '21:00': 'shift-active', '21:30': 'shift-active' },
+      6: { '08:00': 'shift-active', '08:30': 'shift-active', '09:00': 'shift-active', '09:30': 'shift-active', '10:00': '09:00' },
+      7: { '14:00': 'shift-active', '14:30': 'shift-active', '15:00': 'shift-active', '15:30': 'shift-active', '16:00': 'shift-active' },
+      8: { '11:00': 'shift-active', '11:30': 'shift-active', '12:00': 'shift-active', '12:30': 'shift-active', '13:00': 'shift-active' },
     }
 
     // 转换为组件所需的数据格式
@@ -178,15 +163,6 @@ async function loadScheduleData() {
       shifts: mockShifts[emp.id] || {},
     }))
 
-    // 实际项目中应该从 scheduleStore 获取数据
-    // await scheduleStore.fetchSchedules()
-    // const scheduleForDate = scheduleStore.schedules.find(s =>
-    //   new Date(s.start_date).toISOString().slice(0, 10) === formattedDate.value
-    // )
-
-    // if (scheduleForDate) {
-    //   // 处理实际数据...
-    // }
   }
   catch (error) {
     ElMessage.error('加载排班数据失败')
@@ -215,7 +191,7 @@ onMounted(() => {
     <div class="view-options">
       <el-switch
         v-model="showGrouping"
-        active-text="按部门分组"
+        active-text="按岗位分组"
         inactive-text="不分组"
       />
     </div>
@@ -247,12 +223,8 @@ onMounted(() => {
             v-if="getShiftForTimeSlot(row, timeSlot.key)"
             class="shift-cell"
             :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
-          >
-            {{ getShiftForTimeSlot(row, timeSlot.key) }}
-          </div>
-          <div v-else>
-            —
-          </div>
+          />
+          <div v-else />
         </template>
       </el-table-column>
     </el-table>
@@ -287,9 +259,7 @@ onMounted(() => {
                 v-if="getShiftForTimeSlot(row, timeSlot.key)"
                 class="shift-cell"
                 :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
-              >
-                {{ getShiftForTimeSlot(row, timeSlot.key) }}
-              </div>
+              />
               <div v-else>
                 —
               </div>
@@ -327,56 +297,36 @@ onMounted(() => {
 }
 
 .shift-cell {
-  padding: 6px 4px;
+  min-width: 40px;
+  height: 32px;
   border-radius: 4px;
-  font-size: 12px;
-  font-weight: bold;
-  min-height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  margin: 2px;
 }
 
-.shift-morning {
-  background-color: #e6f7ff;
-  color: #1890ff;
-  border: 1px solid #91d5ff;
+.shift-active {
+  background-color: #67C23A;
+  border: 1px solid #85ce61;
 }
 
-.shift-mid {
-  background-color: #f6ffed;
-  color: #52c41a;
-  border: 1px solid #b7eb8f;
+.group-title {
+  font-weight: 600;
+  font-size: 15px;
+  color: #303133;
+  margin: 16px 0 8px;
+  padding-left: 8px;
+  border-left: 3px solid #67C23A;
 }
 
-.shift-evening {
-  background-color: #fff7e6;
-  color: #fa8c16;
-  border: 1px solid #ffd591;
+.department-group {
+  margin-bottom: 36px;
 }
 
-.shift-night {
-  background-color: #f9f0ff;
-  color: #722ed1;
-  border: 1px solid #d3adf7;
+:deep(.el-table__header th) {
+  border-right: 1px solid #EBEEF5;
 }
 
-.shift-training {
-  background-color: #fcf4f6;
-  color: #eb2f96;
-  border: 1px solid #ffadd2;
-}
-
-.shift-rest {
-  background-color: #f5f5f5;
-  color: #8c8c8c;
-  border: 1px solid #d9d9d9;
-}
-
-.shift-default {
-  background-color: #f0f0f0;
-  color: #595959;
-  border: 1px solid #d9d9d9;
+:deep(.el-table__header th:nth-child(even)) {
+  border-right: 1px solid #EBEEF580;
 }
 
 /* 表格样式优化 */
