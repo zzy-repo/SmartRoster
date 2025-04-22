@@ -82,15 +82,15 @@ app.use((req, res, next) => {
 // 遍历配置中的服务，为每个服务创建代理中间件
 Object.entries({
   ...config.services,
-  schedules: config.services.schedule
+  schedules: config.services.schedule,
 }).forEach(([name, service]) => {
   console.log(`正在配置服务代理: ${name} -> localhost:${service.port}`)
-    console.log(`[配置详情] 服务名称: ${service.name} 路径前缀: /api/${name}`);
+  console.log(`[配置详情] 服务名称: ${service.name} 路径前缀: /api/${name}`)
 
   const proxy = httpProxy.createProxyServer({
     target: `http://localhost:${service.port}`,
     timeout: 30000,
-    xfwd: true
+    xfwd: true,
   })
 
   proxy.on('proxyReq', (proxyReq, req, res) => {
@@ -121,7 +121,7 @@ Object.entries({
   })
 
   app.use(`/api/${name}`, (req, res) => {
-    console.log(`[路由匹配] 请求路径: ${req.path} 匹配服务: ${name}`);
+    console.log(`[路由匹配] 请求路径: ${req.path} 匹配服务: ${name}`)
     // 处理路径重写
     req.url = req.url.replace(new RegExp(`^/api/${name}`), '')
     proxy.web(req, res)
@@ -155,9 +155,9 @@ app.listen(PORT, () => {
   // 验证服务配置
   console.log('当前路由配置:')
   Object.entries({
-  ...config.services,
-  schedules: config.services.schedule
-}).forEach(([name, service]) => {
+    ...config.services,
+    schedules: config.services.schedule,
+  }).forEach(([name, service]) => {
     console.log(`/api/${name} -> localhost:${service.port}`)
   })
 })

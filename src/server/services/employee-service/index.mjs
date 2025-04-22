@@ -12,7 +12,7 @@ app.use(express.json())
  * @apiName GetEmployees
  * @apiGroup Employee
  * @apiDescription 获取系统中所有员工的列表，包括其所属门店信息
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {object[]} data.employees 员工列表
  * @apiSuccess {number} data.employees.id 员工ID
@@ -22,7 +22,7 @@ app.use(express.json())
  * @apiSuccess {string} data.employees.position 职位
  * @apiSuccess {number} data.employees.store_id 所属门店ID
  * @apiSuccess {string} data.employees.store_name 门店名称
- * 
+ *
  * @apiError {string} error 错误信息
  */
 app.get('/', async (req, res) => {
@@ -47,9 +47,9 @@ app.get('/', async (req, res) => {
  * @apiName GetEmployee
  * @apiGroup Employee
  * @apiDescription 根据ID获取指定员工的详细信息
- * 
+ *
  * @apiParam {number} id 员工ID
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {number} data.id 员工ID
  * @apiSuccess {string} data.name 员工姓名
@@ -59,14 +59,14 @@ app.get('/', async (req, res) => {
  * @apiSuccess {number} data.store_id 所属门店ID
  * @apiSuccess {string} data.store_name 门店名称
  * @apiSuccess {number} data.max_daily_hours 每日最大工作时数
- * @apiSuccess {Number} data.max_weekly_hours 每周最大工作时数
- * @apiSuccess {Number} data.workday_pref_start 偏好工作日起始值
- * @apiSuccess {Number} data.workday_pref_end 偏好工作日结束值
- * @apiSuccess {String} data.time_pref_start 偏好工作时间起始值
- * @apiSuccess {String} data.time_pref_end 偏好工作时间结束值
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiSuccess {number} data.max_weekly_hours 每周最大工作时数
+ * @apiSuccess {number} data.workday_pref_start 偏好工作日起始值
+ * @apiSuccess {number} data.workday_pref_end 偏好工作日结束值
+ * @apiSuccess {string} data.time_pref_start 偏好工作时间起始值
+ * @apiSuccess {string} data.time_pref_end 偏好工作时间结束值
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 员工不存在:
  *     HTTP/1.1 404 Not Found
  *     {
@@ -105,7 +105,7 @@ app.get('/:id', async (req, res) => {
  * @apiName CreateEmployee
  * @apiGroup Employee
  * @apiDescription 创建新的员工记录，包括基本信息
- * 
+ *
  * @apiBody {string} name 员工姓名
  * @apiBody {string} [phone] 联系电话
  * @apiBody {string} [email] 电子邮箱
@@ -116,15 +116,15 @@ app.get('/:id', async (req, res) => {
  * @apiBody {number} [max_weekly_hours=40] 每周最大工作时数
  * @apiBody {number} [workday_pref_start=0] 偏好工作日起始值
  * @apiBody {number} [workday_pref_end=6] 偏好工作日结束值
- * @apiBody {String} [time_pref_start="08:00:00"] 偏好工作时间起始值
- * @apiBody {String} [time_pref_end="20:00:00"] 偏好工作时间结束值
- * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {String} data.message 成功消息
- * @apiSuccess {Number} data.employeeId 新创建的员工ID
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiBody {string} [time_pref_start="08:00:00"] 偏好工作时间起始值
+ * @apiBody {string} [time_pref_end="20:00:00"] 偏好工作时间结束值
+ *
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {string} data.message 成功消息
+ * @apiSuccess {number} data.employeeId 新创建的员工ID
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 请求无效:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -196,9 +196,9 @@ app.post('/', async (req, res) => {
  * @apiName UpdateEmployee
  * @apiGroup Employee
  * @apiDescription 更新指定员工的信息，包括基本信息
- * 
+ *
  * @apiParam {number} id 员工ID
- * 
+ *
  * @apiBody {string} name 员工姓名
  * @apiBody {string} [phone] 联系电话
  * @apiBody {string} [email] 电子邮箱
@@ -208,15 +208,15 @@ app.post('/', async (req, res) => {
  * @apiBody {number} [max_daily_hours] 每日最大工作时数
  * @apiBody {number} [max_weekly_hours] 每周最大工作时数
  * @apiBody {number} [workday_pref_start] 偏好工作日起始值
- * @apiBody {Number} [workday_pref_end] 偏好工作日结束值
- * @apiBody {String} [time_pref_start] 偏好工作时间起始值
- * @apiBody {String} [time_pref_end] 偏好工作时间结束值
- * 
- * @apiSuccess {Object} data 响应数据
- * @apiSuccess {String} data.message 成功消息
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiBody {number} [workday_pref_end] 偏好工作日结束值
+ * @apiBody {string} [time_pref_start] 偏好工作时间起始值
+ * @apiBody {string} [time_pref_end] 偏好工作时间结束值
+ *
+ * @apiSuccess {object} data 响应数据
+ * @apiSuccess {string} data.message 成功消息
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 员工不存在:
  *     HTTP/1.1 404 Not Found
  *     {

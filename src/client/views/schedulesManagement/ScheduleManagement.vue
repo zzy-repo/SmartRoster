@@ -1,20 +1,20 @@
 <script setup lang="ts">
 import { useScheduleStore } from '@/stores/scheduleStore'
+import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
-import { useStoreStore } from '@/stores/storeStore'
 import { useRouter } from 'vue-router'
 
 const router = useRouter()
 const storeStore = useStoreStore()
 const scheduleStore = useScheduleStore()
 const dialogVisible = ref(false)
-const formatStore = (row: any) => {
+function formatStore(row: any) {
   const store = storeStore.stores.find(s => s.id === row.store_id)
   return store?.name || '未知门店'
 }
 
-const formatDate = (row: any, column: any, value: string) => {
+function formatDate(row: any, column: any, value: string) {
   return value ? value.split('T')[0] : ''
 }
 
@@ -30,7 +30,7 @@ const formRef = ref()
 const rules = {
   start_date: [{ required: true, message: '请选择开始日期', trigger: 'blur' }],
   end_date: [{ required: true, message: '请选择结束日期', trigger: 'blur' }],
-  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }]
+  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
 }
 
 const currentSchedule = ref<Schedule>({ id: 0, start_date: '', end_date: '', status: 'draft', store_id: '0' })
@@ -61,9 +61,10 @@ function openEditDialog(schedule?: any) {
       start_date: today.toISOString().split('T')[0],
       end_date: endDate.toISOString().split('T')[0],
       status: 'draft',
-      store_id: storeStore.currentStore?.id
+      store_id: storeStore.currentStore?.id,
     }
-  } else {
+  }
+  else {
     currentSchedule.value = { ...schedule }
   }
   dialogVisible.value = true
@@ -76,7 +77,7 @@ async function submitSchedule() {
     const scheduleToSubmit = {
       ...currentSchedule.value,
       start_date: currentSchedule.value.start_date,
-      end_date: currentSchedule.value.end_date
+      end_date: currentSchedule.value.end_date,
     }
 
     console.log('正在提交排班数据：', scheduleToSubmit)
@@ -87,7 +88,7 @@ async function submitSchedule() {
     else {
       await scheduleStore.createSchedule(scheduleToSubmit)
     }
-    
+
     console.log('排班操作成功，更新后的数据：', scheduleToSubmit)
     ElMessage.success('操作成功')
     dialogVisible.value = false
@@ -115,15 +116,15 @@ function manageShifts(schedule: any) {
     name: 'ShiftManagement',
     params: {
       scheduleId: schedule.id,
-      storeId: schedule.store_id
-    }
+      storeId: schedule.store_id,
+    },
   })
 }
 
 onMounted(async () => {
   await Promise.all([
     loadSchedules(),
-    storeStore.fetchStores()
+    storeStore.fetchStores(),
   ])
 })
 </script>
@@ -137,9 +138,8 @@ onMounted(async () => {
     <el-table v-if="Array.isArray(scheduleStore.schedules)" :data="scheduleStore.schedules" border>
       <el-table-column prop="start_date" label="开始日期" :formatter="formatDate" />
       <el-table-column prop="end_date" label="结束日期" :formatter="formatDate" />
-      <el-table-column prop="store_id" label="门店" :formatter="formatStore">
-</el-table-column>
-<el-table-column prop="status" label="状态">
+      <el-table-column prop="store_id" label="门店" :formatter="formatStore" />
+      <el-table-column prop="status" label="状态">
         <template #default="{ row }">
           <el-tag :type="row.status === 'published' ? 'success' : 'info'">
             {{ row.status === 'published' ? '已发布' : '草稿' }}

@@ -1,6 +1,6 @@
+import type { ScheduleShift, Shift } from '../types/shiftTypes'
 import { defineStore } from 'pinia'
-import { fetchShifts, createShift, updateShift, deleteShift } from '../api/shiftApi'
-import type { Shift, ScheduleShift } from '../types/shiftTypes'
+import { createShift, deleteShift, fetchShifts, updateShift } from '../api/shiftApi'
 
 interface ShiftState {
   shifts: ScheduleShift[]
@@ -14,7 +14,7 @@ export const useShiftStore = defineStore('shift', {
     shifts: [],
     currentStoreId: null,
     isLoading: false,
-    error: null
+    error: null,
   }),
 
   actions: {
@@ -31,11 +31,13 @@ export const useShiftStore = defineStore('shift', {
           assignments: {},
           positions: [],
           created_at: s.created_at || new Date().toISOString(),
-          updated_at: s.updated_at || new Date().toISOString()
+          updated_at: s.updated_at || new Date().toISOString(),
         }))
-      } catch (error) {
+      }
+      catch (error) {
         this.error = '加载班次失败'
-      } finally {
+      }
+      finally {
         this.isLoading = false
       }
     },
@@ -51,9 +53,10 @@ export const useShiftStore = defineStore('shift', {
           end_time: newShift.endTime,
           store_id: newShift.storeId,
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
+          updated_at: new Date().toISOString(),
         })
-      } catch (error) {
+      }
+      catch (error) {
         this.error = '创建班次失败'
         throw error
       }
@@ -68,10 +71,11 @@ export const useShiftStore = defineStore('shift', {
             ...this.shifts[index],
             ...updatedShift,
             start_time: updatedShift.startTime || this.shifts[index].start_time,
-            end_time: updatedShift.endTime || this.shifts[index].end_time
+            end_time: updatedShift.endTime || this.shifts[index].end_time,
           }
         }
-      } catch (error) {
+      }
+      catch (error) {
         this.error = '更新班次失败'
         throw error
       }
@@ -88,17 +92,18 @@ export const useShiftStore = defineStore('shift', {
       try {
         await deleteShift(shiftId)
         this.shifts = this.shifts.filter(s => s.id !== shiftId)
-      } catch (error) {
+      }
+      catch (error) {
         this.error = '删除班次失败'
         throw error
       }
-    }
+    },
   },
 
   getters: {
     getShiftsByDay: (state) => {
       return (day: number) => state.shifts.filter(s => s.day === day)
     },
-    activeShifts: (state) => state.shifts.filter(s => s.status === 'open')
-  }
+    activeShifts: state => state.shifts.filter(s => s.status === 'open'),
+  },
 })

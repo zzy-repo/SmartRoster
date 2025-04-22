@@ -2,10 +2,10 @@
 import initialScheduleData from '@/assets/data/schedules.json'
 import { useScheduleStore } from '@/stores/scheduleStore'
 
+import DayScheduleView from '@/views/schedulesView/DayScheduleView.vue'
+import ShiftItem from '@/views/schedulesView/ShiftItem.vue'
 import { ElCalendar, ElCard } from 'element-plus'
 import { computed, ref } from 'vue'
-import ShiftItem from '@/views/schedulesView/ShiftItem.vue'
-import DayScheduleView from '@/views/schedulesView/DayScheduleView.vue'
 
 const scheduleStore = useScheduleStore()
 const currentView = ref<'year' | 'month' | 'week' | 'day'>('month')
@@ -180,7 +180,7 @@ function getMonthName(index: number): string {
 
     <!-- 日视图 -->
     <div v-else-if="currentView === 'day'" class="day-view">
-      <DayScheduleView 
+      <DayScheduleView
         v-model:date="currentDate"
       />
     </div>

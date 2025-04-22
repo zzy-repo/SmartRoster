@@ -1,3 +1,3 @@
-export * from './storeTypes';
-export * from './employeeTypes';
-export * from './shiftTypes';
+export * from './employeeTypes'
+export * from './shiftTypes'
+export * from './storeTypes'

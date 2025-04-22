@@ -12,20 +12,20 @@ app.use(express.json())
  * @apiName GetHistoricalData
  * @apiGroup Forecast
  * @apiDescription 获取指定门店在给定时间范围内的历史客流量和销售数据
- * 
+ *
  * @apiParam {number} storeId 门店ID
  * @apiQuery {string} startDate 开始日期 (YYYY-MM-DD)
  * @apiQuery {string} endDate 结束日期 (YYYY-MM-DD)
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {object[]} data.records 历史数据记录
  * @apiSuccess {string} data.records.date 日期
  * @apiSuccess {number} data.records.hour 小时
  * @apiSuccess {number} data.records.customer_count 客流量
  * @apiSuccess {number} data.records.sales_amount 销售额
- * 
+ *
  * @apiError {string} error 错误信息
- * 
+ *
  * @apiErrorExample {json} 参数缺失:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -62,26 +62,26 @@ app.get('/historical/:storeId', async (req, res) => {
  * @apiName GeneratePrediction
  * @apiGroup Forecast
  * @apiDescription 根据历史数据生成指定时间范围内的客流量和销售预测
- * 
+ *
  * @apiBody {number} storeId 门店ID
  * @apiBody {string} startDate 开始日期 (YYYY-MM-DD)
  * @apiBody {string} endDate 结束日期 (YYYY-MM-DD)
  * @apiBody {string} [method="average"] 预测方法
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {number} data.storeId 门店ID
  * @apiSuccess {string} data.startDate 开始日期
  * @apiSuccess {string} data.endDate 结束日期
  * @apiSuccess {string} data.method 使用的预测方法
  * @apiSuccess {object[]} data.predictions 预测结果列表
- * @apiSuccess {String} data.predictions.date 日期
- * @apiSuccess {Number} data.predictions.hour 小时
- * @apiSuccess {Number} data.predictions.customer_count 预测客流量
- * @apiSuccess {Number} data.predictions.sales_amount 预测销售额
- * @apiSuccess {Number} data.predictions.required_staff 建议所需员工数
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiSuccess {string} data.predictions.date 日期
+ * @apiSuccess {number} data.predictions.hour 小时
+ * @apiSuccess {number} data.predictions.customer_count 预测客流量
+ * @apiSuccess {number} data.predictions.sales_amount 预测销售额
+ * @apiSuccess {number} data.predictions.required_staff 建议所需员工数
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 参数缺失:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -175,11 +175,11 @@ app.post('/predict', async (req, res) => {
  * @apiName GetPrediction
  * @apiGroup Forecast
  * @apiDescription 获取指定门店在给定时间范围内的预测数据
- * 
+ *
  * @apiParam {number} storeId 门店ID
  * @apiQuery {string} startDate 开始日期 (YYYY-MM-DD)
  * @apiQuery {string} endDate 结束日期 (YYYY-MM-DD)
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {number} data.storeId 门店ID
  * @apiSuccess {string} data.startDate 开始日期
@@ -187,12 +187,12 @@ app.post('/predict', async (req, res) => {
  * @apiSuccess {object[]} data.predictions 预测结果列表
  * @apiSuccess {string} data.predictions.date 日期
  * @apiSuccess {number} data.predictions.hour 小时
- * @apiSuccess {Number} data.predictions.customer_count 预测客流量
- * @apiSuccess {Number} data.predictions.sales_amount 预测销售额
- * @apiSuccess {Number} data.predictions.required_staff 建议所需员工数
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiSuccess {number} data.predictions.customer_count 预测客流量
+ * @apiSuccess {number} data.predictions.sales_amount 预测销售额
+ * @apiSuccess {number} data.predictions.required_staff 建议所需员工数
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 参数缺失:
  *     HTTP/1.1 400 Bad Request
  *     {
@@ -252,22 +252,22 @@ app.get('/predict/:storeId', async (req, res) => {
  * @apiName GenerateShiftRequirements
  * @apiGroup Forecast
  * @apiDescription 根据预测数据生成指定时间范围内的班次需求
- * 
+ *
  * @apiBody {number} storeId 门店ID
  * @apiBody {string} startDate 开始日期 (YYYY-MM-DD)
  * @apiBody {string} endDate 结束日期 (YYYY-MM-DD)
  * @apiBody {object} [staffingRules] 排班规则配置
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {object[]} data.shifts 班次需求列表
  * @apiSuccess {string} data.shifts.date 日期
  * @apiSuccess {number} data.shifts.start_hour 开始时间
  * @apiSuccess {number} data.shifts.end_hour 结束时间
  * @apiSuccess {number} data.shifts.required_staff 所需员工数
- * @apiSuccess {Object} data.shifts.position_requirements 各职位所需人数
- * 
- * @apiError {String} error 错误信息
- * 
+ * @apiSuccess {object} data.shifts.position_requirements 各职位所需人数
+ *
+ * @apiError {string} error 错误信息
+ *
  * @apiErrorExample {json} 参数缺失:
  *     HTTP/1.1 400 Bad Request
  *     {

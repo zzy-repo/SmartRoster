@@ -121,26 +121,26 @@ app.post('/login', async (req, res) => {
  * @apiName Register
  * @apiGroup Auth
  * @apiDescription 创建新用户账户
- * 
+ *
  * @apiBody {string} username 用户名
  * @apiBody {string} password 密码
  * @apiBody {string} [role] 用户角色（可选）
- * 
+ *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {string} data.token JWT访问令牌
  * @apiSuccess {object} data.user 用户信息
  * @apiSuccess {number} data.user.id 用户ID
  * @apiSuccess {string} data.user.username 用户名
  * @apiSuccess {string} data.user.role 用户角色
- * 
+ *
  * @apiError {string} error 错误信息
- * 
+ *
  * @apiErrorExample {json} 用户名已存在:
  *     HTTP/1.1 400 Bad Request
  *     {
  *       "error": "用户名已存在"
  *     }
- * 
+ *
  * @apiErrorExample {json} 请求无效:
  *     HTTP/1.1 400 Bad Request
  *     {

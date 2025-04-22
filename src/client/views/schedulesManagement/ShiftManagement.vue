@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { useRoute } from 'vue-router'
+import type { Shift } from '@/types/shiftTypes'
 import { useShiftStore } from '@/stores/shiftStore'
 import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { onMounted, ref, computed } from 'vue'
-import type { Shift } from '@/types/shiftTypes'
+import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const shiftStore = useShiftStore()
@@ -22,7 +22,7 @@ const currentShift = ref<Partial<Shift>>({
   end_time: '17:00',
   status: 'open',
   store_id: storeId,
-  positions: []
+  positions: [],
 })
 
 // 表单引用
@@ -32,7 +32,7 @@ const formRef = ref()
 const rules = {
   day: [{ required: true, message: '请选择工作日', trigger: 'change' }],
   start_time: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
-  end_time: [{ required: true, message: '请选择结束时间', trigger: 'change' }]
+  end_time: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
 }
 
 // 按日期分组的班次
@@ -54,7 +54,8 @@ const storeName = computed(() => {
 async function loadShifts() {
   try {
     await shiftStore.loadShifts(storeId)
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载班次数据失败')
   }
 }
@@ -63,14 +64,15 @@ async function loadShifts() {
 function openShiftDialog(shift?: any) {
   if (shift) {
     currentShift.value = { ...shift }
-  } else {
+  }
+  else {
     currentShift.value = {
       day: 0,
       start_time: '09:00',
       end_time: '17:00',
       status: 'open',
       store_id: storeId,
-      positions: []
+      positions: [],
     }
   }
   dialogVisible.value = true
@@ -80,7 +82,7 @@ function openShiftDialog(shift?: any) {
 async function submitShift() {
   try {
     await formRef.value.validate()
-    
+
     // 准备提交数据
     const shiftData = {
       day: currentShift.value.day,
@@ -90,20 +92,22 @@ async function submitShift() {
       store_id: storeId,
       positions: [],
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
+      updated_at: new Date().toISOString(),
     }
 
     if (currentShift.value.id) {
       await shiftStore.updateExistingShift(currentShift.value.id, shiftData)
       ElMessage.success('班次更新成功')
-    } else {
+    }
+    else {
       await shiftStore.createNewShift(shiftData)
       ElMessage.success('班次创建成功')
     }
-    
+
     dialogVisible.value = false
     await loadShifts()
-  } catch (error) {
+  }
+  catch (error) {
     console.error('提交班次数据失败:', error)
     ElMessage.error('操作失败')
   }
@@ -115,13 +119,14 @@ async function deleteShift(id: number) {
     await ElMessageBox.confirm('确定要删除这个班次吗？', '警告', {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     })
-    
+
     await shiftStore.removeShift(id)
     ElMessage.success('班次删除成功')
     await loadShifts()
-  } catch (error) {
+  }
+  catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('删除失败')
     }
@@ -134,7 +139,8 @@ async function toggleStatus(shift: any) {
     const newStatus = shift.status === 'open' ? 'closed' : 'open'
     await shiftStore.toggleShiftStatus(shift.id, newStatus)
     ElMessage.success(`班次状态已更改为${newStatus === 'open' ? '开放' : '关闭'}`)
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('更改状态失败')
   }
 }
@@ -147,7 +153,7 @@ function formatTime(time: string) {
 onMounted(async () => {
   await Promise.all([
     loadShifts(),
-    storeStore.fetchStores()
+    storeStore.fetchStores(),
   ])
 })
 </script>
@@ -162,17 +168,17 @@ onMounted(async () => {
     </div>
 
     <div class="shifts-container">
-      <div v-for="day in 7" :key="day-1" class="day-section">
-        <h3>{{ weekdays[day-1] }}</h3>
-        
+      <div v-for="day in 7" :key="day - 1" class="day-section">
+        <h3>{{ weekdays[day - 1] }}</h3>
+
         <div class="shifts-list">
-          <el-empty v-if="shiftsByDay[day-1]?.length === 0" description="暂无班次" />
-          
-          <el-card 
-            v-for="shift in shiftsByDay[day-1]" 
-            :key="shift.id" 
+          <el-empty v-if="shiftsByDay[day - 1]?.length === 0" description="暂无班次" />
+
+          <el-card
+            v-for="shift in shiftsByDay[day - 1]"
+            :key="shift.id"
             class="shift-card"
-            :class="{ 'closed': shift.status === 'closed' }"
+            :class="{ closed: shift.status === 'closed' }"
           >
             <div class="shift-header">
               <span class="shift-time">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
@@ -180,13 +186,13 @@ onMounted(async () => {
                 {{ shift.status === 'open' ? '开放' : '关闭' }}
               </el-tag>
             </div>
-            
+
             <div class="shift-actions">
               <el-button size="small" @click="openShiftDialog(shift)">
                 编辑
               </el-button>
-              <el-button 
-                size="small" 
+              <el-button
+                size="small"
                 :type="shift.status === 'open' ? 'warning' : 'success'"
                 @click="toggleStatus(shift)"
               >
@@ -206,44 +212,52 @@ onMounted(async () => {
       <el-form ref="formRef" :model="currentShift" :rules="rules" label-width="100px">
         <el-form-item prop="day" label="工作日" required>
           <el-select v-model="currentShift.day">
-            <el-option 
-              v-for="(name, index) in weekdays" 
-              :key="index" 
-              :label="name" 
-              :value="index" 
+            <el-option
+              v-for="(name, index) in weekdays"
+              :key="index"
+              :label="name"
+              :value="index"
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item prop="start_time" label="开始时间" required>
-          <el-time-picker 
-            v-model="currentShift.start_time" 
+          <el-time-picker
+            v-model="currentShift.start_time"
             format="HH:mm"
             value-format="HH:mm"
             placeholder="选择开始时间"
           />
         </el-form-item>
-        
+
         <el-form-item prop="end_time" label="结束时间" required>
-          <el-time-picker 
-            v-model="currentShift.end_time" 
+          <el-time-picker
+            v-model="currentShift.end_time"
             format="HH:mm"
             value-format="HH:mm"
             placeholder="选择结束时间"
           />
         </el-form-item>
-        
+
         <el-form-item prop="status" label="状态">
           <el-radio-group v-model="currentShift.status">
-            <el-radio label="open">开放</el-radio>
-            <el-radio label="closed">关闭</el-radio>
+            <el-radio label="open">
+              开放
+            </el-radio>
+            <el-radio label="closed">
+              关闭
+            </el-radio>
           </el-radio-group>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
-        <el-button @click="dialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="submitShift">确认</el-button>
+        <el-button @click="dialogVisible = false">
+          取消
+        </el-button>
+        <el-button type="primary" @click="submitShift">
+          确认
+        </el-button>
       </template>
     </el-dialog>
   </div>

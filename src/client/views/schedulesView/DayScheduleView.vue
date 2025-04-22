@@ -1,104 +1,7 @@
-<template>
-  <div class="day-schedule-view">
-    <div class="day-header">
-      <el-button @click="prevDay">
-        前一天
-      </el-button>
-      <h3>{{ formattedDate }} 排班详情</h3>
-      <el-button @click="nextDay">
-        后一天
-      </el-button>
-    </div>
-
-    <!-- 分组显示开关 -->
-    <div class="view-options">
-      <el-switch
-        v-model="showGrouping"
-        active-text="按部门分组"
-        inactive-text="不分组"
-      />
-    </div>
-
-    <!-- 不分组视图 -->
-    <el-table 
-      v-if="!showGrouping"
-      :data="employeeList" 
-      border 
-      style="width: 100%" 
-      :cell-class-name="getCellClass"
-      :span-method="objectSpanMethod"
-    >
-      <!-- 员工信息列 -->
-      <el-table-column prop="name" label="员工姓名" width="120" fixed="left" />
-
-      <!-- 动态生成时间段列 -->
-      <el-table-column 
-        v-for="timeSlot in timeSlots" 
-        :key="timeSlot.key"
-        :label="timeSlot.label"
-        :prop="timeSlot.key"
-        align="center"
-        width="80"
-        :class-name="timeSlot.key.endsWith(':00') ? 'hour-column' : 'half-hour-column'"
-      >
-        <template #default="{ row, column }">
-          <div 
-            v-if="getShiftForTimeSlot(row, timeSlot.key)" 
-            class="shift-cell"
-            :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
-          >
-            {{ getShiftForTimeSlot(row, timeSlot.key) }}
-          </div>
-          <div v-else>—</div>
-        </template>
-      </el-table-column>
-    </el-table>
-
-    <!-- 分组视图 -->
-    <div v-else>
-      <div v-for="(group, groupName) in groupedEmployees" :key="groupName" class="department-group">
-        <h4 class="group-title">{{ groupName }}</h4>
-        <el-table 
-          :data="group" 
-          border 
-          style="width: 100%; margin-bottom: 20px" 
-          :cell-class-name="getCellClass"
-        >
-          <!-- 员工信息列 -->
-          <el-table-column prop="name" label="员工姓名" width="120" fixed="left" />
-
-          <!-- 动态生成时间段列 -->
-          <el-table-column 
-            v-for="timeSlot in timeSlots" 
-            :key="timeSlot.key"
-            :label="timeSlot.label"
-            :prop="timeSlot.key"
-            align="center"
-            width="80"
-            :class-name="timeSlot.key.endsWith(':00') ? 'hour-column' : 'half-hour-column'"
-          >
-            <template #default="{ row, column }">
-              <div 
-                v-if="getShiftForTimeSlot(row, timeSlot.key)" 
-                class="shift-cell"
-                :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
-              >
-                {{ getShiftForTimeSlot(row, timeSlot.key) }}
-              </div>
-              <div v-else>—</div>
-            </template>
-          </el-table-column>
-        </el-table>
-      </div>
-    </div>
-  </div>
-</template>
-
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
 import { useScheduleStore } from '@/stores/scheduleStore'
-import type { Schedule, ScheduleShift } from '@/types/shiftTypes'
 import { ElMessage } from 'element-plus'
+import { computed, onMounted, ref } from 'vue'
 
 interface EmployeeShift {
   id: string
@@ -131,14 +34,14 @@ const showGrouping = ref(false)
 // 按部门分组的员工列表
 const groupedEmployees = computed(() => {
   const groups: Record<string, EmployeeShift[]> = {}
-  
-  employeeList.value.forEach(employee => {
+
+  employeeList.value.forEach((employee) => {
     if (!groups[employee.department]) {
       groups[employee.department] = []
     }
     groups[employee.department].push(employee)
   })
-  
+
   return groups
 })
 
@@ -149,12 +52,12 @@ function objectSpanMethod({ row, column, rowIndex, columnIndex }: any) {
     // 整点列可以考虑合并
     return {
       colspan: 1,
-      rowspan: 1
+      rowspan: 1,
     }
   }
   return {
     colspan: 1,
-    rowspan: 1
+    rowspan: 1,
   }
 }
 
@@ -168,25 +71,25 @@ const timeSlots = computed(() => {
   const slots: TimeSlot[] = []
   const startHour = 8
   const endHour = 22
-  
+
   for (let hour = startHour; hour < endHour; hour++) {
     // 整点时间段
     slots.push({
       key: `${hour.toString().padStart(2, '0')}:00`,
-      label: `${hour}:00`,  // 显示所有整点时间
+      label: `${hour}:00`, // 显示所有整点时间
       start: `${hour.toString().padStart(2, '0')}:00`,
-      end: `${hour.toString().padStart(2, '0')}:30`
+      end: `${hour.toString().padStart(2, '0')}:30`,
     })
-    
+
     // 半点时间段
     slots.push({
       key: `${hour.toString().padStart(2, '0')}:30`,
-      label: '',  // 半点不显示标签
+      label: '', // 半点不显示标签
       start: `${hour.toString().padStart(2, '0')}:30`,
-      end: `${(hour + 1).toString().padStart(2, '0')}:00`
+      end: `${(hour + 1).toString().padStart(2, '0')}:00`,
     })
   }
-  
+
   return slots
 })
 
@@ -197,24 +100,26 @@ function getShiftForTimeSlot(employee: EmployeeShift, timeSlotKey: string): stri
 
 // 根据班次类型获取样式类
 function getShiftClass(shiftType: string | null): string {
-  if (!shiftType) return ''
-  
+  if (!shiftType)
+    return ''
+
   const classMap: Record<string, string> = {
-    '早班': 'shift-morning',
-    '中班': 'shift-mid',
-    '晚班': 'shift-evening',
-    '夜班': 'shift-night',
-    '培训': 'shift-training',
-    '休息': 'shift-rest'
+    早班: 'shift-morning',
+    中班: 'shift-mid',
+    晚班: 'shift-evening',
+    夜班: 'shift-night',
+    培训: 'shift-training',
+    休息: 'shift-rest',
   }
-  
+
   return classMap[shiftType] || 'shift-default'
 }
 
 // 获取单元格样式
 function getCellClass({ row, column }: { row: EmployeeShift, column: any }): string {
-  if (column.property === 'name') return ''
-  
+  if (column.property === 'name')
+    return ''
+
   const shiftType = getShiftForTimeSlot(row, column.property)
   return shiftType ? getShiftClass(shiftType) : ''
 }
@@ -249,40 +154,41 @@ async function loadScheduleData() {
       { id: '5', name: '钱七', position: '保洁员', department: '后勤组' },
       { id: '6', name: '孙八', position: '收银员', department: '客服组' },
       { id: '7', name: '周九', position: '客服专员', department: '客服组' },
-      { id: '8', name: '吴十', position: '理货员', department: '运营组' }
+      { id: '8', name: '吴十', position: '理货员', department: '运营组' },
     ]
-    
+
     // 模拟班次数据
     const mockShifts: Record<string, Record<string, string>> = {
-      '1': { '08:00': '早班', '08:30': '早班', '09:00': '休息', '09:30': '早班', '10:00': '早班' },
-      '2': { '09:00': '培训', '09:30': '培训', '10:00': '培训', '10:30': '中班', '11:00': '中班' },
-      '3': { '12:00': '中班', '12:30': '中班', '13:00': '中班', '13:30': '休息', '14:00': '中班' },
-      '4': { '16:00': '晚班', '16:30': '晚班', '17:00': '晚班', '17:30': '晚班', '18:00': '晚班' },
-      '5': { '20:00': '夜班', '20:30': '夜班', '21:00': '夜班', '21:30': '夜班' },
-      '6': { '08:00': '早班', '08:30': '早班', '09:00': '早班', '09:30': '早班', '10:00': '休息' },
-      '7': { '14:00': '中班', '14:30': '中班', '15:00': '中班', '15:30': '中班', '16:00': '中班' },
-      '8': { '11:00': '中班', '11:30': '中班', '12:00': '休息', '12:30': '中班', '13:00': '中班' }
+      1: { '08:00': '早班', '08:30': '早班', '09:00': '休息', '09:30': '早班', '10:00': '早班' },
+      2: { '09:00': '培训', '09:30': '培训', '10:00': '培训', '10:30': '中班', '11:00': '中班' },
+      3: { '12:00': '中班', '12:30': '中班', '13:00': '中班', '13:30': '休息', '14:00': '中班' },
+      4: { '16:00': '晚班', '16:30': '晚班', '17:00': '晚班', '17:30': '晚班', '18:00': '晚班' },
+      5: { '20:00': '夜班', '20:30': '夜班', '21:00': '夜班', '21:30': '夜班' },
+      6: { '08:00': '早班', '08:30': '早班', '09:00': '早班', '09:30': '早班', '10:00': '休息' },
+      7: { '14:00': '中班', '14:30': '中班', '15:00': '中班', '15:30': '中班', '16:00': '中班' },
+      8: { '11:00': '中班', '11:30': '中班', '12:00': '休息', '12:30': '中班', '13:00': '中班' },
     }
-    
+
     // 转换为组件所需的数据格式
     employeeList.value = mockEmployees.map(emp => ({
       id: emp.id,
       name: emp.name,
       position: emp.position,
       department: emp.department,
-      shifts: mockShifts[emp.id] || {}
+      shifts: mockShifts[emp.id] || {},
     }))
-    
+
     // 实际项目中应该从 scheduleStore 获取数据
     // await scheduleStore.fetchSchedules()
-    // const scheduleForDate = scheduleStore.schedules.find(s => 
+    // const scheduleForDate = scheduleStore.schedules.find(s =>
     //   new Date(s.start_date).toISOString().slice(0, 10) === formattedDate.value
     // )
-    
+
     // if (scheduleForDate) {
     //   // 处理实际数据...
     // }
-  } catch (error) {
+  }
+  catch (error) {
     ElMessage.error('加载排班数据失败')
     console.error('加载排班数据失败', error)
   }
@@ -292,6 +198,108 @@ onMounted(() => {
   loadScheduleData()
 })
 </script>
+
+<template>
+  <div class="day-schedule-view">
+    <div class="day-header">
+      <el-button @click="prevDay">
+        前一天
+      </el-button>
+      <h3>{{ formattedDate }} 排班详情</h3>
+      <el-button @click="nextDay">
+        后一天
+      </el-button>
+    </div>
+
+    <!-- 分组显示开关 -->
+    <div class="view-options">
+      <el-switch
+        v-model="showGrouping"
+        active-text="按部门分组"
+        inactive-text="不分组"
+      />
+    </div>
+
+    <!-- 不分组视图 -->
+    <el-table
+      v-if="!showGrouping"
+      :data="employeeList"
+      border
+      style="width: 100%"
+      :cell-class-name="getCellClass"
+      :span-method="objectSpanMethod"
+    >
+      <!-- 员工信息列 -->
+      <el-table-column prop="name" label="员工姓名" width="120" fixed="left" />
+
+      <!-- 动态生成时间段列 -->
+      <el-table-column
+        v-for="timeSlot in timeSlots"
+        :key="timeSlot.key"
+        :label="timeSlot.label"
+        :prop="timeSlot.key"
+        align="center"
+        width="80"
+        :class-name="timeSlot.key.endsWith(':00') ? 'hour-column' : 'half-hour-column'"
+      >
+        <template #default="{ row, column }">
+          <div
+            v-if="getShiftForTimeSlot(row, timeSlot.key)"
+            class="shift-cell"
+            :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
+          >
+            {{ getShiftForTimeSlot(row, timeSlot.key) }}
+          </div>
+          <div v-else>
+            —
+          </div>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <!-- 分组视图 -->
+    <div v-else>
+      <div v-for="(group, groupName) in groupedEmployees" :key="groupName" class="department-group">
+        <h4 class="group-title">
+          {{ groupName }}
+        </h4>
+        <el-table
+          :data="group"
+          border
+          style="width: 100%; margin-bottom: 20px"
+          :cell-class-name="getCellClass"
+        >
+          <!-- 员工信息列 -->
+          <el-table-column prop="name" label="员工姓名" width="120" fixed="left" />
+
+          <!-- 动态生成时间段列 -->
+          <el-table-column
+            v-for="timeSlot in timeSlots"
+            :key="timeSlot.key"
+            :label="timeSlot.label"
+            :prop="timeSlot.key"
+            align="center"
+            width="80"
+            :class-name="timeSlot.key.endsWith(':00') ? 'hour-column' : 'half-hour-column'"
+          >
+            <template #default="{ row, column }">
+              <div
+                v-if="getShiftForTimeSlot(row, timeSlot.key)"
+                class="shift-cell"
+                :class="getShiftClass(getShiftForTimeSlot(row, timeSlot.key))"
+              >
+                {{ getShiftForTimeSlot(row, timeSlot.key) }}
+              </div>
+              <div v-else>
+                —
+              </div>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+    </div>
+  </div>
+</template>
 
 <style scoped>
 .day-schedule-view {
@@ -421,12 +429,12 @@ onMounted(() => {
   .day-schedule-view {
     padding: 8px;
   }
-  
+
   :deep(.el-table__row td) {
     padding: 2px 0;
     height: 40px;
   }
-  
+
   .shift-cell {
     padding: 2px;
     font-size: 10px;
