@@ -88,7 +88,9 @@ async function submitShift() {
       end_time: currentShift.value.end_time,
       status: currentShift.value.status,
       store_id: storeId,
-      positions: []
+      positions: [],
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     }
 
     if (currentShift.value.id) {

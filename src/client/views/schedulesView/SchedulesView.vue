@@ -87,9 +87,6 @@ function getMonthName(index: number): string {
         <el-radio-button label="month">
           月视图
         </el-radio-button>
-        <el-radio-button label="week">
-          周视图
-        </el-radio-button>
         <el-radio-button label="day">
           日视图
         </el-radio-button>
@@ -208,86 +205,6 @@ function getMonthName(index: number): string {
   justify-content: flex-end;
 }
 
-.calendar-cell {
-  --cell-padding: 12px;
-
-  min-height: 140px;
-  padding: var(--cell-padding);
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #ebeef5;
-  transition: all 0.3s;
-  cursor: pointer;
-
-  &:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 4px 16px rgba(64,158,255,0.15);
-    border-color: var(--primary-color);
-  }
-
-  .position-tag {
-    background: rgba(64,158,255,0.1);
-    border-color: rgba(64,158,255,0.2);
-    color: var(--primary-color);
-    margin: 4px;
-    flex-shrink: 0;
-  }
-}
-
-.date-count {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-  font-size: 0.9em;
-  color: var(--text-light);
-}
-
-.year-view {
-  padding: 20px;
-}
-
-.year-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.months-grid {
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  gap: 8px;
-  gap: 12px;
-  padding: 16px;
-}
-
-.month-card {
-  transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
-  border: 1px solid #ebeef5;
-
-  :deep(.el-card__header) {
-    background: linear-gradient(135deg, var(--primary-color), #79bbff);
-    border-radius: 8px 8px 0 0;
-  }
-
-  &:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 8px 24px rgba(64,158,255,0.15);
-  }
-}
-
-.month-header {
-  font-size: 14px;
-  font-weight: bold;
-}
-
-.month-count {
-  font-size: 18px;
-  text-align: center;
-  padding: 12px 0;
-}
-
 .day-view {
   padding: 20px;
 }
@@ -331,29 +248,3 @@ function getMonthName(index: number): string {
   font-size: 14px;
 }
 </style>
-
-.position-tag {
-  white-space: normal;
-  line-height: 1.5;
-  min-width: 60px;
-  text-align: center;
-  border-radius: 14px;
-}
-
-.month-header {
-  color: var(--primary-color);
-  font-size: 15px;
-  letter-spacing: 0.5px;
-}
-
-.month-count {
-  color: var(--text-light);
-  font-size: 20px;
-  font-weight: 500;
-}
-
-.week-header h3 {
-  color: var(--primary-color);
-  font-size: 18px;
-  margin: 0 20px;
-}
