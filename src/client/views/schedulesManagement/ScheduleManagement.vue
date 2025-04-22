@@ -3,7 +3,9 @@ import { useScheduleStore } from '@/stores/scheduleStore'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref } from 'vue'
 import { useStoreStore } from '@/stores/storeStore'
+import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const storeStore = useStoreStore()
 const scheduleStore = useScheduleStore()
 const dialogVisible = ref(false)
@@ -108,6 +110,16 @@ async function deleteSchedule(id: number) {
   }
 }
 
+function manageShifts(schedule: any) {
+  router.push({
+    name: 'ShiftManagement',
+    params: {
+      scheduleId: schedule.id,
+      storeId: schedule.store_id
+    }
+  })
+}
+
 onMounted(async () => {
   await Promise.all([
     loadSchedules(),
@@ -138,6 +150,9 @@ onMounted(async () => {
         <template #default="{ row }">
           <el-button size="small" @click="openEditDialog(row)">
             编辑
+          </el-button>
+          <el-button size="small" type="primary" @click="manageShifts(row)">
+            管理班次
           </el-button>
           <el-button size="small" type="danger" @click="deleteSchedule(row.id)">
             删除

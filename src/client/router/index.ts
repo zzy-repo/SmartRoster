@@ -62,6 +62,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/schedulesManagement/ScheduleManagement.vue'),
     meta: { title: '排班管理', requiresAuth: true },
   },
+  {
+    path: '/scheduleManagement/shifts/:scheduleId/:storeId',
+    name: 'ShiftManagement',
+    component: () => import('@/views/schedulesManagement/ShiftManagement.vue'),
+    meta: { title: '班次管理', requiresAuth: true },
+  },
 ]
 
 // 创建路由实例

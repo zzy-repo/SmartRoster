@@ -5,6 +5,7 @@ import { useScheduleStore } from '@/stores/scheduleStore'
 import { ElCalendar, ElCard } from 'element-plus'
 import { computed, ref } from 'vue'
 import ShiftItem from '@/views/schedulesView/ShiftItem.vue'
+import DayScheduleView from '@/views/schedulesView/DayScheduleView.vue'
 
 const scheduleStore = useScheduleStore()
 const currentView = ref<'year' | 'month' | 'week' | 'day'>('month')
@@ -182,29 +183,9 @@ function getMonthName(index: number): string {
 
     <!-- 日视图 -->
     <div v-else-if="currentView === 'day'" class="day-view">
-      <div class="day-header">
-        <el-button @click="currentDate = new Date(currentDate.getTime() - 86400000)">
-          前一天
-        </el-button>
-        <h3>{{ currentDate.toISOString().slice(0, 10) }} 排班详情</h3>
-        <el-button @click="currentDate = new Date(currentDate.getTime() + 86400000)">
-          后一天
-        </el-button>
-      </div>
-      <div class="day-shifts">
-        <div v-if="scheduleData.filter(d => new Date(d.date).toISOString().slice(0, 10) === currentDate.toISOString().slice(0, 10)).length === 0" class="no-shifts">
-          当天没有排班
-        </div>
-        <div
-          v-for="(item, index) in scheduleData.filter(d =>
-            new Date(d.date).toISOString().slice(0, 10) === currentDate.toISOString().slice(0, 10))" :key="index" class="day-shift-item"
-        >
-          <ShiftItem
-            :shift="item.content"
-            @drag-end="handleDragEnd"
-          />
-        </div>
-      </div>
+      <DayScheduleView 
+        v-model:date="currentDate"
+      />
     </div>
   </div>
 </template>
