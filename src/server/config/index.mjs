@@ -1,49 +1,40 @@
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import dotenv from 'dotenv'
-
-// 获取当前文件的目录路径
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
-
-// 加载.env文件
-dotenv.config({ path: path.resolve(__dirname, '../.env') })
+// 系统配置文件，包含服务端口、数据库、JWT等配置信息
 
 export const config = {
   gateway: {
-    port: 3000,
+    port: 3000, // API 网关端口
   },
   services: {
     auth: {
-      name: 'auth-service',
-      port: 3001,
+      name: 'auth-service', // 认证服务
+      port: 3001,          // 认证服务端口
     },
     store: {
-      name: 'store-service',
-      port: 3002,
+      name: 'store-service', // 门店服务
+      port: 3002,           // 门店服务端口
     },
     employee: {
-      name: 'employee-service',
-      port: 3003,
+      name: 'employee-service', // 员工服务
+      port: 3003,               // 员工服务端口
     },
     schedule: {
-      name: 'schedules-service',
-      port: 3004,
+      name: 'schedules-service', // 排班服务
+      port: 3004,                // 排班服务端口
     },
     forecast: {
-      name: 'forecast-service',
-      port: 3005,
+      name: 'forecast-service', // 预测服务
+      port: 3005,               // 预测服务端口
     },
   },
   database: {
-    host: process.env.DB_HOST || 'localhost',
-    user: process.env.DB_USER || 'root',
-    password: process.env.DB_PASSWORD || 'password',
-    database: process.env.DB_NAME || 'smartroster',
-    port: process.env.DB_PORT || 3306,
+    host: 'localhost', // 数据库地址，静态写死
+    user: 'root',      // 数据库用户名，静态写死
+    password: process.env.MYSQL_PASSWORD || '', // 数据库密码，从系统环境变量 MYSQL_PASSWORD 读取
+    database: 'smartroster', // 数据库名，静态写死
+    port: 3306,        // 数据库端口，静态写死
   },
   jwt: {
-    secret: process.env.JWT_SECRET || 'your-secret-key',
-    expiresIn: '24h',
+    secret: 'your-secret-key', // JWT 密钥
+    expiresIn: '24h',          // JWT 有效期
   },
 }

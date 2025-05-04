@@ -12,6 +12,7 @@ node_modules
 dist
 dist-ssr
 *.local
+pnpm-lock.yaml
 
 # Editor directories and files
 .idea
@@ -71,3 +72,5 @@ coverage
 *.snm
 *.vrb
 .temp/
+
+开发文档/
