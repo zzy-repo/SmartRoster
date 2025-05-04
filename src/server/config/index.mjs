@@ -1,5 +1,10 @@
 // 系统配置文件，包含服务端口、数据库、JWT等配置信息
 
+// 检查是否获取到MYSQL_PASSWORD环境变量
+if (!process.env.MYSQL_PASSWORD) {
+  throw new Error('未检测到系统环境变量 MYSQL_PASSWORD，请先设置数据库密码环境变量！')
+}
+
 export const config = {
   gateway: {
     port: 3000, // API 网关端口
@@ -27,11 +32,11 @@ export const config = {
     },
   },
   database: {
-    host: 'localhost', // 数据库地址，静态写死
-    user: 'root',      // 数据库用户名，静态写死
-    password: process.env.MYSQL_PASSWORD || '', // 数据库密码，从系统环境变量 MYSQL_PASSWORD 读取
-    database: 'smartroster', // 数据库名，静态写死
-    port: 3306,        // 数据库端口，静态写死
+    host: 'localhost', // 数据库地址
+    user: 'root',      // 数据库用户名
+    password: process.env.MYSQL_PASSWORD, // 数据库密码，从系统环境变量 MYSQL_PASSWORD 读取
+    database: 'smartroster', // 数据库名
+    port: 3306,        // 数据库端口
   },
   jwt: {
     secret: 'your-secret-key', // JWT 密钥
