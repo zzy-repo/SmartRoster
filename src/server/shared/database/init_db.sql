@@ -45,8 +45,8 @@ CREATE TABLE IF NOT EXISTS employees (
 -- 排班表 - 存储排班计划
 CREATE TABLE IF NOT EXISTS schedules (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '排班ID，自增主键',
-  start_date DATE NOT NULL COMMENT '排班开始日期',
-  end_date DATE NOT NULL COMMENT '排班结束日期',
+  start_date DATE NOT NULL COMMENT '排班周开始日期(周一)',
+  end_date DATE NOT NULL COMMENT '排班周结束日期(周日)',
   status VARCHAR(20) NOT NULL DEFAULT 'draft' COMMENT '状态(draft/published/archived)',
   store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   created_by INT COMMENT '创建人ID，关联users表',
