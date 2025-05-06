@@ -23,17 +23,23 @@ const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '�
   day: number;               // 工作日 (0-6 对应周一到周日)
   start_time: string;        // 开始时间 (格式: "HH:mm")
   end_time: string;          // 结束时间 (格式: "HH:mm")
-  status: 'open' | 'closed'; // 班次状态
   store_id: number;          // 所属门店ID
   positions: string[];       // 关联的职位数组
 }
+
+// 职位选项
+const positionOptions = ref([
+  { value: 'cashier', label: '收银员' },
+  { value: 'waiter', label: '服务员' },
+  { value: 'cook', label: '厨师' },
+  { value: 'manager', label: '店长' },
+])
 
 // 当前编辑的班次
 const currentShift = ref<ShiftTemp>({
   day: 0,
   start_time: '09:00',
   end_time: '17:00',
-  status: 'open',
   store_id: storeId,
   positions: [],
 })
@@ -83,7 +89,6 @@ function openShiftDialog(shift?: any) {
       day: 0,
       start_time: '09:00',
       end_time: '17:00',
-      status: 'open',
       store_id: storeId,
       positions: [],
     }
@@ -101,9 +106,13 @@ async function submitShift() {
       day: currentShift.value.day,
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
-      status: currentShift.value.status,
       store_id: storeId,
-      positions: [],
+      positions: currentShift.value.positions.map(position => ({
+        id: 0, // 新建时id为0，后端会自动生成
+        position,
+        count: 1, // 默认每个职位需要1人
+        shift_id: currentShift.value.id || 0, // 如果是新建，则为0
+      })),
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -146,18 +155,6 @@ async function deleteShift(id: number) {
   }
 }
 
-// 切换班次状态
-async function toggleStatus(shift: any) {
-  try {
-    const newStatus = shift.status === 'open' ? 'closed' : 'open'
-    await shiftStore.toggleShiftStatus(shift.id, newStatus)
-    ElMessage.success(`班次状态已更改为${newStatus === 'open' ? '开放' : '关闭'}`)
-  }
-  catch (error) {
-    ElMessage.error('更改状态失败')
-  }
-}
-
 // 格式化时间显示
 function formatTime(time: string) {
   return time || ''
@@ -173,55 +170,62 @@ onMounted(async () => {
 
 <template>
   <div class="shift-management">
-    <div class="header">
-      <h2>班次管理 - {{ storeName }} (排班ID: {{ scheduleId }})</h2>
-      <el-button type="primary" @click="openShiftDialog()">
-        新建班次
-      </el-button>
-    </div>
-
-    <div class="shifts-container">
-      <div v-for="day in 7" :key="day - 1" class="day-section">
-        <h3>{{ weekdays[day - 1] }}</h3>
-
-        <div class="shifts-list">
-          <el-empty v-if="shiftsByDay[day - 1]?.length === 0" description="暂无班次" />
-
-          <el-card
-            v-for="shift in shiftsByDay[day - 1]"
-            :key="shift.id"
-            class="shift-card"
-            :class="{ closed: shift.status === 'closed' }"
-          >
-            <div class="shift-header">
-              <span class="shift-time">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
-              <el-tag :type="shift.status === 'open' ? 'success' : 'info'">
-                {{ shift.status === 'open' ? '开放' : '关闭' }}
-              </el-tag>
-            </div>
-
-            <div class="shift-actions">
-              <el-button size="small" @click="openShiftDialog(shift)">
-                编辑
-              </el-button>
-              <el-button
-                size="small"
-                :type="shift.status === 'open' ? 'warning' : 'success'"
-                @click="toggleStatus(shift)"
-              >
-                {{ shift.status === 'open' ? '关闭' : '开放' }}
-              </el-button>
-              <el-button size="small" type="danger" @click="deleteShift(shift.id)">
-                删除
-              </el-button>
-            </div>
-          </el-card>
+    <el-card class="main-card">
+      <template #header>
+        <div class="card-header">
+          <h2>班次管理 - {{ storeName }} (排班ID: {{ scheduleId }})</h2>
         </div>
-      </div>
-    </div>
+      </template>
+
+      <el-tabs type="card">
+        <el-tab-pane v-for="(dayName, index) in weekdays" :key="index" :label="dayName">
+          <div class="day-content">
+            <div class="day-header">
+              <h3>{{ dayName }}的班次安排</h3>
+              <el-button type="primary" size="small" @click="openShiftDialog({ day: index })">
+                添加班次
+              </el-button>
+            </div>
+
+            <div class="shifts-list">
+              <el-empty v-if="shiftsByDay[index]?.length === 0" description="暂无班次" />
+
+              <el-card
+                v-for="shift in shiftsByDay[index]"
+                :key="shift.id"
+                class="shift-card"
+              >
+                <div class="shift-header">
+                  <span class="shift-time">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
+                </div>
+
+                <div class="shift-positions" v-if="shift.positions?.length">
+                  <el-tag
+                    v-for="position in shift.positions"
+                    :key="position"
+                    class="position-tag"
+                  >
+                    {{ positionOptions.find(p => p.value === position)?.label || position }}
+                  </el-tag>
+                </div>
+
+                <div class="shift-actions">
+                  <el-button size="small" @click="openShiftDialog(shift)">
+                    编辑
+                  </el-button>
+                  <el-button size="small" type="danger" @click="deleteShift(shift.id)">
+                    删除
+                  </el-button>
+                </div>
+              </el-card>
+            </div>
+          </div>
+        </el-tab-pane>
+      </el-tabs>
+    </el-card>
 
     <!-- 新增/编辑班次对话框 -->
-    <el-dialog v-model="dialogVisible" :title="currentShift.id ? '编辑班次' : '新建班次'">
+    <el-dialog v-model="dialogVisible" :title="currentShift.id ? '编辑班次' : '新建班次'" width="500px">
       <el-form ref="formRef" :model="currentShift" :rules="rules" label-width="100px">
         <el-form-item prop="day" label="工作日" required>
           <el-select v-model="currentShift.day">
@@ -252,15 +256,20 @@ onMounted(async () => {
           />
         </el-form-item>
 
-        <el-form-item prop="status" label="状态">
-          <el-radio-group v-model="currentShift.status">
-            <el-radio label="open">
-              开放
-            </el-radio>
-            <el-radio label="closed">
-              关闭
-            </el-radio>
-          </el-radio-group>
+        <el-form-item label="职位需求">
+          <el-select
+            v-model="currentShift.positions"
+            multiple
+            placeholder="请选择需要的职位"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in positionOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
         </el-form-item>
       </el-form>
 
@@ -281,39 +290,39 @@ onMounted(async () => {
   padding: 20px;
 }
 
-.header {
+.main-card {
+  margin-bottom: 20px;
+}
+
+.card-header h2,
+.day-header h3 {
+  margin: 0;
+  font-weight: 500;
+}
+
+.card-header h2 {
+  font-size: 18px;
+}
+
+.day-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
 }
 
-.shifts-container {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 20px;
-}
-
-.day-section {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 15px;
-  background-color: #f8f8f8;
+.day-content {
+  padding: 20px;
 }
 
 .shifts-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 10px;
+  gap: 15px;
 }
 
 .shift-card {
   margin-bottom: 10px;
-}
-
-.shift-card.closed {
-  opacity: 0.7;
 }
 
 .shift-header {
@@ -325,11 +334,20 @@ onMounted(async () => {
 
 .shift-time {
   font-weight: bold;
+  font-size: 16px;
+}
+
+.shift-positions {
+  margin: 10px 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
 }
 
 .shift-actions {
   display: flex;
   gap: 5px;
   margin-top: 10px;
+  justify-content: flex-end;
 }
 </style>

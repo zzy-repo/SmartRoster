@@ -7,7 +7,6 @@ export interface Shift {
   day: number // 0-6 表示周一到周日
   start_time: string // 开始时间，格式HH:MM
   end_time: string // 结束时间，格式HH:MM
-  status: 'open' | 'closed' // 班次状态: open-可分配 closed-已关闭
   store_id: number // 所属门店ID
   positions: ShiftPosition[] // 该班次需要的岗位及人数
   created_at: string // 创建时间

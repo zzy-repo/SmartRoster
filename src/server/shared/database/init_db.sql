@@ -59,11 +59,13 @@ CREATE TABLE IF NOT EXISTS schedules (
 CREATE TABLE IF NOT EXISTS shifts (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '班次ID，自增主键',
   day INT NOT NULL COMMENT '0-6 表示周一到周日',
-  start_time TIME NOT NULL COMMENT '班次开始时间',
-  end_time TIME NOT NULL COMMENT '班次结束时间',
-  status VARCHAR(20) DEFAULT 'open' COMMENT '状态(open/closed)',
+  start_time TIME NOT NULL COMMENT '班次开始时间(以半小时为单位，如09:00, 09:30, 10:00等)',
+  end_time TIME NOT NULL COMMENT '班次结束时间(以半小时为单位，如09:00, 09:30, 10:00等)',
   store_id INT NOT NULL COMMENT '门店ID，关联stores表',
-  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE
+  schedule_id INT NOT NULL COMMENT '排班ID，关联schedules表',
+  created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
+  FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE
 );
 
 -- 班次职位需求表 - 定义每个班次需要的职位和人数
