@@ -24,18 +24,18 @@ const router = useRouter()
 const employeeId = ref<string>(route.params.id as string)
 
 const weekDays = [
-  { label: '周一', value: 1 },
-  { label: '周二', value: 2 },
-  { label: '周三', value: 3 },
-  { label: '周四', value: 4 },
-  { label: '周五', value: 5 },
-  { label: '周六', value: 6 },
-  { label: '周日', value: 7 },
+  { label: '周一', value: 0 },
+  { label: '周二', value: 1 },
+  { label: '周三', value: 2 },
+  { label: '周四', value: 3 },
+  { label: '周五', value: 4 },
+  { label: '周六', value: 5 },
+  { label: '周日', value: 6 },
 ]
 
 const preferences = ref<EmployeePreference>({
   workday_pref: [0, 6], // 默认周一至周日
-  time_pref: ['09:00', '17:00'],
+  time_pref: ['08:00:00', '20:00:00'], // 默认工作时间
   max_daily_hours: 8,
   max_weekly_hours: 40,
 })
@@ -113,7 +113,7 @@ function returnPage() {
             v-for="day in weekDays"
             :key="day.value"
             :label="day.label"
-            :value="day.value - 1"
+            :value="day.value"
           />
         </el-select>
         <el-select v-model="preferences.workday_pref[1]" style="width: 100%; margin-top: 10px">
@@ -121,7 +121,7 @@ function returnPage() {
             v-for="day in weekDays"
             :key="day.value"
             :label="day.label"
-            :value="day.value - 1"
+            :value="day.value"
           />
         </el-select>
       </el-form-item>
