@@ -228,12 +228,12 @@ onMounted(async () => {
     </el-card>
 
     <!-- 新增/编辑班次对话框 -->
-    <el-dialog v-model="dialogVisible" :title="currentShift.id ? '编辑班次' : '新建班次'" width="500px">
+    <el-dialog
+      v-model="dialogVisible"
+      :title="currentShift.id ? `编辑班次（${weekdays[currentShift.day]}）` : `新建班次（${weekdays[currentShift.day]}）`"
+      width="500px"
+    >
       <el-form ref="formRef" :model="currentShift" :rules="rules" label-width="100px">
-        <el-form-item label="工作日">
-          <span>{{ weekdays[currentShift.day] }}</span>
-        </el-form-item>
-
         <el-form-item prop="start_time" label="开始时间" required>
           <el-time-picker
             v-model="currentShift.start_time"
