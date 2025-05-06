@@ -18,13 +18,14 @@ const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '�
 /**
  * 班次基础类型定义
  */
- export interface ShiftTemp {
+export interface ShiftTemp {
   id?: number;               // 班次ID (可选，新建时可能没有)
   day: number;               // 工作日 (0-6 对应周一到周日)
   start_time: string;        // 开始时间 (格式: "HH:mm")
   end_time: string;          // 结束时间 (格式: "HH:mm")
   store_id: number;          // 所属门店ID
-  positions: string[];       // 关联的职位数组
+  position: string;          // 单职位
+  count: number;             // 需求人数
 }
 
 // 职位选项
@@ -41,7 +42,8 @@ const currentShift = ref<ShiftTemp>({
   start_time: '09:00',
   end_time: '17:00',
   store_id: storeId,
-  positions: [],
+  position: '',
+  count: 1,
 })
 
 // 表单引用
@@ -124,7 +126,8 @@ function openShiftDialog(shift?: any) {
       start_time: '09:00',
       end_time: '17:00',
       store_id: storeId,
-      positions: [],
+      position: '',
+      count: 1,
     }
   }
   dialogVisible.value = true
@@ -141,12 +144,12 @@ async function submitShift() {
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
       store_id: storeId,
-      positions: currentShift.value.positions.map(position => ({
-        id: 0, // 新建时id为0，后端会自动生成
-        position,
-        count: 1, // 默认每个职位需要1人
-        shift_id: currentShift.value.id || 0, // 如果是新建，则为0
-      })),
+      positions: [{
+        id: 0,
+        position: currentShift.value.position,
+        count: currentShift.value.count,
+        shift_id: currentShift.value.id || 0,
+      }],
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     }
@@ -286,12 +289,11 @@ onMounted(async () => {
           />
         </el-form-item>
 
-        <el-form-item label="职位需求">
+        <el-form-item label="职位需求" required>
           <el-select
-            v-model="currentShift.positions"
-            multiple
-            placeholder="请选择需要的职位"
-            style="width: 100%"
+            v-model="currentShift.position"
+            placeholder="请选择职位"
+            style="width: 60%"
           >
             <el-option
               v-for="item in positionOptions"
@@ -300,6 +302,14 @@ onMounted(async () => {
               :value="item.value"
             />
           </el-select>
+          <el-input-number
+            v-model="currentShift.count"
+            :min="1"
+            style="margin-left: 16px; width: 120px"
+            :step="1"
+            controls-position="right"
+            placeholder="人数"
+          />
         </el-form-item>
       </el-form>
 
