@@ -9,9 +9,22 @@ const router = useRouter()
 const storeStore = useStoreStore()
 const scheduleStore = useScheduleStore()
 const dialogVisible = ref(false)
+const formRef = ref()
 
-// 添加周数计算和格式化的辅助函数
-function getWeekNumber(date: Date) {
+// 类型定义
+interface Schedule {
+  id: number
+  start_date: string
+  end_date: string
+  status: string
+  store_id?: string
+  year?: number
+  month?: number
+  week_number?: number
+}
+
+// 日期处理函数
+const getWeekNumber = (date: Date) => {
   const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
   const dayNum = d.getUTCDay() || 7
   d.setUTCDate(d.getUTCDate() + 4 - dayNum)
@@ -19,74 +32,7 @@ function getWeekNumber(date: Date) {
   return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7)
 }
 
-function formatSchedulePeriod(row: any) {
-  const startDate = new Date(row.start_date)
-  const year = startDate.getFullYear()
-  const weekNumber = getWeekNumber(startDate)
-  return `${year}年第${weekNumber}周`
-}
-
-function formatStore(row: any) {
-  const store = storeStore.stores.find(s => s.id === row.store_id)
-  return store?.name || '未知门店'
-}
-
-interface Schedule {
-  id: number
-  start_date: string
-  end_date: string
-  status: string
-  store_id?: string
-}
-
-const formRef = ref()
-const rules = {
-  year: [{ required: true, message: '请选择年份', trigger: 'change' }],
-  month: [{ required: true, message: '请选择月份', trigger: 'change' }],
-  week_number: [
-    { required: true, message: '请选择周数', trigger: 'change' }
-  ],
-  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
-}
-
-// 修改年份选项，改为从当前年份前5年到后5年
-const yearOptions = Array.from({ length: 11 }, (_, i) => {
-  const year = new Date().getFullYear() - 5 + i
-  return {
-    value: year,
-    label: `${year}年`
-  }
-})
-
-// 修改获取当前周数的函数
-function getCurrentWeekNumber() {
-  const now = new Date()
-  return getWeekNumber(now)
-}
-
-// 修改获取当前月份的函数
-function getCurrentMonth() {
-  return new Date().getMonth() + 1
-}
-
-// 修改currentSchedule的默认值
-const currentSchedule = ref<Schedule & { 
-  year?: number; 
-  month?: number; 
-  week_number?: number 
-}>({
-  id: 0,
-  start_date: '',
-  end_date: '',
-  status: 'draft',
-  store_id: '0',
-  year: new Date().getFullYear(),
-  month: getCurrentMonth(),
-  week_number: getCurrentWeekNumber()
-})
-
-// 添加周数转换为日期的函数
-function getDateFromWeek(year: number, week: number) {
+const getDateFromWeek = (year: number, week: number) => {
   const simple = new Date(year, 0, 1 + (week - 1) * 7)
   const dow = simple.getDay()
   const ISOweekStart = simple
@@ -97,42 +43,38 @@ function getDateFromWeek(year: number, week: number) {
   return ISOweekStart
 }
 
-// 添加获取周日期范围的函数
-function getWeekDateRange(year: number, week: number) {
-  const startDate = getDateFromWeek(year, week)
-  const endDate = new Date(startDate)
-  endDate.setDate(startDate.getDate() + 6)
-  return {
-    start: startDate.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' }),
-    end: endDate.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
-  }
-}
+// 当前日期相关函数
+const getCurrentDate = () => new Date()
+const getCurrentYear = () => getCurrentDate().getFullYear()
+const getCurrentMonth = () => getCurrentDate().getMonth() + 1
+const getCurrentWeekNumber = () => getWeekNumber(getCurrentDate())
 
-// 添加月份选项
-const monthOptions = Array.from({ length: 12 }, (_, i) => ({
+// 选项生成函数
+const generateYearOptions = () => Array.from({ length: 11 }, (_, i) => {
+  const year = getCurrentYear() - 5 + i
+  return { value: year, label: `${year}年` }
+})
+
+const generateMonthOptions = () => Array.from({ length: 12 }, (_, i) => ({
   value: i + 1,
   label: `${i + 1}月`
 }))
 
-// 获取指定年月的周数选项
-function getWeekOptionsForMonth(year: number, month: number) {
+const getWeekOptionsForMonth = (year: number, month: number) => {
   const weeks = []
   const firstDay = new Date(year, month - 1, 1)
   const lastDay = new Date(year, month, 0)
   
-  // 获取该月的第一个周一
   let currentDate = new Date(firstDay)
   while (currentDate.getDay() !== 1) {
     currentDate.setDate(currentDate.getDate() + 1)
   }
   
-  // 生成该月的周选项
   while (currentDate <= lastDay) {
     const weekNumber = getWeekNumber(currentDate)
     const endDate = new Date(currentDate)
     endDate.setDate(currentDate.getDate() + 6)
     
-    // 如果结束日期超过月末，则调整到月末
     if (endDate > lastDay) {
       endDate.setTime(lastDay.getTime())
     }
@@ -142,67 +84,73 @@ function getWeekOptionsForMonth(year: number, month: number) {
       label: `第${weekNumber}周 (${currentDate.getMonth() + 1}/${currentDate.getDate()} - ${endDate.getMonth() + 1}/${endDate.getDate()})`
     })
     
-    // 移动到下一周
     currentDate.setDate(currentDate.getDate() + 7)
   }
   
   return weeks
 }
 
-// 周选项的响应式变量
+// 响应式数据
+const currentSchedule = ref<Schedule>({
+  id: 0,
+  start_date: '',
+  end_date: '',
+  status: 'draft',
+  store_id: '0',
+  year: getCurrentYear(),
+  month: getCurrentMonth(),
+  week_number: getCurrentWeekNumber()
+})
+
+const yearOptions = generateYearOptions()
+const monthOptions = generateMonthOptions()
 const weekOptions = ref(getWeekOptionsForMonth(
   currentSchedule.value.year!,
   currentSchedule.value.month!
 ))
 
-// 监听年月变化，更新周选项
+// 表单验证规则
+const rules = {
+  year: [{ required: true, message: '请选择年份', trigger: 'change' }],
+  month: [{ required: true, message: '请选择月份', trigger: 'change' }],
+  week_number: [{ required: true, message: '请选择周数', trigger: 'change' }],
+  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
+}
+
+// 监听器
 watch([() => currentSchedule.value.year, () => currentSchedule.value.month], ([newYear, newMonth]) => {
   if (newYear && newMonth) {
     weekOptions.value = getWeekOptionsForMonth(newYear, newMonth)
-    // 重置周数选择
     currentSchedule.value.week_number = weekOptions.value[0]?.value || 1
   }
 })
 
-async function loadSchedules() {
-  try {
-    await scheduleStore.fetchSchedules()
-    // 确保数据是数组
-    if (!Array.isArray(scheduleStore.schedules)) {
-      scheduleStore.schedules = []
-      ElMessage.warning('获取排班数据格式不正确')
-    }
-  }
-  catch (error) {
-    ElMessage.error('获取排班数据失败')
-    console.log(scheduleStore.schedules)
-    scheduleStore.schedules = []
-  }
+// 业务函数
+const formatStore = (row: any) => {
+  const store = storeStore.stores.find(s => s.id === row.store_id)
+  return store?.name || '未知门店'
 }
 
-// 新增：计算最近周一的日期
-function getNearestMonday(date = new Date()) {
-  const day = date.getDay();
-  const diff = day >= 1 ? date.getDate() - (day - 1) : date.getDate() - 6;
-  return new Date(date.setDate(diff));
+const formatSchedulePeriod = (row: any) => {
+  const startDate = new Date(row.start_date)
+  const year = startDate.getFullYear()
+  const weekNumber = getWeekNumber(startDate)
+  return `${year}年第${weekNumber}周`
 }
 
-// 修改后的 openEditDialog 函数
-function openEditDialog(schedule?: any) {
+const openEditDialog = (schedule?: any) => {
   if (!schedule) {
-    const now = new Date()
     currentSchedule.value = {
       id: 0,
       start_date: '',
       end_date: '',
       status: 'draft',
       store_id: storeStore.currentStore?.id,
-      year: now.getFullYear(),
+      year: getCurrentYear(),
       month: getCurrentMonth(),
       week_number: getCurrentWeekNumber()
     }
-  }
-  else {
+  } else {
     const startDate = new Date(schedule.start_date)
     currentSchedule.value = {
       ...schedule,
@@ -218,11 +166,10 @@ function openEditDialog(schedule?: any) {
   dialogVisible.value = true
 }
 
-async function submitSchedule() {
+const submitSchedule = async () => {
   try {
     await formRef.value.validate()
     
-    // 根据选择的年月和周数计算开始日期和结束日期
     const startDate = getDateFromWeek(currentSchedule.value.year!, currentSchedule.value.week_number!)
     const endDate = new Date(startDate)
     endDate.setDate(startDate.getDate() + 6)
@@ -233,38 +180,32 @@ async function submitSchedule() {
       end_date: endDate.toISOString().split('T')[0],
     }
 
-    console.log('正在提交排班数据：', scheduleToSubmit)
-
     if (currentSchedule.value.id) {
       await scheduleStore.updateSchedule(scheduleToSubmit)
-    }
-    else {
+    } else {
       await scheduleStore.createSchedule(scheduleToSubmit)
     }
 
-    console.log('排班操作成功，更新后的数据：', scheduleToSubmit)
     ElMessage.success('操作成功')
     dialogVisible.value = false
     await loadSchedules()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('排班操作发生错误：', error)
     ElMessage.error('操作失败')
   }
 }
 
-async function deleteSchedule(id: number) {
+const deleteSchedule = async (id: number) => {
   try {
     await scheduleStore.deleteSchedule(id)
     ElMessage.success('删除成功')
     await loadSchedules()
-  }
-  catch (error) {
+  } catch (error) {
     ElMessage.error('删除失败')
   }
 }
 
-function manageShifts(schedule: any) {
+const manageShifts = (schedule: any) => {
   router.push({
     name: 'ShiftManagement',
     params: {
@@ -272,6 +213,20 @@ function manageShifts(schedule: any) {
       storeId: schedule.store_id,
     },
   })
+}
+
+const loadSchedules = async () => {
+  try {
+    await scheduleStore.fetchSchedules()
+    if (!Array.isArray(scheduleStore.schedules)) {
+      scheduleStore.schedules = []
+      ElMessage.warning('获取排班数据格式不正确')
+    }
+  } catch (error) {
+    ElMessage.error('获取排班数据失败')
+    console.error(error)
+    scheduleStore.schedules = []
+  }
 }
 
 onMounted(async () => {
