@@ -4,6 +4,7 @@ import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage } from 'element-plus'
 import { onMounted, ref, watch, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Search, Refresh, Plus, Edit, Setting, Delete } from '@element-plus/icons-vue'
 
 const router = useRouter()
 const storeStore = useStoreStore()
@@ -113,7 +114,7 @@ const weekOptions = ref(getWeekOptionsForMonth(
   currentSchedule.value.month!
 ))
 
-// 在响应式数据部分添加筛选条件
+// 筛选条件
 const filterForm = ref({
   year: getCurrentYear(),
   month: getCurrentMonth(),
@@ -121,14 +122,21 @@ const filterForm = ref({
   status: ''
 })
 
-// 添加状态选项
 const statusOptions = [
   { value: '', label: '全部' },
   { value: 'draft', label: '草稿' },
   { value: 'published', label: '已发布' }
 ]
 
-// 添加筛选后的排班数据计算属性
+// 表单验证规则
+const rules = {
+  year: [{ required: true, message: '请选择年份', trigger: 'change' }],
+  month: [{ required: true, message: '请选择月份', trigger: 'change' }],
+  week_number: [{ required: true, message: '请选择周数', trigger: 'change' }],
+  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
+}
+
+// 计算属性
 const filteredSchedules = computed(() => {
   if (!Array.isArray(scheduleStore.schedules)) return []
   
@@ -142,14 +150,6 @@ const filteredSchedules = computed(() => {
     return yearMatch && monthMatch && storeMatch && statusMatch
   })
 })
-
-// 表单验证规则
-const rules = {
-  year: [{ required: true, message: '请选择年份', trigger: 'change' }],
-  month: [{ required: true, message: '请选择月份', trigger: 'change' }],
-  week_number: [{ required: true, message: '请选择周数', trigger: 'change' }],
-  store_id: [{ required: true, message: '请选择门店', trigger: 'change' }],
-}
 
 // 监听器
 watch([() => currentSchedule.value.year, () => currentSchedule.value.month], ([newYear, newMonth]) => {
@@ -263,7 +263,6 @@ const loadSchedules = async () => {
   }
 }
 
-// 添加重置筛选的函数
 const resetFilter = () => {
   filterForm.value = {
     year: getCurrentYear(),
@@ -284,90 +283,106 @@ onMounted(async () => {
 
 <template>
   <div class="schedule-management">
-    <div class="header-section">
-      <el-form :model="filterForm" inline class="filter-form">
-        <el-form-item label="年份">
-          <el-select v-model="filterForm.year" placeholder="请选择年份" clearable>
-            <el-option
-              v-for="year in yearOptions"
-              :key="year.value"
-              :label="year.label"
-              :value="year.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="月份">
-          <el-select v-model="filterForm.month" placeholder="请选择月份" clearable>
-            <el-option
-              v-for="month in monthOptions"
-              :key="month.value"
-              :label="month.label"
-              :value="month.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="门店">
-          <el-select v-model="filterForm.store_id" class="store-select" placeholder="请选择门店" clearable filterable>
-            <el-option
-              v-for="store in storeStore.stores"
-              :key="store.id"
-              :label="store.name"
-              :value="store.id"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filterForm.status" class="status-select" placeholder="请选择状态" clearable>
-            <el-option
-              v-for="status in statusOptions"
-              :key="status.value"
-              :label="status.label"
-              :value="status.value"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="loadSchedules">
-            查询
+    <el-card class="main-card">
+      <template #header>
+        <div class="card-header">
+          <span>排班管理</span>
+        </div>
+      </template>
+      
+      <div class="header-section">
+        <el-form :model="filterForm" inline class="filter-form">
+          <el-form-item label="年份">
+            <el-select v-model="filterForm.year" placeholder="请选择年份" clearable>
+              <el-option
+                v-for="year in yearOptions"
+                :key="year.value"
+                :label="year.label"
+                :value="year.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="月份">
+            <el-select v-model="filterForm.month" placeholder="请选择月份" clearable>
+              <el-option
+                v-for="month in monthOptions"
+                :key="month.value"
+                :label="month.label"
+                :value="month.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="门店">
+            <el-select v-model="filterForm.store_id" class="store-select" placeholder="请选择门店" clearable filterable>
+              <el-option
+                v-for="store in storeStore.stores"
+                :key="store.id"
+                :label="store.name"
+                :value="store.id"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="状态">
+            <el-select v-model="filterForm.status" class="status-select" placeholder="请选择状态" clearable>
+              <el-option
+                v-for="status in statusOptions"
+                :key="status.value"
+                :label="status.label"
+                :value="status.value"
+              />
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button type="primary" @click="loadSchedules">
+              <el-icon><Search /></el-icon>
+              查询
+            </el-button>
+            <el-button @click="resetFilter">
+              <el-icon><Refresh /></el-icon>
+              重置
+            </el-button>
+          </el-form-item>
+        </el-form>
+        <div class="action-buttons">
+          <el-button type="primary" @click="openEditDialog()">
+            <el-icon><Plus /></el-icon>
+            新建排班
           </el-button>
-          <el-button @click="resetFilter">
-            重置
-          </el-button>
-        </el-form-item>
-      </el-form>
-      <div class="action-buttons">
-        <el-button type="primary" @click="openEditDialog()">
-          新建排班
-        </el-button>
+        </div>
       </div>
-    </div>
 
-    <el-table v-if="Array.isArray(filteredSchedules)" :data="filteredSchedules" border>
-      <el-table-column prop="start_date" label="排班周期" :formatter="formatSchedulePeriod" />
-      <el-table-column prop="store_id" label="门店" :formatter="formatStore" />
-      <el-table-column prop="status" label="状态">
-        <template #default="{ row }">
-          <el-tag :type="row.status === 'published' ? 'success' : 'info'">
-            {{ row.status === 'published' ? '已发布' : '草稿' }}
-          </el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作">
-        <template #default="{ row }">
-          <el-button size="small" @click="openEditDialog(row)">
-            编辑
-          </el-button>
-          <el-button size="small" type="primary" @click="manageShifts(row)">
-            管理班次
-          </el-button>
-          <el-button size="small" type="danger" @click="deleteSchedule(row.id)">
-            删除
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+      <el-table v-if="Array.isArray(filteredSchedules)" :data="filteredSchedules" border stripe>
+        <el-table-column prop="start_date" label="排班周期" :formatter="formatSchedulePeriod" />
+        <el-table-column prop="store_id" label="门店" :formatter="formatStore" />
+        <el-table-column prop="status" label="状态">
+          <template #default="{ row }">
+            <el-tag :type="row.status === 'published' ? 'success' : 'info'" effect="light">
+              {{ row.status === 'published' ? '已发布' : '草稿' }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" width="280">
+          <template #default="{ row }">
+            <el-button-group>
+              <el-button size="small" @click="openEditDialog(row)">
+                <el-icon><Edit /></el-icon>
+                编辑
+              </el-button>
+              <el-button size="small" type="primary" @click="manageShifts(row)">
+                <el-icon><Setting /></el-icon>
+                管理班次
+              </el-button>
+              <el-button size="small" type="danger" @click="deleteSchedule(row.id)">
+                <el-icon><Delete /></el-icon>
+                删除
+              </el-button>
+            </el-button-group>
+          </template>
+        </el-table-column>
+      </el-table>
+    </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="currentSchedule.id ? '编辑排班' : '新建排班'">
+    <el-dialog v-model="dialogVisible" :title="currentSchedule.id ? '编辑排班' : '新建排班'" width="500px">
       <el-form ref="formRef" :model="currentSchedule" :rules="rules" label-width="100px">
         <el-form-item prop="year" label="年份" required>
           <el-select v-model="currentSchedule.year" placeholder="请选择年份">
@@ -427,15 +442,24 @@ onMounted(async () => {
   padding: 20px;
 }
 
+.main-card {
+  margin-bottom: 20px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 16px;
+  font-weight: bold;
+}
+
 .header-section {
   display: flex;
   align-items: center;
   margin-bottom: 20px;
-  padding: 20px;
-  background-color: #f5f7fa;
-  border-radius: 4px;
-  border-top: 1px solid #dcdfe6;
-  border-bottom: 1px solid #dcdfe6;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .filter-form {
@@ -465,5 +489,20 @@ onMounted(async () => {
 
 :deep(.el-select.status-select) {
   width: 100px;
+}
+
+:deep(.el-button-group) {
+  display: flex;
+  gap: 8px;
+}
+
+:deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+:deep(.el-icon) {
+  margin-right: 4px;
 }
 </style>
