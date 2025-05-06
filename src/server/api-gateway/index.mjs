@@ -8,8 +8,8 @@ const PORT = config.gateway.port || 3000
 
 // 调整请求日志中间件的位置
 app.use((req, res, next) => {
-  // 只记录非OPTIONS请求
-  if (req.method !== 'OPTIONS') {
+  // 只记录非OPTIONS和非GET请求
+  if (req.method !== 'OPTIONS' && req.method !== 'GET') {
     console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
   }
   next()
@@ -22,7 +22,7 @@ app.use(express.json({
       req.rawBody = buf.toString()
     }
     catch (e) {
-      console.error('无法读取请求体:', e)
+      console.error('请求体解析失败')
       res.status(400).json({ error: '无效的请求体' })
     }
   },
@@ -32,7 +32,7 @@ app.use(express.json({
 // 添加连接错误处理中间件
 app.use((req, res, next) => {
   req.on('error', (err) => {
-    console.error('[API Gateway] 请求连接错误:', err)
+    console.error('请求连接错误')
     if (!res.headersSent) {
       res.status(400).json({ error: '请求连接错误' })
     }
@@ -54,7 +54,7 @@ app.use((req, res, next) => {
 // 添加请求超时中间件
 app.use((req, res, next) => {
   req.setTimeout(5000, () => {
-    console.error(`请求超时: ${req.method} ${req.originalUrl}`)
+    console.error('请求超时')
     res.status(504).send('请求超时')
   })
   next()
@@ -101,7 +101,7 @@ Object.entries({
   })
 
   proxy.on('error', (err, req, res) => {
-    console.error(`[API Gateway Error] ${req.method} ${req.path}: ${err.message}`)
+    console.error(`服务连接失败: ${name}`)
     if (!res.headersSent) {
       res.status(502).json({ error: '服务连接失败', message: err.message })
     }
@@ -113,10 +113,8 @@ Object.entries({
   })
 })
 
-// 添加全局错误处理中间件 - 改进错误处理
+// 添加全局错误处理中间件
 app.use((err, req, res, next) => {
-  console.error('未处理的错误:', err)
-
   if (err instanceof SyntaxError) {
     return res.status(400).json({ error: '无效的JSON格式' })
   }

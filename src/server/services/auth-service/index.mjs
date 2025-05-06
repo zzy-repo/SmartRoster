@@ -64,40 +64,31 @@ app.get('/health', (req, res) => {
 app.post('/login', async (req, res) => {
   try {
     const { username, password } = req.body
-    console.log(`登录请求 - 用户名: ${username}`)
 
     if (!username || !password) {
-      console.warn('登录失败: 用户名或密码为空')
       return res.status(400).json({ error: '用户名和密码不能为空' })
     }
 
     // 查询用户
-    console.log(`正在查询用户: ${username}`)
     const [users] = await pool.query(
       'SELECT * FROM users WHERE username = ?',
       [username],
     )
 
     if (users.length === 0) {
-      console.warn(`用户不存在: ${username}`)
       return res.status(401).json({ error: '用户名或密码错误' })
     }
 
     const user = users[0]
-    console.log(`找到用户: ${user.username}, 角色: ${user.role}`)
 
     // 验证密码
-    console.log('正在验证密码')
     const isMatch = await comparePassword(password, user.password)
     if (!isMatch) {
-      console.warn('密码验证失败')
       return res.status(401).json({ error: '用户名或密码错误' })
     }
 
     // 生成令牌
-    console.log('正在生成令牌')
     const token = generateToken(user)
-    console.log('登录成功')
 
     res.json({
       data: {
@@ -111,7 +102,7 @@ app.post('/login', async (req, res) => {
     })
   }
   catch (error) {
-    console.error('登录失败:', error)
+    console.error('登录失败')
     res.status(500).json({ error: '服务器错误' })
   }
 })
@@ -150,37 +141,30 @@ app.post('/login', async (req, res) => {
 app.post('/register', async (req, res) => {
   try {
     const { username, password, role } = req.body
-    console.log(`注册请求 - 用户名: ${username}, 角色: ${role || '默认用户'}`)
 
     if (!username || !password) {
-      console.warn('注册失败: 用户名或密码为空')
       return res.status(400).json({ error: '用户名和密码不能为空' })
     }
 
     // 检查用户名是否已存在
-    console.log(`正在检查用户名是否存在: ${username}`)
     const [existingUsers] = await pool.query(
       'SELECT * FROM users WHERE username = ?',
       [username],
     )
 
     if (existingUsers.length > 0) {
-      console.warn(`用户名已存在: ${username}`)
       return res.status(400).json({ error: '用户名已存在' })
     }
 
     // 加密密码
-    console.log('正在加密密码')
     const hashedPassword = await hashPassword(password)
 
     // 创建新用户
-    console.log('正在创建新用户')
     const [result] = await pool.query(
       'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
       [username, hashedPassword, role || 'user'],
     )
 
-    console.log(`用户注册成功 - 用户ID: ${result.insertId}`)
     res.status(201).json({
       data: {
         message: '用户注册成功',
@@ -189,21 +173,14 @@ app.post('/register', async (req, res) => {
     })
   }
   catch (error) {
-    console.error('注册失败:', error)
+    console.error('注册失败')
     res.status(500).json({ error: '服务器错误' })
   }
 })
 
-// TODO: 实现密码重置功能
-// TODO: 实现角色权限管理系统
-// TODO: 实现用户信息修改接口
-// TODO: 实现登录日志记录
-// TODO: 实现账号锁定机制
-
 // 启动服务器
-app.listen(PORT, '0.0.0.0', () => { // 明确指定监听所有网络接口
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`认证服务运行在端口 ${PORT}`)
-  console.log(`当前环境: ${process.env.NODE_ENV || 'development'}`) // 添加环境信息
 })
 
 export default app
