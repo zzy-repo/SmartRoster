@@ -179,7 +179,7 @@ const openEditDialog = (schedule?: any) => {
       start_date: '',
       end_date: '',
       status: 'draft',
-      store_id: storeStore.currentStore?.id,
+      store_id: storeStore.currentStore?.id || '',
       year: getCurrentYear(),
       month: getCurrentMonth(),
       week_number: getCurrentWeekNumber()
@@ -382,10 +382,10 @@ onMounted(async () => {
       </el-table>
     </el-card>
 
-    <el-dialog v-model="dialogVisible" :title="currentSchedule.id ? '编辑排班' : '新建排班'" width="500px">
-      <el-form ref="formRef" :model="currentSchedule" :rules="rules" label-width="100px">
+    <el-dialog v-model="dialogVisible" :title="currentSchedule.id ? '编辑排班' : '新建排班'" width="500px" class="schedule-dialog">
+      <el-form ref="formRef" :model="currentSchedule" :rules="rules" label-width="100px" class="schedule-form">
         <el-form-item prop="year" label="年份" required>
-          <el-select v-model="currentSchedule.year" placeholder="请选择年份">
+          <el-select v-model="currentSchedule.year" placeholder="请选择年份" class="form-select">
             <el-option
               v-for="year in yearOptions"
               :key="year.value"
@@ -395,7 +395,7 @@ onMounted(async () => {
           </el-select>
         </el-form-item>
         <el-form-item prop="month" label="月份" required>
-          <el-select v-model="currentSchedule.month" placeholder="请选择月份">
+          <el-select v-model="currentSchedule.month" placeholder="请选择月份" class="form-select">
             <el-option
               v-for="month in monthOptions"
               :key="month.value"
@@ -405,7 +405,7 @@ onMounted(async () => {
           </el-select>
         </el-form-item>
         <el-form-item prop="week_number" label="周数" required>
-          <el-select v-model="currentSchedule.week_number" placeholder="请选择周数">
+          <el-select v-model="currentSchedule.week_number" placeholder="请选择周数" class="form-select">
             <el-option
               v-for="week in weekOptions"
               :key="week.value"
@@ -415,7 +415,7 @@ onMounted(async () => {
           </el-select>
         </el-form-item>
         <el-form-item prop="store_id" label="门店" required>
-          <el-select v-model="currentSchedule.store_id" filterable placeholder="请选择门店">
+          <el-select v-model="currentSchedule.store_id" filterable placeholder="请选择门店" class="form-select">
             <el-option
               v-for="store in storeStore.stores"
               :key="store.id"
@@ -426,12 +426,10 @@ onMounted(async () => {
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogVisible = false">
-          取消
-        </el-button>
-        <el-button type="primary" @click="submitSchedule">
-          确认
-        </el-button>
+        <div class="dialog-footer">
+          <el-button @click="dialogVisible = false">取消</el-button>
+          <el-button type="primary" @click="submitSchedule">确认</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -504,5 +502,46 @@ onMounted(async () => {
 
 :deep(.el-icon) {
   margin-right: 4px;
+}
+
+:deep(.schedule-dialog) {
+  border-radius: 8px;
+}
+
+:deep(.schedule-dialog .el-dialog__header) {
+  padding: 20px;
+  margin: 0;
+  border-bottom: 1px solid #ebeef5;
+}
+
+:deep(.schedule-dialog .el-dialog__body) {
+  padding: 30px 20px;
+}
+
+:deep(.schedule-dialog .el-dialog__footer) {
+  padding: 20px;
+  border-top: 1px solid #ebeef5;
+}
+
+:deep(.schedule-form) {
+  padding: 0 20px;
+}
+
+:deep(.schedule-form .el-form-item) {
+  margin-bottom: 20px;
+}
+
+:deep(.schedule-form .form-select) {
+  width: 100%;
+}
+
+:deep(.dialog-footer) {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+:deep(.dialog-footer .el-button) {
+  min-width: 80px;
 }
 </style>
