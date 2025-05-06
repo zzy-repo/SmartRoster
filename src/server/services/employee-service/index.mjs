@@ -11,7 +11,7 @@ app.use(express.json())
  * @api {get} /api/employee 获取所有员工
  * @apiName GetEmployees
  * @apiGroup Employee
- * @apiDescription 获取系统中所有员工的列表，包括其所属门店信息
+ * @apiDescription 获取当前用户创建的所有员工的列表，包括其所属门店信息
  *
  * @apiSuccess {object} data 响应数据
  * @apiSuccess {object[]} data.employees 员工列表
@@ -27,14 +27,23 @@ app.use(express.json())
  */
 app.get('/', async (req, res) => {
   try {
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
     const [employees] = await pool.query(`
       SELECT e.*, 
              st.name as store_name
       FROM employees e
       LEFT JOIN stores st ON e.store_id = st.id
+      WHERE e.user_id = ?
       GROUP BY e.id
-    `)
-    res.json({ data: employees }) // 修改为统一格式
+    `, [userId])
+    
+    res.json({ data: employees })
   }
   catch (error) {
     console.error('获取员工列表失败:', error)
@@ -133,13 +142,19 @@ app.get('/:id', async (req, res) => {
  */
 app.post('/', async (req, res) => {
   try {
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
     const {
       name,
       phone,
       email,
       position,
       store_id,
-      user_id,
       max_daily_hours,
       max_weekly_hours,
       workday_pref_start,
@@ -152,7 +167,17 @@ app.post('/', async (req, res) => {
       return res.status(400).json({ error: '员工姓名和职位不能为空' })
     }
 
-    // 插入员工基本信息
+    // 检查用户是否已经绑定为员工
+    const [existingEmployee] = await pool.query(
+      'SELECT id FROM employees WHERE user_id = ?',
+      [userId],
+    )
+
+    if (existingEmployee.length > 0) {
+      return res.status(400).json({ error: '该用户已经绑定为员工' })
+    }
+
+    // 插入员工基本信息，自动绑定当前用户
     const [result] = await pool.query(
       `INSERT INTO employees (
         name, phone, email, position, store_id, user_id,
@@ -166,7 +191,7 @@ app.post('/', async (req, res) => {
         email,
         position,
         store_id,
-        user_id,
+        userId,
         max_daily_hours || 8,
         max_weekly_hours || 40,
         workday_pref_start || 0,
@@ -181,9 +206,9 @@ app.post('/', async (req, res) => {
     res.status(201).json({
       data: {
         message: '员工创建成功',
-        employeeId,
+        id: employeeId,
       },
-    }) // 修改为统一格式
+    })
   }
   catch (error) {
     console.error('创建员工失败:', error)
@@ -226,13 +251,19 @@ app.post('/', async (req, res) => {
 app.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
     const {
       name,
       phone,
       email,
       position,
       store_id,
-      user_id,
       max_daily_hours,
       max_weekly_hours,
       workday_pref_start,
@@ -245,22 +276,31 @@ app.put('/:id', async (req, res) => {
       return res.status(400).json({ error: '员工姓名和职位不能为空' })
     }
 
+    // 检查员工是否存在且属于当前用户
+    const [employee] = await pool.query(
+      'SELECT id FROM employees WHERE id = ? AND user_id = ?',
+      [id, userId],
+    )
+
+    if (!employee.length) {
+      return res.status(404).json({ error: '员工不存在或无权修改' })
+    }
+
     // 更新员工基本信息
     const [result] = await pool.query(
       `UPDATE employees SET
         name = ?, phone = ?, email = ?, position = ?, 
-        store_id = ?, user_id = ?,
+        store_id = ?,
         max_daily_hours = ?, max_weekly_hours = ?,
         workday_pref_start = ?, workday_pref_end = ?,
         time_pref_start = ?, time_pref_end = ?
-      WHERE id = ?`,
+      WHERE id = ? AND user_id = ?`,
       [
         name,
         phone,
         email,
         position,
         store_id,
-        user_id,
         max_daily_hours,
         max_weekly_hours,
         workday_pref_start,
@@ -268,14 +308,15 @@ app.put('/:id', async (req, res) => {
         time_pref_start,
         time_pref_end,
         id,
+        userId,
       ],
     )
 
     if (result.affectedRows === 0) {
-      return res.status(404).json({ error: '员工不存在' })
+      return res.status(404).json({ error: '员工不存在或无权修改' })
     }
 
-    res.json({ data: { message: '员工更新成功' } }) // 修改为统一格式
+    res.json({ data: { message: '员工更新成功' } })
   }
   catch (error) {
     console.error('更新员工失败:', error)

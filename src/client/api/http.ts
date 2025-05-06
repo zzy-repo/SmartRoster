@@ -16,8 +16,14 @@ http.interceptors.request.use(
     // Skip auth header for registration and login endpoints
     const skipAuthUrls = ['/auth/register', '/auth/login']
     const token = localStorage.getItem('token')
+    const user = JSON.parse(localStorage.getItem('user') || 'null')
+    
     if (token && !skipAuthUrls.some(url => config.url?.includes(url))) {
       config.headers.Authorization = `Bearer ${token}`
+      // 添加用户ID到请求头
+      if (user && user.id) {
+        config.headers['x-user-id'] = user.id
+      }
     }
     return config
   },
@@ -35,6 +41,7 @@ http.interceptors.response.use(
       // Skip auth cleanup for registration endpoint
       if (response.status === 401 && !response.config.url?.includes('/auth/register')) {
         localStorage.removeItem('token')
+        localStorage.removeItem('user')
         window.location.href = '/login'
       }
       return Promise.reject(error)

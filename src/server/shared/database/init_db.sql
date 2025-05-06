@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS stores (
   address VARCHAR(200) COMMENT '门店地址',
   phone VARCHAR(20) COMMENT '联系电话',
   area DECIMAL(10,2) COMMENT '工作场所面积(平方米)',
-  manager_id INT COMMENT '店长ID，关联users表',
+  manager_id INT COMMENT '用户ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   FOREIGN KEY (manager_id) REFERENCES users(id) ON DELETE SET NULL
 );
@@ -83,7 +83,7 @@ CREATE TABLE IF NOT EXISTS shift_assignments (
   schedule_id INT NOT NULL COMMENT '排班ID，关联schedules表',
   shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
   employee_id INT NOT NULL COMMENT '员工ID，关联employees表',
-  assigned_by INT COMMENT '分配人ID，关联users表',
+  assigned_by INT COMMENT '用户ID，关联users表',
   assigned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
   FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE,
   FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,

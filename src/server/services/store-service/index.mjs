@@ -26,15 +26,25 @@ app.use(express.json())
  */
 app.get('/', async (req, res) => {
   try {
-    // 联表查询，计算每个门店的员工数量
+    // 从请求头中获取用户ID
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回空列表
+    if (!userId) {
+      return res.json({ data: [] })
+    }
+
+    // 联表查询，计算每个门店的员工数量，并根据用户ID过滤
     const [stores] = await pool.query(`
       SELECT 
         s.id, s.name, s.area, s.address, s.phone, s.manager_id, 
         COUNT(e.id) AS employeeCount
       FROM stores s
       LEFT JOIN employees e ON s.id = e.store_id
+      WHERE s.manager_id = ? OR e.user_id = ?
       GROUP BY s.id
-    `)
+    `, [userId, userId])
+    
     res.json({ data: stores })
   }
   catch (error) {
@@ -70,19 +80,26 @@ app.get('/', async (req, res) => {
 app.get('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    // 联表查询，计算指定门店的员工数量
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
+    // 联表查询，计算指定门店的员工数量，并验证用户权限
     const [stores] = await pool.query(`
       SELECT 
         s.id, s.name, s.area, s.address, s.phone, s.manager_id, 
         COUNT(e.id) AS employeeCount
       FROM stores s
       LEFT JOIN employees e ON s.id = e.store_id
-      WHERE s.id = ?
+      WHERE s.id = ? AND (s.manager_id = ? OR e.user_id = ?)
       GROUP BY s.id
-    `, [id])
+    `, [id, userId, userId])
 
     if (stores.length === 0) {
-      return res.status(404).json({ error: '门店不存在' })
+      return res.status(404).json({ error: '门店不存在或无权访问' })
     }
 
     res.json({ data: stores[0] })
@@ -118,7 +135,14 @@ app.get('/:id', async (req, res) => {
  */
 app.post('/', async (req, res) => {
   try {
-    const { name, area, address, phone, manager_id } = req.body
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
+    const { name, area, address, phone } = req.body
 
     if (!name) {
       return res.status(400).json({ error: '门店名称不能为空' })
@@ -126,7 +150,7 @@ app.post('/', async (req, res) => {
 
     const [result] = await pool.query(
       'INSERT INTO stores (name, area, address, phone, manager_id) VALUES (?, ?, ?, ?, ?)',
-      [name, area, address, phone, manager_id],
+      [name, area, address, phone, userId],
     )
 
     res.status(201).json({
@@ -169,15 +193,34 @@ app.post('/', async (req, res) => {
 app.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { name, area, address, phone, manager_id } = req.body
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
+    const { name, area, address, phone } = req.body
 
     if (!name) {
       return res.status(400).json({ error: '门店名称不能为空' })
     }
 
+    // 检查用户是否有权限更新门店
+    const [store] = await pool.query('SELECT manager_id FROM stores WHERE id = ?', [id])
+    if (!store.length) {
+      return res.status(404).json({ error: '门店不存在' })
+    }
+
+    // 只有管理员或店长可以更新门店信息
+    const [user] = await pool.query('SELECT role FROM users WHERE id = ?', [userId])
+    if (user[0].role !== 'admin' && store[0].manager_id !== userId) {
+      return res.status(403).json({ error: '无权更新门店信息' })
+    }
+
     const [result] = await pool.query(
-      'UPDATE stores SET name = ?, area = ?, address = ?, phone = ?, manager_id = ? WHERE id = ?',
-      [name, area, address, phone, manager_id, id],
+      'UPDATE stores SET name = ?, area = ?, address = ?, phone = ? WHERE id = ?',
+      [name, area, address, phone, id],
     )
 
     if (result.affectedRows === 0) {
@@ -219,6 +262,18 @@ app.put('/:id', async (req, res) => {
 app.delete('/:id', async (req, res) => {
   try {
     const { id } = req.params
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
+    // 检查用户是否有权限删除门店
+    const [user] = await pool.query('SELECT role FROM users WHERE id = ?', [userId])
+    if (!user.length || user[0].role !== 'admin') {
+      return res.status(403).json({ error: '无权删除门店' })
+    }
 
     // 检查门店是否有关联的员工
     const [employees] = await pool.query('SELECT COUNT(*) as count FROM employees WHERE store_id = ?', [id])
@@ -260,13 +315,33 @@ app.delete('/:id', async (req, res) => {
 app.get('/:id/employees', async (req, res) => {
   try {
     const { id } = req.params
+    const userId = req.headers['x-user-id']
+    
+    // 如果没有用户ID，返回未授权
+    if (!userId) {
+      return res.status(401).json({ error: '未授权访问' })
+    }
+
+    // 检查用户是否有权限查看门店员工
+    const [store] = await pool.query('SELECT manager_id FROM stores WHERE id = ?', [id])
+    if (!store.length) {
+      return res.status(404).json({ error: '门店不存在' })
+    }
+
+    // 只有管理员、店长或该门店的员工可以查看员工列表
+    const [user] = await pool.query('SELECT role FROM users WHERE id = ?', [userId])
+    const [employee] = await pool.query('SELECT id FROM employees WHERE store_id = ? AND user_id = ?', [id, userId])
+    
+    if (user[0].role !== 'admin' && store[0].manager_id !== userId && !employee.length) {
+      return res.status(403).json({ error: '无权查看门店员工' })
+    }
 
     const [employees] = await pool.query(
-      'SELECT * FROM employees WHERE store_id = ?',
+      'SELECT e.*, u.username FROM employees e LEFT JOIN users u ON e.user_id = u.id WHERE e.store_id = ?',
       [id],
     )
 
-    res.json(employees)
+    res.json({ data: employees })
   }
   catch (error) {
     console.error('获取门店员工失败:', error)
@@ -274,11 +349,6 @@ app.get('/:id/employees', async (req, res) => {
   }
 })
 
-// TODO: 实现门店运营时间管理
-// TODO: 实现门店特殊日期设置（如节假日）
-// TODO: 实现门店业绩目标设置
-// TODO: 实现门店人员配置标准管理
-// TODO: 实现门店业绩分析报告
 
 // 启动服务器
 app.listen(PORT, () => {

@@ -64,8 +64,9 @@ async function addStore() {
       area: newStore.area,
       phone: newStore.phone,
     }
-    const data = await storeStore.createStore(storeToAdd)
-    stores.value.push(data)
+    await storeStore.createStore(storeToAdd)
+    // 更新本地stores列表
+    stores.value = storeStore.stores
     showAddStoreForm.value = false
     // 重置表单
     Object.assign(newStore, {

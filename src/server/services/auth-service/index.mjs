@@ -156,19 +156,27 @@ app.post('/register', async (req, res) => {
       return res.status(400).json({ error: '用户名已存在' })
     }
 
+    // 验证角色
+    const validRoles = ['admin', 'manager', 'staff']
+    const userRole = role && validRoles.includes(role) ? role : 'staff'
+
     // 加密密码
     const hashedPassword = await hashPassword(password)
 
     // 创建新用户
     const [result] = await pool.query(
       'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-      [username, hashedPassword, role || 'user'],
+      [username, hashedPassword, userRole],
     )
+
+    // 返回用户信息
+    const [newUser] = await pool.query('SELECT id, username, role FROM users WHERE id = ?', [result.insertId])
 
     res.status(201).json({
       data: {
         message: '用户注册成功',
         userId: result.insertId,
+        user: newUser[0],
       },
     })
   }
