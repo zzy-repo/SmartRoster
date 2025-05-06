@@ -8,10 +8,7 @@ const PORT = config.gateway.port || 3000
 
 // 调整请求日志中间件的位置
 app.use((req, res, next) => {
-  // 只记录非OPTIONS和非GET请求
-  if (req.method !== 'OPTIONS' && req.method !== 'GET') {
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
-  }
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
   next()
 })
 
