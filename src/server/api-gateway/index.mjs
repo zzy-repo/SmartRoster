@@ -84,7 +84,7 @@ app.use((req, res, next) => {
 // 遍历配置中的服务，为每个服务创建代理中间件
 Object.entries({
   ...config.services,
-  schedules: config.services.schedule,
+  schedule: config.services.schedule,
 }).forEach(([name, service]) => {
   const proxy = httpProxy.createProxyServer({
     target: `http://localhost:${service.port}`,

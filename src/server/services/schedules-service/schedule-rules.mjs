@@ -17,9 +17,20 @@ const router = express.Router()
  */
 router.get('/', async (req, res) => {
   try {
-    const [rules] = await pool.query('SELECT * FROM schedule_rules WHERE id = 1')
+    const userId = req.headers['x-user-id']
+    if (!userId) {
+      return res.status(401).json({ error: '未提供用户ID' })
+    }
+
+    const [rules] = await pool.query('SELECT * FROM schedule_rules WHERE user_id = ?', [userId])
     if (rules.length === 0) {
-      return res.status(404).json({ error: '规则不存在' })
+      // 如果没有规则，创建一个默认规则
+      const [result] = await pool.query(
+        'INSERT INTO schedule_rules (max_daily_hours, max_weekly_hours, user_id) VALUES (?, ?, ?)',
+        [8, 40, userId],
+      )
+      const [newRules] = await pool.query('SELECT * FROM schedule_rules WHERE id = ?', [result.insertId])
+      return res.json({ rules: newRules })
     }
     res.json({ rules })
   }
@@ -43,12 +54,16 @@ router.get('/', async (req, res) => {
  */
 router.put('/', async (req, res) => {
   try {
-    const { id } = 1
+    const userId = req.headers['x-user-id']
+    if (!userId) {
+      return res.status(401).json({ error: '未提供用户ID' })
+    }
+
     const { max_daily_hours, max_weekly_hours } = req.body
 
     const [result] = await pool.query(
-      'UPDATE schedule_rules SET max_daily_hours = ?, max_weekly_hours = ? WHERE id = 1',
-      [max_daily_hours, max_weekly_hours],
+      'UPDATE schedule_rules SET max_daily_hours = ?, max_weekly_hours = ? WHERE user_id = ?',
+      [max_daily_hours, max_weekly_hours, userId],
     )
 
     if (result.affectedRows === 0) {
