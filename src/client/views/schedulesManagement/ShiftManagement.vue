@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import type { Shift } from '@/types/shiftTypes'
 import { useShiftStore } from '@/stores/shiftStore'
 import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
@@ -57,7 +56,7 @@ const rules = {
   start_time: [
     { required: true, message: '请选择开始时间', trigger: 'change' },
     {
-      validator: (rule: any, value: string, callback: any) => {
+      validator: (_rule: any, value: string, callback: any) => {
         if (!value || !currentShift.value.end_time) {
           callback()
           return
@@ -74,7 +73,7 @@ const rules = {
   end_time: [
     { required: true, message: '请选择结束时间', trigger: 'change' },
     {
-      validator: (rule: any, value: string, callback: any) => {
+      validator: (_rule: any, value: string, callback: any) => {
         if (!value || !currentShift.value.start_time) {
           callback()
           return
@@ -197,6 +196,22 @@ function formatTime(time: string) {
   return time || ''
 }
 
+// 计算当前周的日期
+const getWeekDates = () => {
+  const today = new Date()
+  const currentDay = today.getDay()
+  const monday = new Date(today)
+  monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1))
+  
+  return weekdays.map((_, index) => {
+    const date = new Date(monday)
+    date.setDate(monday.getDate() + index)
+    return `${date.getMonth() + 1}月${date.getDate()}日`
+  })
+}
+
+const weekDates = ref(getWeekDates())
+
 onMounted(async () => {
   await Promise.all([
     loadShifts(),
@@ -218,7 +233,7 @@ onMounted(async () => {
         <el-tab-pane
           v-for="(dayName, index) in weekdays"
           :key="index"
-          :label="dayName"
+          :label="`${dayName}（${weekDates[index]}）`"
           :name="index"
         >
           <div class="day-content">
