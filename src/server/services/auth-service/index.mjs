@@ -194,6 +194,12 @@ app.post('/register', async (req, res) => {
   }
 })
 
+// TODO: 实现密码重置功能
+// TODO: 实现角色权限管理系统
+// TODO: 实现用户信息修改接口
+// TODO: 实现登录日志记录
+// TODO: 实现账号锁定机制
+
 // 启动服务器
 app.listen(PORT, '0.0.0.0', () => { // 明确指定监听所有网络接口
   console.log(`认证服务运行在端口 ${PORT}`)

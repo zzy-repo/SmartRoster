@@ -381,6 +381,12 @@ app.post('/shifts/generate', async (req, res) => {
   }
 })
 
+// TODO: 实现更复杂的预测算法（如时间序列分析、机器学习模型等）
+// TODO: 实现预测准确度评估机制
+// TODO: 实现预测数据可视化接口
+// TODO: 实现预测模型训练和更新机制
+// TODO: 实现预测结果导出功能
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`预测服务运行在端口 ${PORT}`)

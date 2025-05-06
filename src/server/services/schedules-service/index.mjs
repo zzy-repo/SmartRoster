@@ -16,6 +16,12 @@ app.use('', schedulesRouter)
 // 注册班次表路由
 app.use('/shifts', shiftsRouter)
 
+// TODO: 实现排班规则配置接口
+// TODO: 实现自动排班算法
+// TODO: 实现排班冲突检测
+// TODO: 实现排班调整和审批流程
+// TODO: 实现排班历史记录查询
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`排班服务运行在端口 ${PORT}`)

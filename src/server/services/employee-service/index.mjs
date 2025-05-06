@@ -306,6 +306,12 @@ app.delete('/:id', async (req, res) => {
   }
 })
 
+// TODO: 实现员工技能管理接口
+// TODO: 实现员工绩效评估系统
+// TODO: 实现员工培训记录管理
+// TODO: 实现员工请假管理系统
+// TODO: 实现员工排班偏好设置接口
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`员工服务运行在端口 ${PORT}`)

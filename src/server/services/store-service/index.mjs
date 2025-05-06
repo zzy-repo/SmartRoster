@@ -274,6 +274,12 @@ app.get('/:id/employees', async (req, res) => {
   }
 })
 
+// TODO: 实现门店运营时间管理
+// TODO: 实现门店特殊日期设置（如节假日）
+// TODO: 实现门店业绩目标设置
+// TODO: 实现门店人员配置标准管理
+// TODO: 实现门店业绩分析报告
+
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`门店服务运行在端口 ${PORT}`)
