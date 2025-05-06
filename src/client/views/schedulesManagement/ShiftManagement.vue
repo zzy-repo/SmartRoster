@@ -52,8 +52,40 @@ const currentDayIndex = ref(0)
 
 // 表单验证规则
 const rules = {
-  start_time: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
-  end_time: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
+  start_time: [
+    { required: true, message: '请选择开始时间', trigger: 'change' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (!value || !currentShift.value.end_time) {
+          callback()
+          return
+        }
+        if (value >= currentShift.value.end_time) {
+          callback(new Error('开始时间不能高于或等于结束时间'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ],
+  end_time: [
+    { required: true, message: '请选择结束时间', trigger: 'change' },
+    {
+      validator: (rule: any, value: string, callback: any) => {
+        if (!value || !currentShift.value.start_time) {
+          callback()
+          return
+        }
+        if (value <= currentShift.value.start_time) {
+          callback(new Error('结束时间不能低于或等于开始时间'))
+        } else {
+          callback()
+        }
+      },
+      trigger: 'change'
+    }
+  ]
 }
 
 // 按日期分组的班次
@@ -235,20 +267,22 @@ onMounted(async () => {
     >
       <el-form ref="formRef" :model="currentShift" :rules="rules" label-width="100px">
         <el-form-item prop="start_time" label="开始时间" required>
-          <el-time-picker
+          <el-time-select
             v-model="currentShift.start_time"
+            :picker-options="{ start: '00:00', end: '23:30', step: '00:30' }"
+            placeholder="选择开始时间"
             format="HH:mm"
             value-format="HH:mm"
-            placeholder="选择开始时间"
           />
         </el-form-item>
 
         <el-form-item prop="end_time" label="结束时间" required>
-          <el-time-picker
+          <el-time-select
             v-model="currentShift.end_time"
+            :picker-options="{ start: '00:00', end: '23:30', step: '00:30' }"
+            placeholder="选择结束时间"
             format="HH:mm"
             value-format="HH:mm"
-            placeholder="选择结束时间"
           />
         </el-form-item>
 
