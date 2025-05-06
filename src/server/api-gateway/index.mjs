@@ -8,7 +8,10 @@ const PORT = config.gateway.port || 3000
 
 // 调整请求日志中间件的位置
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
+  // 只记录非OPTIONS请求
+  if (req.method !== 'OPTIONS') {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
+  }
   next()
 })
 
@@ -17,7 +20,6 @@ app.use(express.json({
   verify: (req, res, buf) => {
     try {
       req.rawBody = buf.toString()
-      console.log(`[API Gateway] 请求体解析成功:`, req.rawBody) // 新增调试信息
     }
     catch (e) {
       console.error('无法读取请求体:', e)
@@ -84,9 +86,6 @@ Object.entries({
   ...config.services,
   schedules: config.services.schedule,
 }).forEach(([name, service]) => {
-  console.log(`正在配置服务代理: ${name} -> localhost:${service.port}`)
-  console.log(`[配置详情] 服务名称: ${service.name} 路径前缀: /api/${name}`)
-
   const proxy = httpProxy.createProxyServer({
     target: `http://localhost:${service.port}`,
     timeout: 30000,
@@ -94,40 +93,24 @@ Object.entries({
   })
 
   proxy.on('proxyReq', (proxyReq, req, res) => {
-    console.log(`[API Gateway] 转发请求: ${req.method} ${req.originalUrl} -> ${service.name}(${service.port})`)
-    console.log(`[API Gateway] 请求头:`, req.headers)
-
-    if (req.body && req.method !== 'GET') {
+    if (req.method !== 'GET') {
       const bodyData = JSON.stringify(req.body)
       proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData))
       proxyReq.write(bodyData)
-      console.log(`[API Gateway] 请求体:`, req.body)
     }
   })
 
-  proxy.on('proxyRes', (proxyRes, req, res) => {
-    console.log(`[API Gateway] 收到响应: ${req.method} ${req.originalUrl}`)
-    console.log(`[API Gateway] 响应状态码: ${proxyRes.statusCode}`)
-    console.log(`[API Gateway] 响应头:`, proxyRes.headers)
-  })
-
   proxy.on('error', (err, req, res) => {
-    console.error(`[API Gateway Error] ${req.method} ${req.path}`)
-    console.error('错误详情:', err)
-
+    console.error(`[API Gateway Error] ${req.method} ${req.path}: ${err.message}`)
     if (!res.headersSent) {
       res.status(502).json({ error: '服务连接失败', message: err.message })
     }
   })
 
   app.use(`/api/${name}`, (req, res) => {
-    console.log(`[路由匹配] 请求路径: ${req.path} 匹配服务: ${name}`)
-    // 处理路径重写
     req.url = req.url.replace(new RegExp(`^/api/${name}`), '')
     proxy.web(req, res)
   })
-
-  console.log(`成功配置服务代理: ${name} -> localhost:${service.port}`)
 })
 
 // 添加全局错误处理中间件 - 改进错误处理
@@ -151,15 +134,15 @@ app.use((err, req, res, next) => {
 
 // 在服务器启动前添加调试日志
 app.listen(PORT, () => {
-  console.log(`API网关运行在端口 ${PORT}`)
-  // 验证服务配置
-  console.log('当前路由配置:')
+  console.log(`\nAPI网关运行在端口 ${PORT}`)
+  console.log('服务路由配置:')
   Object.entries({
     ...config.services,
     schedules: config.services.schedule,
   }).forEach(([name, service]) => {
-    console.log(`/api/${name} -> localhost:${service.port}`)
+    console.log(`  /api/${name} -> localhost:${service.port}`)
   })
+  console.log('\n按 Ctrl+C 停止服务\n')
 })
 
 export default app

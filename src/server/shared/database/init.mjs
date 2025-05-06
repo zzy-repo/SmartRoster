@@ -28,9 +28,7 @@ async function clearDatabase() {
     ]
     
     for (const tableName of dropOrder) {
-      console.log(`正在删除表: ${tableName}`)
       await pool.query(`DROP TABLE IF EXISTS \`${tableName}\``)
-      console.log(`已删除表: ${tableName}`)
     }
     
     console.log('数据库已清空')
@@ -68,16 +66,13 @@ async function initDatabase() {
     
     for (const statement of statements) {
       if (!statement) continue
-      console.log('执行SQL语句:', statement)
       try {
         await pool.query(statement)
-        console.log('SQL语句执行成功')
       } catch (error) {
-        console.error('执行SQL语句失败:', error)
+        console.error('执行SQL语句失败:',statement , error)
         throw error
       }
     }
-    console.log('数据库表结构检查完成')
     return true
   } catch (error) {
     console.error('初始化数据库失败:', error)
