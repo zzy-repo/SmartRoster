@@ -47,9 +47,11 @@ const currentShift = ref<ShiftTemp>({
 // 表单引用
 const formRef = ref()
 
+// 当前选中的工作日
+const currentDayIndex = ref(0)
+
 // 表单验证规则
 const rules = {
-  day: [{ required: true, message: '请选择工作日', trigger: 'change' }],
   start_time: [{ required: true, message: '请选择开始时间', trigger: 'change' }],
   end_time: [{ required: true, message: '请选择结束时间', trigger: 'change' }],
 }
@@ -86,7 +88,7 @@ function openShiftDialog(shift?: any) {
   }
   else {
     currentShift.value = {
-      day: 0,
+      day: currentDayIndex.value,
       start_time: '09:00',
       end_time: '17:00',
       store_id: storeId,
@@ -177,28 +179,30 @@ onMounted(async () => {
         </div>
       </template>
 
-      <el-tabs type="card">
-        <el-tab-pane v-for="(dayName, index) in weekdays" :key="index" :label="dayName">
+      <el-tabs v-model="currentDayIndex" type="card">
+        <el-tab-pane
+          v-for="(dayName, index) in weekdays"
+          :key="index"
+          :label="dayName"
+          :name="index"
+        >
           <div class="day-content">
             <div class="day-header">
               <h3>{{ dayName }}的班次安排</h3>
-              <el-button type="primary" size="small" @click="openShiftDialog({ day: index })">
+              <el-button type="primary" size="small" @click="openShiftDialog()">
                 添加班次
               </el-button>
             </div>
-
             <div class="shifts-list">
-              <el-empty v-if="shiftsByDay[index]?.length === 0" description="暂无班次" />
-
+              <el-empty v-if="shiftsByDay[Number(index)]?.length === 0" description="暂无班次" />
               <el-card
-                v-for="shift in shiftsByDay[index]"
+                v-for="shift in shiftsByDay[Number(index)]"
                 :key="shift.id"
                 class="shift-card"
               >
                 <div class="shift-header">
                   <span class="shift-time">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
                 </div>
-
                 <div class="shift-positions" v-if="shift.positions?.length">
                   <el-tag
                     v-for="position in shift.positions"
@@ -208,7 +212,6 @@ onMounted(async () => {
                     {{ positionOptions.find(p => p.value === position)?.label || position }}
                   </el-tag>
                 </div>
-
                 <div class="shift-actions">
                   <el-button size="small" @click="openShiftDialog(shift)">
                     编辑
@@ -227,15 +230,8 @@ onMounted(async () => {
     <!-- 新增/编辑班次对话框 -->
     <el-dialog v-model="dialogVisible" :title="currentShift.id ? '编辑班次' : '新建班次'" width="500px">
       <el-form ref="formRef" :model="currentShift" :rules="rules" label-width="100px">
-        <el-form-item prop="day" label="工作日" required>
-          <el-select v-model="currentShift.day">
-            <el-option
-              v-for="(name, index) in weekdays"
-              :key="index"
-              :label="name"
-              :value="index"
-            />
-          </el-select>
+        <el-form-item label="工作日">
+          <span>{{ weekdays[currentShift.day] }}</span>
         </el-form-item>
 
         <el-form-item prop="start_time" label="开始时间" required>
