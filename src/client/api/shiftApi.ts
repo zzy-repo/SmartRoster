@@ -8,20 +8,33 @@ export interface Shift {
   store_id: number
   schedule_id: number
   positions: {
+    id: number
     position: string
     count: number
+    shift_id: number
   }[]
+  created_at: string
+  updated_at: string
 }
 
-export function fetchShifts(scheduleId: number) {
-  return http.get<Shift[]>(`/schedule/shifts?scheduleId=${scheduleId}`).then(res => res.data)
+export interface ShiftResponse {
+  shifts: Shift[]
 }
 
-export function createShift(data: Omit<Shift, 'id'>) {
+export function fetchShifts(storeId: number, scheduleId: number) {
+  return http.get<ShiftResponse>('/schedule/shifts', {
+    params: {
+      storeId,
+      scheduleId
+    }
+  }).then(res => res.data)
+}
+
+export function createShift(data: Omit<Shift, 'id' | 'created_at' | 'updated_at'>) {
   return http.post<Shift>('/schedule/shifts', data).then(res => res.data)
 }
 
-export function updateShift(id: number, data: Partial<Shift>) {
+export function updateShift(id: number, data: Partial<Omit<Shift, 'id' | 'created_at' | 'updated_at'>>) {
   return http.put<Shift>(`/schedule/shifts/${id}`, data).then(res => res.data)
 }
 

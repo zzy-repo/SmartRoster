@@ -9,8 +9,25 @@ const route = useRoute()
 const shiftStore = useShiftStore()
 const storeStore = useStoreStore()
 
-const scheduleId = Number(route.params.scheduleId)
-const storeId = Number(route.params.storeId)
+// 获取并验证路由参数
+const scheduleId = computed(() => {
+  const id = Number(route.params.scheduleId)
+  if (isNaN(id)) {
+    ElMessage.error('无效的排班ID')
+    return 0
+  }
+  return id
+})
+
+const storeId = computed(() => {
+  const id = Number(route.params.storeId)
+  if (isNaN(id)) {
+    ElMessage.error('无效的门店ID')
+    return 0
+  }
+  return id
+})
+
 const dialogVisible = ref(false)
 const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
 
@@ -40,7 +57,7 @@ const currentShift = ref<ShiftTemp>({
   day: 0,
   start_time: '09:00',
   end_time: '17:00',
-  store_id: storeId,
+  store_id: storeId.value,
   position: '',
   count: 1,
 })
@@ -100,16 +117,28 @@ const shiftsByDay = computed(() => {
 
 // 获取门店名称
 const storeName = computed(() => {
-  const store = storeStore.stores.find(s => Number(s.id) === storeId)
+  const store = storeStore.stores.find(s => Number(s.id) === storeId.value)
   return store?.name || '未知门店'
 })
 
 // 加载班次数据
 async function loadShifts() {
   try {
-    await shiftStore.loadShifts(storeId)
+    if (!scheduleId.value || !storeId.value) {
+      ElMessage.error('缺少必要的参数')
+      return
+    }
+
+    await shiftStore.loadShifts(storeId.value, scheduleId.value)
+    console.log('加载到的班次数据:', {
+      storeId: storeId.value,
+      scheduleId: scheduleId.value,
+      shifts: shiftStore.shifts,
+      shiftsByDay: shiftsByDay.value
+    })
   }
   catch (error) {
+    console.error('加载班次数据失败:', error)
     ElMessage.error('加载班次数据失败')
   }
 }
@@ -124,7 +153,7 @@ function openShiftDialog(shift?: any) {
       day: currentDayIndex.value,
       start_time: '09:00',
       end_time: '17:00',
-      store_id: storeId,
+      store_id: storeId.value,
       position: '',
       count: 1,
     }
@@ -142,8 +171,8 @@ async function submitShift() {
       day: currentShift.value.day,
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
-      store_id: storeId,
-      schedule_id: scheduleId,
+      store_id: storeId.value,
+      schedule_id: scheduleId.value,
       positions: [{
         position: currentShift.value.position,
         count: currentShift.value.count
