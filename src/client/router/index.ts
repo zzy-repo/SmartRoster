@@ -51,12 +51,6 @@ const routes: RouteRecordRaw[] = [
     meta: { title: '排班规则', requiresAuth: true },
   },
   {
-    path: '/forecast',
-    name: 'BusinessForecast',
-    component: () => import('@/views/forecast/BusinessForecast.vue'),
-    meta: { title: '业务预测', requiresAuth: true },
-  },
-  {
     path: '/scheduleManagement',
     name: 'ScheduleManagement',
     component: () => import('@/views/schedulesManagement/ScheduleManagement.vue'),

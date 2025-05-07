@@ -62,9 +62,6 @@ async function handleLogout() {
             <el-menu-item index="/scheduleView">
               排班展示
             </el-menu-item>
-            <el-menu-item index="/forecast">
-              业务预测
-            </el-menu-item>
             <el-menu-item index="/logout" @click="handleLogout">
               退出登录
             </el-menu-item>

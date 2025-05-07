@@ -52,6 +52,11 @@ function goToForecast() {
   router.push('/forecast')
 }
 
+// 跳转到排班展示页面
+function goToScheduleView() {
+  router.push('/scheduleView')
+}
+
 onMounted(() => {
   loadData()
 })
@@ -118,8 +123,8 @@ onMounted(() => {
             <el-button text @click="goToRoster">
               排班表
             </el-button>
-            <el-button text @click="goToForecast">
-              业务预测
+            <el-button text @click="goToScheduleView">
+              排班展示
             </el-button>
           </div>
         </el-card>

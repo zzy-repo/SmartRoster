@@ -26,10 +26,6 @@ export const config = {
       name: 'schedules-service', // 排班服务
       port: 3004,                // 排班服务端口
     },
-    forecast: {
-      name: 'forecast-service', // 预测服务
-      port: 3005,               // 预测服务端口
-    },
   },
   database: {
     host: 'localhost', // 数据库地址
