@@ -305,6 +305,22 @@ const getWeekDates = () => {
 
 const weekDates = ref(getWeekDates())
 
+// 计算时间段进度条样式
+function getTimeBarStyle(start: string, end: string) {
+  // start, end 格式为 HH:mm
+  const [sh, sm] = start.split(':').map(Number)
+  const [eh, em] = end.split(':').map(Number)
+  const startMinutes = sh * 60 + sm
+  const endMinutes = eh * 60 + em
+  const totalMinutes = 24 * 60
+  const left = (startMinutes / totalMinutes) * 100
+  const width = ((endMinutes - startMinutes) / totalMinutes) * 100
+  return {
+    left: `${left}%`,
+    width: `${width}%`
+  }
+}
+
 onMounted(async () => {
   try {
     await Promise.all([
@@ -348,26 +364,41 @@ onMounted(async () => {
                 :key="shift.id"
                 class="shift-card"
               >
-                <div class="shift-header">
-                  <span class="shift-time">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
+                <div class="shift-row">
+                  <div class="shift-time-block">
+                    <span class="shift-time-main">{{ formatTime(shift.start_time) }} - {{ formatTime(shift.end_time) }}</span>
+                  </div>
+                  <div class="shift-positions-inline" v-if="shift.positions?.length">
+                    <div
+                      v-for="position in shift.positions"
+                      :key="position.position"
+                      class="position-row-inline"
+                    >
+                      <span class="position-label-inline">
+                        {{ positionOptions.find(p => p.value === position.position)?.label || position.position }}
+                      </span>
+                      <span class="position-badge-inline">{{ position.count }}人</span>
+                    </div>
+                  </div>
+                  <div class="shift-actions-inline">
+                    <el-button size="small" @click="openShiftDialog(shift)">
+                      编辑
+                    </el-button>
+                    <el-button size="small" type="danger" @click="deleteShift(shift.id)">
+                      删除
+                    </el-button>
+                  </div>
                 </div>
-                <div class="shift-positions" v-if="shift.positions?.length">
-                  <el-tag
-                    v-for="position in shift.positions"
-                    :key="position.position"
-                    class="position-tag"
-                  >
-                    {{ positionOptions.find(p => p.value === position.position)?.label || position.position }}
-                    <span class="position-count">({{ position.count }}人)</span>
-                  </el-tag>
+                <div class="shift-time-bar-bg">
+                  <div
+                    class="shift-time-bar"
+                    :style="getTimeBarStyle(formatTime(shift.start_time), formatTime(shift.end_time))"
+                  ></div>
                 </div>
-                <div class="shift-actions">
-                  <el-button size="small" @click="openShiftDialog(shift)">
-                    编辑
-                  </el-button>
-                  <el-button size="small" type="danger" @click="deleteShift(shift.id)">
-                    删除
-                  </el-button>
+                <div class="shift-time-ruler">
+                  <span v-for="t in [0,6,12,18,24]" :key="t" class="ruler-tick" :style="{ left: (t/24*100) + '%' }">
+                    {{ t === 24 ? '24:00' : (t < 10 ? '0' + t : t) + ':00' }}
+                  </span>
                 </div>
               </el-card>
             </div>
@@ -476,43 +507,103 @@ onMounted(async () => {
 }
 
 .shift-card {
-  margin-bottom: 10px;
+  margin-bottom: 3px;
+  padding: 0;
+  border-radius: 5px;
+  box-shadow: 0 1px 2px #ececec;
 }
 
-.shift-header {
+.shift-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 10px;
+  padding: 5px 8px 2px 8px;
+  gap: 8px;
 }
 
-.shift-time {
+.shift-time-block {
+  min-width: 80px;
+  background: linear-gradient(90deg, #e3f0ff 60%, #fff 100%);
+  border-radius: 4px;
+  padding: 3px 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: bold;
-  font-size: 16px;
+  font-size: 13px;
+  color: #3578e5;
+  margin-right: 6px;
 }
 
-.shift-positions {
-  margin: 10px 0;
+.shift-positions-inline {
   display: flex;
+  align-items: center;
+  gap: 6px;
   flex-wrap: wrap;
-  gap: 5px;
+  flex: 1;
 }
 
-.shift-actions {
+.position-row-inline {
   display: flex;
-  gap: 5px;
-  margin-top: 10px;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 2px;
 }
 
-.position-tag {
-  margin-right: 8px;
-  margin-bottom: 8px;
+.position-label-inline {
+  background: #f0f6ff;
+  color: #3578e5;
+  padding: 0 6px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 500;
 }
 
-.position-count {
-  margin-left: 4px;
-  font-size: 0.9em;
-  opacity: 0.8;
+.position-badge-inline {
+  background: #e6f7e6;
+  color: #2e7d32;
+  border-radius: 6px;
+  padding: 0 4px;
+  font-size: 11px;
+  font-weight: 500;
+  min-width: 18px;
+  text-align: center;
+  display: inline-block;
+}
+
+.shift-actions-inline {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.shift-time-bar-bg {
+  position: relative;
+  height: 4px;
+  background: #f0f0f0;
+  border-radius: 2px;
+  margin: 2px 0 0 0;
+  width: 100%;
+  overflow: hidden;
+}
+.shift-time-bar {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #6fbaf8, #3578e5);
+  border-radius: 2px;
+}
+
+.shift-time-ruler {
+  position: relative;
+  height: 10px;
+  width: 100%;
+  margin-top: 0;
+}
+.ruler-tick {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  font-size: 12px;
+  color: #dddddd;
+  user-select: none;
+  font-family: monospace;
 }
 </style>
