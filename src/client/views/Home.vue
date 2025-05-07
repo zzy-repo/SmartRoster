@@ -47,11 +47,6 @@ function goToRules() {
   router.push('/rules')
 }
 
-// 跳转到业务预测页面
-function goToForecast() {
-  router.push('/forecast')
-}
-
 // 跳转到排班展示页面
 function goToScheduleView() {
   router.push('/scheduleView')

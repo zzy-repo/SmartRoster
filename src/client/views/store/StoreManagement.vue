@@ -1,16 +1,7 @@
 <script setup lang="ts">
 import { useStoreStore } from '@/stores/storeStore'
 import { onMounted, reactive, ref } from 'vue'
-
-// 定义门店类型
-interface Store {
-  id: string
-  name: string
-  address: string
-  area: number
-  phone?: string
-  employeeCount?: number
-}
+import type { Store } from '@/types'
 
 // 获取 store 实例
 const storeStore = useStoreStore()
@@ -26,18 +17,16 @@ const confirmDelete = ref(false)
 // 新门店表单数据
 const newStore = reactive({
   name: '',
-  address: '',
-  phone: '',
   area: 0,
+  phone: '',
 })
 
 // 编辑门店表单数据
 const editingStore = reactive({
   id: '',
   name: '',
-  address: '',
-  phone: '',
   area: 0,
+  phone: '',
 })
 
 // 加载门店数据
@@ -60,7 +49,6 @@ async function addStore() {
   try {
     const storeToAdd = {
       name: newStore.name,
-      address: newStore.address,
       area: newStore.area,
       phone: newStore.phone,
     }
@@ -71,9 +59,8 @@ async function addStore() {
     // 重置表单
     Object.assign(newStore, {
       name: '',
-      address: '',
-      phone: '',
       area: 0,
+      phone: '',
     })
   }
   catch (error) {
@@ -92,10 +79,8 @@ function prepareEditStore() {
     Object.assign(editingStore, {
       id: selectedStore.value.id,
       name: selectedStore.value.name,
-      address: selectedStore.value.address,
       area: selectedStore.value.area,
       phone: selectedStore.value.phone,
-
     })
     showEditStoreForm.value = true
   }
@@ -106,10 +91,9 @@ async function updateStore() {
   try {
     const { data } = await storeStore.updateStore(editingStore.id, {
       name: editingStore.name,
-      address: editingStore.address,
-      area: editingStore.area, // 使用 editingStore 中的 area
+      area: editingStore.area,
       phone: editingStore.phone,
-    } as Partial<Store>) // 使用 Partial<Store> 因为 employeeCount 不在此处更新
+    } as Partial<Store>)
 
     const index = stores.value.findIndex(s => s.id === editingStore.id)
     if (index !== -1) {
@@ -173,11 +157,9 @@ async function deleteStore() {
                   @click="selectStore(store)"
                   shadow="hover"
                 >
-                  <div class="store-name">
-                    {{ store.name }}
-                  </div>
-                  <div class="store-address">
-                    {{ store.address }}
+                  <div class="store-item-content">
+                    <span class="store-name">店名：{{ store.name }}</span>
+                    <span v-if="store.phone" class="store-phone">电话：{{ store.phone }}</span>
                   </div>
                 </el-card>
               </div>
@@ -200,9 +182,8 @@ async function deleteStore() {
             <el-descriptions :column="1" border>
               <el-descriptions-item label="门店ID">{{ selectedStore.id }}</el-descriptions-item>
               <el-descriptions-item label="门店名称">{{ selectedStore.name }}</el-descriptions-item>
-              <el-descriptions-item label="门店地址">{{ selectedStore.address }}</el-descriptions-item>
+              <el-descriptions-item label="门店面积">{{ selectedStore.area }}(m²)</el-descriptions-item>
               <el-descriptions-item label="联系电话">{{ selectedStore.phone }}</el-descriptions-item>
-              <el-descriptions-item label="门店面积">{{ Math.floor(selectedStore.area) }}(m²)</el-descriptions-item>
               <el-descriptions-item label="员工数量">{{ selectedStore.employeeCount }}</el-descriptions-item>
             </el-descriptions>
 
@@ -233,14 +214,11 @@ async function deleteStore() {
         <el-form-item label="门店名称" required>
           <el-input v-model="newStore.name" />
         </el-form-item>
-        <el-form-item label="门店地址" required>
-          <el-input v-model="newStore.address" />
+        <el-form-item label="门店面积" required>
+          <el-input-number v-model="newStore.area" :min="0" :step="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="联系电话" required>
           <el-input v-model="newStore.phone" />
-        </el-form-item>
-        <el-form-item label="门店面积" required>
-          <el-input-number v-model="newStore.area" :min="0" :step="1" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -265,14 +243,11 @@ async function deleteStore() {
         <el-form-item label="门店名称" required>
           <el-input v-model="editingStore.name" />
         </el-form-item>
-        <el-form-item label="门店地址" required>
-          <el-input v-model="editingStore.address" />
+        <el-form-item label="门店面积" required>
+          <el-input-number v-model="editingStore.area" :min="0" :step="1" style="width: 100%" />
         </el-form-item>
         <el-form-item label="联系电话" required>
           <el-input v-model="editingStore.phone" />
-        </el-form-item>
-        <el-form-item label="门店面积" required>
-          <el-input-number v-model="editingStore.area" :min="0" :step="1" style="width: 100%" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -344,13 +319,30 @@ async function deleteStore() {
 .store-items {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 8px;
   height: 100%;
 }
 
 .store-item {
   cursor: pointer;
   transition: all 0.2s;
+}
+
+.store-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.store-name {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.store-phone {
+  color: var(--el-text-color-secondary);
+  font-size: 13px;
 }
 
 .store-item:hover {
@@ -360,17 +352,6 @@ async function deleteStore() {
 .store-item.active {
   border-color: var(--el-color-primary);
   background-color: var(--el-color-primary-light-9);
-}
-
-.store-name {
-  font-weight: bold;
-  font-size: 16px;
-  margin-bottom: 5px;
-}
-
-.store-address {
-  color: var(--el-text-color-secondary);
-  font-size: 14px;
 }
 
 .store-detail {
