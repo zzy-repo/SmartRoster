@@ -2,12 +2,39 @@
 import { useShiftStore } from '@/stores/shiftStore'
 import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 const shiftStore = useShiftStore()
 const storeStore = useStoreStore()
+
+// 基础数据
+const dialogVisible = ref(false)
+const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
+const currentDayIndex = ref(0)
+const formRef = ref()
+
+// 职位选项
+const positionOptions = ref([
+  { value: 'cashier', label: '收银员' },
+  { value: 'waiter', label: '服务员' },
+  { value: 'cook', label: '厨师' },
+  { value: 'manager', label: '店长' },
+])
+
+/**
+ * 班次基础类型定义
+ */
+export interface ShiftTemp {
+  id?: number;               // 班次ID (可选，新建时可能没有)
+  day: number;               // 工作日 (0-6 对应周一到周日)
+  start_time: string;        // 开始时间 (格式: "HH:mm")
+  end_time: string;          // 结束时间 (格式: "HH:mm")
+  store_id: number;          // 所属门店ID
+  position: string;          // 单职位
+  count: number;             // 需求人数
+}
 
 // 获取并验证路由参数
 const scheduleId = computed(() => {
@@ -28,45 +55,29 @@ const storeId = computed(() => {
   return id
 })
 
-const dialogVisible = ref(false)
-const weekdays = ['周一', '周二', '周三', '周四', '周五', '周六', '周日']
-
-/**
- * 班次基础类型定义
- */
-export interface ShiftTemp {
-  id?: number;               // 班次ID (可选，新建时可能没有)
-  day: number;               // 工作日 (0-6 对应周一到周日)
-  start_time: string;        // 开始时间 (格式: "HH:mm")
-  end_time: string;          // 结束时间 (格式: "HH:mm")
-  store_id: number;          // 所属门店ID
-  position: string;          // 单职位
-  count: number;             // 需求人数
-}
-
-// 职位选项
-const positionOptions = ref([
-  { value: 'cashier', label: '收银员' },
-  { value: 'waiter', label: '服务员' },
-  { value: 'cook', label: '厨师' },
-  { value: 'manager', label: '店长' },
-])
-
 // 当前编辑的班次
 const currentShift = ref<ShiftTemp>({
-  day: 0,
+  day: currentDayIndex.value,
   start_time: '09:00',
   end_time: '17:00',
-  store_id: storeId.value,
+  store_id: 0,
   position: '',
   count: 1,
 })
 
-// 表单引用
-const formRef = ref()
+// 监听currentDayIndex的变化，更新currentShift的day
+watch(currentDayIndex, (newValue) => {
+  if (currentShift.value) {
+    currentShift.value.day = Number(newValue)
+  }
+})
 
-// 当前选中的工作日
-const currentDayIndex = ref(0)
+// 监听storeId的变化，更新currentShift的store_id
+watch(storeId, (newValue) => {
+  if (currentShift.value) {
+    currentShift.value.store_id = Number(newValue)
+  }
+})
 
 // 表单验证规则
 const rules = {
@@ -145,20 +156,26 @@ async function loadShifts() {
 
 // 打开新增/编辑班次对话框
 function openShiftDialog(shift?: any) {
-  if (shift) {
-    currentShift.value = { ...shift }
-  }
-  else {
-    currentShift.value = {
-      day: currentDayIndex.value,
-      start_time: '09:00',
-      end_time: '17:00',
-      store_id: storeId.value,
-      position: '',
-      count: 1,
+  try {
+    if (shift) {
+      currentShift.value = { ...shift }
+    } else {
+      // 确保使用当前选中的日期
+      const currentDay = Number(currentDayIndex.value)
+      currentShift.value = {
+        day: currentDay,
+        start_time: '09:00',
+        end_time: '17:00',
+        store_id: storeId.value,
+        position: '',
+        count: 1,
+      }
     }
+    dialogVisible.value = true
+  } catch (error) {
+    console.error('打开班次对话框失败:', error)
+    ElMessage.error('打开班次对话框失败')
   }
-  dialogVisible.value = true
 }
 
 // 提交班次表单
@@ -166,34 +183,53 @@ async function submitShift() {
   try {
     await formRef.value.validate()
 
+    // 验证必要参数
+    const requiredFields = {
+      position: '请选择职位',
+      count: '请输入有效的人数',
+      store_id: '缺少门店ID',
+      schedule_id: '缺少排班ID'
+    }
+
+    for (const [field, message] of Object.entries(requiredFields)) {
+      if (!currentShift.value[field] || (field === 'count' && currentShift.value[field] < 1)) {
+        ElMessage.error(message)
+        return
+      }
+    }
+
     // 准备提交数据
     const shiftData = {
-      day: currentShift.value.day,
+      day: Number(currentDayIndex.value),
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
       store_id: storeId.value,
       schedule_id: scheduleId.value,
       positions: [{
         position: currentShift.value.position,
-        count: currentShift.value.count
+        count: Number(currentShift.value.count)
       }]
+    }
+
+    // 验证positions字段
+    if (!shiftData.positions?.[0]?.position || !shiftData.positions?.[0]?.count) {
+      ElMessage.error('职位信息不完整')
+      return
     }
 
     if (currentShift.value.id) {
       await shiftStore.updateExistingShift(currentShift.value.id, shiftData)
       ElMessage.success('班次更新成功')
-    }
-    else {
+    } else {
       await shiftStore.createNewShift(shiftData)
       ElMessage.success('班次创建成功')
     }
 
     dialogVisible.value = false
     await loadShifts()
-  }
-  catch (error) {
+  } catch (error) {
     console.error('提交班次数据失败:', error)
-    ElMessage.error('操作失败')
+    ElMessage.error(error.response?.data?.error || '操作失败')
   }
 }
 
@@ -219,30 +255,45 @@ async function deleteShift(id: number) {
 
 // 格式化时间显示
 function formatTime(time: string) {
-  return time || ''
+  try {
+    return time || ''
+  } catch (error) {
+    console.error('格式化时间失败:', error)
+    return ''
+  }
 }
 
 // 计算当前周的日期
 const getWeekDates = () => {
-  const today = new Date()
-  const currentDay = today.getDay()
-  const monday = new Date(today)
-  monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1))
-  
-  return weekdays.map((_, index) => {
-    const date = new Date(monday)
-    date.setDate(monday.getDate() + index)
-    return `${date.getMonth() + 1}月${date.getDate()}日`
-  })
+  try {
+    const today = new Date()
+    const currentDay = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1))
+    
+    return weekdays.map((_, index) => {
+      const date = new Date(monday)
+      date.setDate(monday.getDate() + index)
+      return `${date.getMonth() + 1}月${date.getDate()}日`
+    })
+  } catch (error) {
+    console.error('计算周日期失败:', error)
+    return weekdays.map(() => '日期计算错误')
+  }
 }
 
 const weekDates = ref(getWeekDates())
 
 onMounted(async () => {
-  await Promise.all([
-    loadShifts(),
-    storeStore.fetchStores(),
-  ])
+  try {
+    await Promise.all([
+      loadShifts(),
+      storeStore.fetchStores(),
+    ])
+  } catch (error) {
+    console.error('初始化数据失败:', error)
+    ElMessage.error('初始化数据失败')
+  }
 })
 </script>
 
