@@ -81,15 +81,16 @@ CREATE TABLE IF NOT EXISTS shift_positions (
 CREATE TABLE IF NOT EXISTS shift_assignments (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '分配ID，自增主键',
   position VARCHAR(50) NOT NULL COMMENT '分配的职位',
-  override_reason TEXT COMMENT '特殊分配原因',
   schedule_id INT NOT NULL COMMENT '排班ID，关联schedules表',
   shift_id INT NOT NULL COMMENT '班次ID，关联shifts表',
   employee_id INT NOT NULL COMMENT '员工ID，关联employees表',
+  store_id INT NOT NULL COMMENT '门店ID，关联stores表',
   assigned_by INT COMMENT '用户ID，关联users表',
   assigned_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '分配时间',
   FOREIGN KEY (schedule_id) REFERENCES schedules(id) ON DELETE CASCADE,
   FOREIGN KEY (shift_id) REFERENCES shifts(id) ON DELETE CASCADE,
   FOREIGN KEY (employee_id) REFERENCES employees(id) ON DELETE CASCADE,
+  FOREIGN KEY (store_id) REFERENCES stores(id) ON DELETE CASCADE,
   FOREIGN KEY (assigned_by) REFERENCES users(id) ON DELETE SET NULL
 );
 
@@ -98,6 +99,18 @@ CREATE TABLE IF NOT EXISTS schedule_rules (
   id INT PRIMARY KEY AUTO_INCREMENT COMMENT '规则ID，自增主键',
   max_daily_hours INT DEFAULT 8 COMMENT '每日最大工作时长(小时)',
   max_weekly_hours INT DEFAULT 40 COMMENT '每周最大工作时长(小时)',
+  -- 模拟退火算法参数
+  initial_temp DECIMAL(10,2) DEFAULT 100.0 COMMENT '初始温度',
+  min_temp DECIMAL(10,2) DEFAULT 0.1 COMMENT '最小温度',
+  cooling_rate DECIMAL(10,2) DEFAULT 0.95 COMMENT '冷却率',
+  iter_per_temp INT DEFAULT 100 COMMENT '每个温度的迭代次数',
+  iterations INT DEFAULT 50 COMMENT '总迭代次数',
+  -- 成本参数
+  understaff_penalty INT DEFAULT 100 COMMENT '人员不足惩罚系数',
+  workday_violation INT DEFAULT 10 COMMENT '工作日偏好违反惩罚系数',
+  time_pref_violation INT DEFAULT 5 COMMENT '时间偏好违反惩罚系数',
+  daily_hours_violation INT DEFAULT 20 COMMENT '每日工时违反惩罚系数',
+  weekly_hours_violation INT DEFAULT 50 COMMENT '每周工时违反惩罚系数',
   user_id INT NOT NULL COMMENT '用户ID，关联users表',
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

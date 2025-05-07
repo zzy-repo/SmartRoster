@@ -332,26 +332,8 @@ const handleGenerateSchedule = async () => {
 
     // 准备请求数据
     const requestData = {
-      employees: [], // TODO: 从员工列表获取
-      shifts: shiftsByDay.value[currentDayIndex.value].map(shift => {
-        // 计算实际日期
-        const shiftDate = new Date(monday)
-        shiftDate.setDate(monday.getDate() + shift.day)
-        
-        // 转换职位需求为 {职位: 数量} 格式
-        const required_positions = shift.positions?.reduce((acc: Record<string, number>, pos: { position: string, count: number }) => {
-          acc[pos.position] = pos.count
-          return acc
-        }, {}) || {}
-        
-        return {
-          day: shiftDate.toISOString().split('T')[0], // 转换为 YYYY-MM-DD 格式
-          start_time: shift.start_time,
-          end_time: shift.end_time,
-          required_positions,
-          store: storeStore.stores.find(s => Number(s.id) === storeId.value)
-        }
-      }),
+      schedule_id: scheduleId.value,
+      store_id: storeId.value,
       sa_config: {
         initial_temp: 100.0,
         min_temp: 0.1,
