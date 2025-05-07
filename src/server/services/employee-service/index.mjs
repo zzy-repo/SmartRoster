@@ -167,16 +167,6 @@ app.post('/', async (req, res) => {
       return res.status(400).json({ error: '员工姓名和职位不能为空' })
     }
 
-    // 检查用户是否已经在该门店创建过相同职位的员工
-    const [existingEmployee] = await pool.query(
-      'SELECT id FROM employees WHERE user_id = ? AND store_id = ? AND position = ?',
-      [userId, store_id, position],
-    )
-
-    if (existingEmployee.length > 0) {
-      return res.status(400).json({ error: '该用户已经在该门店创建过相同职位的员工' })
-    }
-
     // 插入员工基本信息，自动绑定当前用户
     const [result] = await pool.query(
       `INSERT INTO employees (

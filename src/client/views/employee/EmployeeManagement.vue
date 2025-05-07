@@ -61,6 +61,31 @@ const editingEmployee = reactive({
   updated_at: '',
 })
 
+// 表单验证规则
+const rules = {
+  name: [
+    { required: true, message: '请输入姓名', trigger: 'blur' },
+    { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
+  ],
+  position: [
+    { required: true, message: '请选择职位', trigger: 'change' }
+  ],
+  store_id: [
+    { required: true, message: '请选择所属门店', trigger: 'change' }
+  ],
+  phone: [
+    { required: true, message: '请输入联系电话', trigger: 'blur' }
+  ],
+  email: [
+    { required: true, message: '请输入电子邮箱', trigger: 'blur' },
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+  ]
+}
+
+// 表单引用
+const addFormRef = ref()
+const editFormRef = ref()
+
 // 加载员工和门店数据
 onMounted(async () => {
   try {
@@ -107,13 +132,23 @@ function selectEmployee(employee: Employee) {
 // 添加员工
 async function addEmployee() {
   try {
+    // 表单验证
+    await addFormRef.value.validate()
+    
     // 准备API所需的员工数据格式
+    const store = stores.value.find(s => s.id === newEmployee.store_id)
+    if (!store) {
+      ElMessage.error('未找到所选门店信息')
+      return
+    }
+
     const employeeData = {
       name: newEmployee.name,
       position: newEmployee.position,
       phone: newEmployee.phone,
       email: newEmployee.email,
       store_id: newEmployee.store_id,
+      store_name: store.name, // 添加store_name字段
       max_daily_hours: newEmployee.max_daily_hours,
       max_weekly_hours: newEmployee.max_weekly_hours,
       workday_pref_start: newEmployee.workday_pref_start,
@@ -121,21 +156,17 @@ async function addEmployee() {
       time_pref_start: newEmployee.time_pref_start,
       time_pref_end: newEmployee.time_pref_end,
     }
-    console.log('employeeData', employeeData)
 
     // 调用API创建员工
     const response = await employeeStore.createEmployee(employeeData)
 
-    console.log('response', response)
-
     // 添加到本地列表
-    const store_name = stores.value.find(s => s.id === newEmployee.store_id)?.name || ''
     const employeeToAdd: Employee = {
       id: response.data.id,
       name: newEmployee.name,
       position: newEmployee.position,
       store_id: newEmployee.store_id,
-      store_name,
+      store_name: store.name,
       phone: newEmployee.phone,
       email: newEmployee.email,
       max_daily_hours: newEmployee.max_daily_hours,
@@ -151,36 +182,38 @@ async function addEmployee() {
     ElMessage.success('员工添加成功')
 
     // 重置表单
-    Object.assign(newEmployee, {
-      name: '',
-      position: '',
-      phone: '',
-      email: '',
-      store_id: null,
-      user_id: null,
-      max_daily_hours: 8,
-      max_weekly_hours: 40,
-      workday_pref_start: 0,
-      workday_pref_end: 6,
-      time_pref_start: '08:00:00',
-      time_pref_end: '20:00:00',
-    })
+    addFormRef.value.resetFields()
   }
-  catch (error) {
+  catch (error: any) {
     console.error('添加员工失败', error)
-    ElMessage.error('添加员工失败')
+    if (error.response?.data?.error) {
+      ElMessage.error(error.response.data.error)
+    } else {
+      ElMessage.error('添加员工失败，请检查表单信息是否正确')
+    }
   }
 }
 
 // 更新员工
 async function updateEmployee() {
   try {
+    // 表单验证
+    await editFormRef.value.validate()
+
     // 准备API所需的员工数据格式
+    const store = stores.value.find(s => s.id === editingEmployee.store_id)
+    if (!store) {
+      ElMessage.error('未找到所选门店信息')
+      return
+    }
+
     const employeeData = {
       name: editingEmployee.name,
       position: editingEmployee.position,
       phone: editingEmployee.phone,
+      email: editingEmployee.email,
       store_id: editingEmployee.store_id,
+      store_name: store.name, // 添加store_name字段
     }
 
     // 调用API更新员工
@@ -189,23 +222,14 @@ async function updateEmployee() {
     // 更新本地列表
     const index = employees.value.findIndex(e => e.id === editingEmployee.id)
     if (index !== -1) {
-      const store_name = stores.value.find(s => s.id === editingEmployee.store_id)?.name || ''
-
       const updatedEmployee = {
         ...employees.value[index],
         name: editingEmployee.name,
         position: editingEmployee.position,
         store_id: editingEmployee.store_id,
-        store_name,
+        store_name: store.name,
         phone: editingEmployee.phone,
         email: editingEmployee.email,
-        user_id: editingEmployee.user_id,
-        max_daily_hours: editingEmployee.max_daily_hours,
-        max_weekly_hours: editingEmployee.max_weekly_hours,
-        workday_pref_start: editingEmployee.workday_pref_start,
-        workday_pref_end: editingEmployee.workday_pref_end,
-        time_pref_start: editingEmployee.time_pref_start,
-        time_pref_end: editingEmployee.time_pref_end,
       }
 
       employees.value[index] = updatedEmployee
@@ -214,9 +238,13 @@ async function updateEmployee() {
       ElMessage.success('员工更新成功')
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('更新员工失败', error)
-    ElMessage.error('更新员工失败')
+    if (error.response?.data?.error) {
+      ElMessage.error(error.response.data.error)
+    } else {
+      ElMessage.error('更新员工失败，请检查表单信息是否正确')
+    }
   }
 }
 
@@ -258,216 +286,200 @@ function prepareEditEmployee() {
 
 <template>
   <div class="employee-management">
-    <h1>员工管理</h1>
-    <div class="employee-container">
-      <!-- 员工列表 -->
-      <div class="employee-list">
-        <div class="employee-list-header">
-          <h2>员工列表</h2>
-          <button class="add-employee-btn" @click="showAddEmployeeForm = true">
-            添加员工
-          </button>
+    <el-card class="main-card">
+      <template #header>
+        <div class="card-header">
+          <h1>员工管理</h1>
         </div>
-        <div class="employee-list-content">
-          <div v-if="loading" class="loading">
-            加载中...
-          </div>
-          <div v-else-if="employees.length === 0" class="no-data">
-            暂无员工数据
-          </div>
-          <div v-else class="employee-items">
-            <div
-              v-for="employee in employees"
-              :key="employee.id"
-              class="employee-item"
-              :class="{ active: selectedEmployee?.id === employee.id }"
-              @click="selectEmployee(employee)"
-            >
-              <div class="employee-name">
-                {{ employee.name }}
+      </template>
+      
+      <div class="employee-container">
+        <!-- 员工列表 -->
+        <el-card class="employee-list">
+          <template #header>
+            <div class="employee-list-header">
+              <h2>员工列表</h2>
+              <el-button type="primary" @click="showAddEmployeeForm = true">
+                添加员工
+              </el-button>
+            </div>
+          </template>
+          
+          <div class="employee-list-content">
+            <el-skeleton :rows="3" animated v-if="loading" />
+            <el-empty v-else-if="employees.length === 0" description="暂无员工数据" />
+            <el-scrollbar v-else height="600px">
+              <div class="employee-items">
+                <el-card
+                  v-for="employee in employees"
+                  :key="employee.id"
+                  class="employee-item"
+                  :class="{ active: selectedEmployee?.id === employee.id }"
+                  @click="selectEmployee(employee)"
+                  shadow="hover"
+                >
+                  <div class="employee-name">
+                    {{ employee.name }}
+                  </div>
+                  <div class="employee-position">
+                    {{ employee.position }}
+                  </div>
+                </el-card>
               </div>
-              <div class="employee-position">
-                {{ employee.position }}
-              </div>
+            </el-scrollbar>
+          </div>
+        </el-card>
+
+        <!-- 员工详情 -->
+        <el-card class="employee-detail">
+          <template #header>
+            <div class="employee-detail-header">
+              <h2>{{ selectedEmployee ? `${selectedEmployee.name} 详情` : '员工详情' }}</h2>
+            </div>
+          </template>
+          
+          <div v-if="!selectedEmployee" class="no-selection">
+            <el-empty description="请选择一个员工查看详情" />
+          </div>
+          <div v-else class="employee-info">
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="员工ID">{{ selectedEmployee.id }}</el-descriptions-item>
+              <el-descriptions-item label="姓名">{{ selectedEmployee.name }}</el-descriptions-item>
+              <el-descriptions-item label="职位">{{ selectedEmployee.position }}</el-descriptions-item>
+              <el-descriptions-item label="所属门店">{{ selectedEmployee.store_name }}</el-descriptions-item>
+              <el-descriptions-item label="联系电话">{{ selectedEmployee.phone }}</el-descriptions-item>
+            </el-descriptions>
+
+            <div class="actions">
+              <el-button type="primary" @click="prepareEditEmployee()">
+                编辑
+              </el-button>
+              <el-button type="danger" @click="confirmDelete = true">
+                删除
+              </el-button>
+              <el-button type="success" @click="$router.push(`/employees/${selectedEmployee.id}/preferences`)">
+                偏好设置
+              </el-button>
             </div>
           </div>
-        </div>
+        </el-card>
       </div>
-
-      <!-- 员工详情 -->
-      <div class="employee-detail">
-        <div v-if="!selectedEmployee" class="no-selection">
-          <p>请选择一个员工查看详情</p>
-        </div>
-        <div v-else class="employee-info">
-          <h2>{{ selectedEmployee.name }} 详情</h2>
-          <div class="info-group">
-            <label>员工ID:</label>
-            <span>{{ selectedEmployee.id }}</span>
-          </div>
-          <div class="info-group">
-            <label>姓名:</label>
-            <span>{{ selectedEmployee.name }}</span>
-          </div>
-          <div class="info-group">
-            <label>职位:</label>
-            <span>{{ selectedEmployee.position }}</span>
-          </div>
-          <div class="info-group">
-            <label>所属门店:</label>
-            <span>{{ selectedEmployee.store_name }}</span>
-          </div>
-          <div class="info-group">
-            <label>联系电话:</label>
-            <span>{{ selectedEmployee.phone }}</span>
-          </div>
-
-          <div class="actions">
-            <button class="edit-btn" @click="prepareEditEmployee()">
-              编辑
-            </button>
-            <button class="delete-btn" @click="confirmDelete = true">
-              删除
-            </button>
-            <button class="pref-btn" @click="$router.push(`/employees/${selectedEmployee.id}/preferences`)">
-              偏好设置
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </el-card>
 
     <!-- 添加员工表单 -->
-    <div v-if="showAddEmployeeForm" class="modal">
-      <div class="modal-content">
-        <h2>添加员工</h2>
-        <form @submit.prevent="addEmployee">
-          <div class="form-group">
-            <label for="name">姓名</label>
-            <input id="name" v-model="newEmployee.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="position">职位</label>
-            <select id="position" v-model="newEmployee.position" required>
-              <option value="店长">
-                店长
-              </option>
-              <option value="副店长">
-                副店长
-              </option>
-              <option value="收银员">
-                收银员
-              </option>
-              <option value="理货员">
-                理货员
-              </option>
-              <option value="促销员">
-                促销员
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="store">所属门店</label>
-            <select id="store" v-model="newEmployee.store_id" required>
-              <option v-for="store in stores" :key="store.id" :value="store.id">
-                {{ store.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="phone">联系电话</label>
-            <input id="phone" v-model="newEmployee.phone" type="tel" required>
-          </div>
-          <div class="form-group">
-            <label for="email">电子邮箱</label>
-            <input id="email" v-model="newEmployee.email" type="email" required>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="showAddEmployeeForm = false">
-              取消
-            </button>
-            <button type="submit">
-              保存
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showAddEmployeeForm"
+      title="添加员工"
+      width="500px"
+    >
+      <el-form
+        ref="addFormRef"
+        :model="newEmployee"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent="addEmployee"
+      >
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="newEmployee.name" />
+        </el-form-item>
+        <el-form-item label="职位" prop="position">
+          <el-select v-model="newEmployee.position" style="width: 100%">
+            <el-option label="店长" value="店长" />
+            <el-option label="副店长" value="副店长" />
+            <el-option label="收银员" value="收银员" />
+            <el-option label="理货员" value="理货员" />
+            <el-option label="促销员" value="促销员" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属门店" prop="store_id">
+          <el-select v-model="newEmployee.store_id" style="width: 100%">
+            <el-option
+              v-for="store in stores"
+              :key="store.id"
+              :label="store.name"
+              :value="store.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="newEmployee.phone" />
+        </el-form-item>
+        <el-form-item label="电子邮箱" prop="email">
+          <el-input v-model="newEmployee.email" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showAddEmployeeForm = false">取消</el-button>
+          <el-button type="primary" @click="addEmployee">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 编辑员工表单 -->
-    <div v-if="showEditEmployeeForm && selectedEmployee" class="modal">
-      <div class="modal-content">
-        <h2>编辑员工</h2>
-        <form @submit.prevent="updateEmployee">
-          <div class="form-group">
-            <label for="edit-name">姓名</label>
-            <input id="edit-name" v-model="editingEmployee.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-position">职位</label>
-            <select id="edit-position" v-model="editingEmployee.position" required>
-              <option value="店长">
-                店长
-              </option>
-              <option value="副店长">
-                副店长
-              </option>
-              <option value="收银员">
-                收银员
-              </option>
-              <option value="理货员">
-                理货员
-              </option>
-              <option value="促销员">
-                促销员
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit-store">所属门店</label>
-            <select id="edit-store" v-model="editingEmployee.store_id" required>
-              <option v-for="store in stores" :key="store.id" :value="store.id">
-                {{ store.name }}
-              </option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="edit-phone">联系电话</label>
-            <input id="edit-phone" v-model="editingEmployee.phone" type="tel" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-email">电子邮箱</label>
-            <input id="edit-email" v-model="editingEmployee.email" type="email" required>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="showEditEmployeeForm = false">
-              取消
-            </button>
-            <button type="submit">
-              保存
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showEditEmployeeForm"
+      title="编辑员工"
+      width="500px"
+    >
+      <el-form
+        ref="editFormRef"
+        :model="editingEmployee"
+        :rules="rules"
+        label-width="100px"
+        @submit.prevent="updateEmployee"
+      >
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="editingEmployee.name" />
+        </el-form-item>
+        <el-form-item label="职位" prop="position">
+          <el-select v-model="editingEmployee.position" style="width: 100%">
+            <el-option label="店长" value="店长" />
+            <el-option label="副店长" value="副店长" />
+            <el-option label="收银员" value="收银员" />
+            <el-option label="理货员" value="理货员" />
+            <el-option label="促销员" value="促销员" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属门店" prop="store_id">
+          <el-select v-model="editingEmployee.store_id" style="width: 100%">
+            <el-option
+              v-for="store in stores"
+              :key="store.id"
+              :label="store.name"
+              :value="store.id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="联系电话" prop="phone">
+          <el-input v-model="editingEmployee.phone" />
+        </el-form-item>
+        <el-form-item label="电子邮箱" prop="email">
+          <el-input v-model="editingEmployee.email" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showEditEmployeeForm = false">取消</el-button>
+          <el-button type="primary" @click="updateEmployee">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 删除确认对话框 -->
-    <div v-if="confirmDelete && selectedEmployee" class="modal">
-      <div class="modal-content confirm-dialog">
-        <h2>确认删除</h2>
-        <p>您确定要删除员工 "{{ selectedEmployee.name }}" 吗？此操作不可撤销。</p>
-        <div class="form-actions">
-          <button type="button" @click="confirmDelete = false">
-            取消
-          </button>
-          <button type="button" class="delete-btn" @click="deleteEmployee">
-            确认删除
-          </button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="confirmDelete"
+      title="确认删除"
+      width="400px"
+    >
+      <p>您确定要删除员工 "{{ selectedEmployee?.name }}" 吗？此操作不可撤销。</p>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="confirmDelete = false">取消</el-button>
+          <el-button type="danger" @click="deleteEmployee">确认删除</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -476,26 +488,29 @@ function prepareEditEmployee() {
   padding: 20px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .employee-container {
   display: flex;
   gap: 20px;
-  margin-top: 20px;
+  height: calc(100vh - 200px); /* 调整整体容器高度 */
+  min-height: 500px; /* 设置最小高度 */
 }
 
 .employee-list {
   flex: 1;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .employee-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
 }
 
 .employee-list-header h2 {
@@ -503,48 +518,31 @@ function prepareEditEmployee() {
   font-size: 18px;
 }
 
-.add-employee-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
 .employee-list-content {
+  flex: 1;
+  overflow: hidden;
   padding: 15px;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.loading, .no-data {
-  text-align: center;
-  padding: 20px;
-  color: #666;
 }
 
 .employee-items {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 100%;
 }
 
 .employee-item {
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .employee-item:hover {
-  background-color: #f9f9f9;
+  transform: translateY(-2px);
 }
 
 .employee-item.active {
-  border-color: #2196f3;
-  background-color: #e3f2fd;
+  border-color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
 }
 
 .employee-name {
@@ -554,15 +552,25 @@ function prepareEditEmployee() {
 }
 
 .employee-position {
-  color: #666;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
 }
 
 .employee-detail {
   flex: 2;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.employee-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.employee-detail-header h2 {
+  margin: 0;
+  font-size: 18px;
 }
 
 .no-selection {
@@ -570,25 +578,13 @@ function prepareEditEmployee() {
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #666;
+  min-height: 200px;
 }
 
-.employee-info h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.info-group {
-  margin-bottom: 15px;
-  display: flex;
-}
-
-.info-group label {
-  width: 100px;
-  font-weight: bold;
-  color: #555;
+.employee-info {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
 }
 
 .actions {
@@ -597,97 +593,9 @@ function prepareEditEmployee() {
   gap: 10px;
 }
 
-.edit-btn, .delete-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.edit-btn {
-  background-color: #2196f3;
-  color: white;
-}
-
-.delete-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 4px;
-  width: 500px;
-  max-width: 90%;
-  max-height: 90vh;
-  overflow-y: auto;
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-group input, .form-group select {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.form-actions {
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 20px;
-}
-
-.form-actions button {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.form-actions button[type="button"] {
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.form-actions button[type="submit"] {
-  background-color: #4caf50;
-  color: white;
-}
-
-.confirm-dialog {
-  text-align: center;
-}
-
-.confirm-dialog p {
-  margin-bottom: 20px;
 }
 </style>

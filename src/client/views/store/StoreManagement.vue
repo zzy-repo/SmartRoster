@@ -141,170 +141,162 @@ async function deleteStore() {
 
 <template>
   <div class="store-management">
-    <h1>门店管理</h1>
-    <div class="store-container">
-      <!-- 门店列表 -->
-      <div class="store-list">
-        <div class="store-list-header">
-          <h2>门店列表</h2>
-          <button class="add-store-btn" @click="showAddStoreForm = true">
-            添加门店
-          </button>
+    <el-card class="main-card">
+      <template #header>
+        <div class="card-header">
+          <h1>门店管理</h1>
         </div>
-        <div class="store-list-content">
-          <div v-if="loading" class="loading">
-            加载中...
-          </div>
-          <div v-else-if="stores.length === 0" class="no-data">
-            暂无门店数据
-          </div>
-          <div v-else class="store-items">
-            <div
-              v-for="store in stores"
-              :key="store.id"
-              class="store-item"
-              :class="{ active: selectedStore?.id === store.id }"
-              @click="selectStore(store)"
-            >
-              <div class="store-name">
-                {{ store.name }}
+      </template>
+      
+      <div class="store-container">
+        <!-- 门店列表 -->
+        <el-card class="store-list">
+          <template #header>
+            <div class="store-list-header">
+              <h2>门店列表</h2>
+              <el-button type="primary" @click="showAddStoreForm = true">
+                添加门店
+              </el-button>
+            </div>
+          </template>
+          
+          <div class="store-list-content">
+            <el-skeleton :rows="3" animated v-if="loading" />
+            <el-empty v-else-if="stores.length === 0" description="暂无门店数据" />
+            <el-scrollbar v-else height="600px">
+              <div class="store-items">
+                <el-card
+                  v-for="store in stores"
+                  :key="store.id"
+                  class="store-item"
+                  :class="{ active: selectedStore?.id === store.id }"
+                  @click="selectStore(store)"
+                  shadow="hover"
+                >
+                  <div class="store-name">
+                    {{ store.name }}
+                  </div>
+                  <div class="store-address">
+                    {{ store.address }}
+                  </div>
+                </el-card>
               </div>
-              <div class="store-address">
-                {{ store.address }}
-              </div>
+            </el-scrollbar>
+          </div>
+        </el-card>
+
+        <!-- 门店详情 -->
+        <el-card class="store-detail">
+          <template #header>
+            <div class="store-detail-header">
+              <h2>{{ selectedStore ? `${selectedStore.name} 详情` : '门店详情' }}</h2>
+            </div>
+          </template>
+          
+          <div v-if="!selectedStore" class="no-selection">
+            <el-empty description="请选择一个门店查看详情" />
+          </div>
+          <div v-else class="store-info">
+            <el-descriptions :column="1" border>
+              <el-descriptions-item label="门店ID">{{ selectedStore.id }}</el-descriptions-item>
+              <el-descriptions-item label="门店名称">{{ selectedStore.name }}</el-descriptions-item>
+              <el-descriptions-item label="门店地址">{{ selectedStore.address }}</el-descriptions-item>
+              <el-descriptions-item label="联系电话">{{ selectedStore.phone }}</el-descriptions-item>
+              <el-descriptions-item label="门店面积">{{ Math.floor(selectedStore.area) }}(m²)</el-descriptions-item>
+              <el-descriptions-item label="员工数量">{{ selectedStore.employeeCount }}</el-descriptions-item>
+            </el-descriptions>
+
+            <div class="actions">
+              <el-button type="primary" @click="prepareEditStore">
+                编辑
+              </el-button>
+              <el-button type="danger" @click="confirmDelete = true">
+                删除
+              </el-button>
             </div>
           </div>
-        </div>
+        </el-card>
       </div>
-
-      <!-- 门店详情 -->
-      <div class="store-detail">
-        <div v-if="!selectedStore" class="no-selection">
-          <p>请选择一个门店查看详情</p>
-        </div>
-        <div v-else class="store-info">
-          <h2>{{ selectedStore.name }} 详情</h2>
-          <div class="info-group">
-            <label>门店ID:</label>
-            <span>{{ selectedStore.id }}</span>
-          </div>
-          <div class="info-group">
-            <label>门店名称:</label>
-            <span>{{ selectedStore.name }}</span>
-          </div>
-          <div class="info-group">
-            <label>门店地址:</label>
-            <span>{{ selectedStore.address }}</span>
-          </div>
-          <div class="info-group">
-            <label>联系电话:</label>
-            <span>{{ selectedStore.phone }}</span>
-          </div>
-          <div class="info-group">
-            <label>门店面积:</label>
-            <span>{{ Math.floor(selectedStore.area) }}(m²)</span>
-          </div>
-
-          <div class="info-group">
-            <label>员工数量:</label>
-            <span>{{ selectedStore.employeeCount }}</span>
-          </div>
-          <div class="actions">
-            <!-- 在模板中修改编辑按钮 -->
-            <button class="edit-btn" @click="prepareEditStore">
-              编辑
-            </button>
-            <button class="delete-btn" @click="confirmDelete = true">
-              删除
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+    </el-card>
 
     <!-- 添加门店表单 -->
-    <div v-if="showAddStoreForm" class="modal">
-      <div class="modal-content">
-        <h2>添加门店</h2>
-        <form @submit.prevent="addStore">
-          <div class="form-group">
-            <label for="name">门店名称</label>
-            <input id="name" v-model="newStore.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="address">门店地址</label>
-            <input id="address" v-model="newStore.address" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="phone">联系电话</label>
-            <input id="phone" v-model="newStore.phone" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="area">门店面积(m²)</label>
-            <input id="area" v-model="newStore.area" type="number" step="1" min="0" required>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="showAddStoreForm = false">
-              取消
-            </button>
-            <button type="submit">
-              保存
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showAddStoreForm"
+      title="添加门店"
+      width="500px"
+    >
+      <el-form
+        :model="newStore"
+        label-width="100px"
+        @submit.prevent="addStore"
+      >
+        <el-form-item label="门店名称" required>
+          <el-input v-model="newStore.name" />
+        </el-form-item>
+        <el-form-item label="门店地址" required>
+          <el-input v-model="newStore.address" />
+        </el-form-item>
+        <el-form-item label="联系电话" required>
+          <el-input v-model="newStore.phone" />
+        </el-form-item>
+        <el-form-item label="门店面积" required>
+          <el-input-number v-model="newStore.area" :min="0" :step="1" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showAddStoreForm = false">取消</el-button>
+          <el-button type="primary" @click="addStore">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 编辑门店表单 -->
-    <div v-if="showEditStoreForm && selectedStore" class="modal">
-      <div class="modal-content">
-        <h2>编辑门店</h2>
-        <form @submit.prevent="updateStore">
-          <div class="form-group">
-            <label for="edit-name">门店名称</label>
-            <input id="edit-name" v-model="editingStore.name" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-address">门店地址</label>
-            <input id="edit-address" v-model="editingStore.address" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-phone">联系电话</label>
-            <input id="edit-phone" v-model="editingStore.phone" type="text" required>
-          </div>
-          <div class="form-group">
-            <label for="edit-area">门店面积(m²)</label>
-            <input id="edit-area" v-model="editingStore.area" type="number" required>
-          </div>
-
-          <div class="form-actions">
-            <button type="button" @click="showEditStoreForm = false">
-              取消
-            </button>
-            <button type="submit">
-              保存
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <el-dialog
+      v-model="showEditStoreForm"
+      title="编辑门店"
+      width="500px"
+    >
+      <el-form
+        :model="editingStore"
+        label-width="100px"
+        @submit.prevent="updateStore"
+      >
+        <el-form-item label="门店名称" required>
+          <el-input v-model="editingStore.name" />
+        </el-form-item>
+        <el-form-item label="门店地址" required>
+          <el-input v-model="editingStore.address" />
+        </el-form-item>
+        <el-form-item label="联系电话" required>
+          <el-input v-model="editingStore.phone" />
+        </el-form-item>
+        <el-form-item label="门店面积" required>
+          <el-input-number v-model="editingStore.area" :min="0" :step="1" style="width: 100%" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="showEditStoreForm = false">取消</el-button>
+          <el-button type="primary" @click="updateStore">保存</el-button>
+        </span>
+      </template>
+    </el-dialog>
 
     <!-- 删除确认对话框 -->
-    <div v-if="confirmDelete && selectedStore" class="modal">
-      <div class="modal-content confirm-dialog">
-        <h2>确认删除</h2>
-        <p>您确定要删除门店 "{{ selectedStore.name }}" 吗？此操作不可撤销。</p>
-        <div class="form-actions">
-          <button type="button" @click="confirmDelete = false">
-            取消
-          </button>
-          <button type="button" class="delete-btn" @click="deleteStore">
-            确认删除
-          </button>
-        </div>
-      </div>
-    </div>
+    <el-dialog
+      v-model="confirmDelete"
+      title="确认删除"
+      width="400px"
+    >
+      <p>您确定要删除门店 "{{ selectedStore?.name }}" 吗？此操作不可撤销。</p>
+      <template #footer>
+        <span class="dialog-footer">
+          <el-button @click="confirmDelete = false">取消</el-button>
+          <el-button type="danger" @click="deleteStore">确认删除</el-button>
+        </span>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -313,26 +305,29 @@ async function deleteStore() {
   padding: 20px;
 }
 
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .store-container {
   display: flex;
   gap: 20px;
-  margin-top: 20px;
+  height: calc(100vh - 200px);
+  min-height: 500px;
 }
 
 .store-list {
   flex: 1;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .store-list-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 15px;
-  background-color: #f5f5f5;
-  border-bottom: 1px solid #e0e0e0;
 }
 
 .store-list-header h2 {
@@ -340,48 +335,31 @@ async function deleteStore() {
   font-size: 18px;
 }
 
-.add-store-btn {
-  background-color: #4caf50;
-  color: white;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
 .store-list-content {
+  flex: 1;
+  overflow: hidden;
   padding: 15px;
-  max-height: 600px;
-  overflow-y: auto;
-}
-
-.loading, .no-data {
-  text-align: center;
-  padding: 20px;
-  color: #666;
 }
 
 .store-items {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  height: 100%;
 }
 
 .store-item {
-  padding: 15px;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .store-item:hover {
-  background-color: #f9f9f9;
+  transform: translateY(-2px);
 }
 
 .store-item.active {
-  border-color: #2196f3;
-  background-color: #e3f2fd;
+  border-color: var(--el-color-primary);
+  background-color: var(--el-color-primary-light-9);
 }
 
 .store-name {
@@ -391,15 +369,25 @@ async function deleteStore() {
 }
 
 .store-address {
-  color: #666;
+  color: var(--el-text-color-secondary);
   font-size: 14px;
 }
 
 .store-detail {
   flex: 2;
-  border: 1px solid #e0e0e0;
-  border-radius: 4px;
-  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.store-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.store-detail-header h2 {
+  margin: 0;
+  font-size: 18px;
 }
 
 .no-selection {
@@ -407,25 +395,13 @@ async function deleteStore() {
   justify-content: center;
   align-items: center;
   height: 100%;
-  color: #666;
+  min-height: 200px;
 }
 
-.store-info h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.info-group {
-  margin-bottom: 15px;
-  display: flex;
-}
-
-.info-group label {
-  width: 100px;
-  font-weight: bold;
-  color: #555;
+.store-info {
+  flex: 1;
+  padding: 20px 0;
+  overflow-y: auto;
 }
 
 .actions {
@@ -434,95 +410,9 @@ async function deleteStore() {
   gap: 10px;
 }
 
-.edit-btn, .delete-btn {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.edit-btn {
-  background-color: #2196f3;
-  color: white;
-}
-
-.delete-btn {
-  background-color: #f44336;
-  color: white;
-}
-
-.modal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background-color: white;
-  padding: 20px;
-  border-radius: 4px;
-  width: 500px;
-  max-width: 90%;
-}
-
-.modal-content h2 {
-  margin-top: 0;
-  margin-bottom: 20px;
-}
-
-.form-group {
-  margin-bottom: 15px;
-}
-
-.form-group label {
-  display: block;
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.form-group input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
-
-.form-actions {
+.dialog-footer {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  margin-top: 20px;
-}
-
-.form-actions button {
-  padding: 8px 15px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.form-actions button[type="button"] {
-  background-color: #f5f5f5;
-  color: #333;
-}
-
-.form-actions button[type="submit"] {
-  background-color: #4caf50;
-  color: white;
-}
-
-.confirm-dialog {
-  text-align: center;
-}
-
-.confirm-dialog p {
-  margin-bottom: 20px;
 }
 </style>
