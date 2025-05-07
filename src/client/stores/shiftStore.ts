@@ -96,6 +96,7 @@ export const useShiftStore = defineStore('shift', {
       try {
         const updatedShift = await updateShift(shiftId, updateData)
         const index = this.shifts.findIndex(s => s.id === shiftId)
+        
         if (index !== -1) {
           this.shifts[index] = {
             ...this.shifts[index],

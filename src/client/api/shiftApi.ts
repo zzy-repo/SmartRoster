@@ -1,21 +1,5 @@
 import http from './http'
-
-export interface Shift {
-  id: number
-  day: number
-  start_time: string
-  end_time: string
-  store_id: number
-  schedule_id: number
-  positions: {
-    id: number
-    position: string
-    count: number
-    shift_id: number
-  }[]
-  created_at: string
-  updated_at: string
-}
+import type { Shift, ShiftPosition } from '@/types/shiftTypes'
 
 export interface ShiftResponse {
   shifts: Shift[]

@@ -4,6 +4,7 @@ import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
+import type { Shift, ShiftPosition } from '@/types/shiftTypes'
 
 const route = useRoute()
 const shiftStore = useShiftStore()
@@ -157,8 +158,13 @@ async function loadShifts() {
 // 打开新增/编辑班次对话框
 function openShiftDialog(shift?: any) {
   try {
+    console.log('打开对话框，传入的班次数据:', shift)
     if (shift) {
       currentShift.value = { ...shift }
+      // 同步当前选中的工作日
+      currentDayIndex.value = shift.day
+      console.log('编辑模式 - 当前班次数据:', currentShift.value)
+      console.log('编辑模式 - 当前工作日索引:', currentDayIndex.value)
     } else {
       // 确保使用当前选中的日期
       const currentDay = Number(currentDayIndex.value)
@@ -170,6 +176,8 @@ function openShiftDialog(shift?: any) {
         position: '',
         count: 1,
       }
+      console.log('新建模式 - 当前班次数据:', currentShift.value)
+      console.log('新建模式 - 当前工作日索引:', currentDayIndex.value)
     }
     dialogVisible.value = true
   } catch (error) {
@@ -184,30 +192,39 @@ async function submitShift() {
     await formRef.value.validate()
 
     // 验证必要参数
-    const requiredFields = {
+    const requiredFields: Partial<Record<keyof ShiftTemp, string>> = {
       position: '请选择职位',
       count: '请输入有效的人数',
       store_id: '缺少门店ID',
-      schedule_id: '缺少排班ID'
+      day: '缺少工作日',
+      start_time: '缺少开始时间',
+      end_time: '缺少结束时间'
     }
 
     for (const [field, message] of Object.entries(requiredFields)) {
-      if (!currentShift.value[field] || (field === 'count' && currentShift.value[field] < 1)) {
+      const key = field as keyof ShiftTemp
+      if (
+        (key === 'count' && (!currentShift.value[key] || currentShift.value[key] < 1)) ||
+        (key === 'day' && currentShift.value[key] === undefined) ||
+        (key !== 'count' && key !== 'day' && !currentShift.value[key])
+      ) {
         ElMessage.error(message)
         return
       }
     }
 
     // 准备提交数据
-    const shiftData = {
-      day: Number(currentDayIndex.value),
+    const shiftData: Omit<Shift, 'id' | 'created_at' | 'updated_at'> = {
+      day: Number(currentShift.value.day),
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
-      store_id: storeId.value,
-      schedule_id: scheduleId.value,
+      store_id: Number(storeId.value),
+      schedule_id: Number(scheduleId.value),
       positions: [{
         position: currentShift.value.position,
-        count: Number(currentShift.value.count)
+        count: Number(currentShift.value.count),
+        id: 0,
+        shift_id: currentShift.value.id || 0
       }]
     }
 
@@ -227,9 +244,10 @@ async function submitShift() {
 
     dialogVisible.value = false
     await loadShifts()
-  } catch (error) {
-    console.error('提交班次数据失败:', error)
-    ElMessage.error(error.response?.data?.error || '操作失败')
+  }
+  catch (error) {
+    console.error('提交班次失败:', error)
+    ElMessage.error('提交班次失败')
   }
 }
 
