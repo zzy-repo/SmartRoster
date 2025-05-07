@@ -27,7 +27,6 @@
 </template>
 
 <script setup lang="ts">
-import { ArrowLeft, ArrowRight } from '@element-plus/icons-vue'
 
 defineProps<{
   currentYear: number
