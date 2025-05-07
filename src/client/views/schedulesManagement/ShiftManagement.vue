@@ -295,7 +295,7 @@ const getWeekDates = () => {
     return weekdays.map((_, index) => {
       const date = new Date(monday)
       date.setDate(monday.getDate() + index)
-      return `${date.getMonth() + 1}月${date.getDate()}日`
+      return `${date.getFullYear()}年${date.getMonth() + 1}月${date.getDate()}日`
     })
   } catch (error) {
     console.error('计算周日期失败:', error)
@@ -321,6 +321,67 @@ function getTimeBarStyle(start: string, end: string) {
   }
 }
 
+// 添加排班生成相关函数
+const handleGenerateSchedule = async () => {
+  try {
+    // 获取当前周的日期
+    const today = new Date()
+    const currentDay = today.getDay()
+    const monday = new Date(today)
+    monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1))
+
+    // 准备请求数据
+    const requestData = {
+      employees: [], // TODO: 从员工列表获取
+      shifts: shiftsByDay.value[currentDayIndex.value].map(shift => {
+        // 计算实际日期
+        const shiftDate = new Date(monday)
+        shiftDate.setDate(monday.getDate() + shift.day)
+        
+        // 转换职位需求为 {职位: 数量} 格式
+        const required_positions = shift.positions?.reduce((acc: Record<string, number>, pos: { position: string, count: number }) => {
+          acc[pos.position] = pos.count
+          return acc
+        }, {}) || {}
+        
+        return {
+          day: shiftDate.toISOString().split('T')[0], // 转换为 YYYY-MM-DD 格式
+          start_time: shift.start_time,
+          end_time: shift.end_time,
+          required_positions,
+          store: storeStore.stores.find(s => Number(s.id) === storeId.value)
+        }
+      }),
+      sa_config: {
+        initial_temp: 100.0,
+        min_temp: 0.1,
+        cooling_rate: 0.95,
+        iter_per_temp: 100,
+        iterations: 50
+      },
+      cost_params: {
+        understaff_penalty: 100,
+        workday_violation: 10,
+        time_pref_violation: 5,
+        daily_hours_violation: 20,
+        weekly_hours_violation: 50
+      }
+    }
+
+    // 打印请求数据到控制台
+    console.log('排班请求数据:', JSON.stringify(requestData, null, 2))
+
+    // TODO: 实际调用API
+    // const response = await scheduleApi.generateSchedule(requestData)
+    // console.log('排班结果:', response)
+
+    ElMessage.success('排班生成成功')
+  } catch (error) {
+    console.error('排班生成失败:', error)
+    ElMessage.error('排班生成失败')
+  }
+}
+
 onMounted(async () => {
   try {
     await Promise.all([
@@ -340,6 +401,9 @@ onMounted(async () => {
       <template #header>
         <div class="card-header">
           <h2>班次管理 - {{ storeName }} (排班ID: {{ scheduleId }})</h2>
+          <el-button type="primary" @click="handleGenerateSchedule">
+            生成排班
+          </el-button>
         </div>
       </template>
 
@@ -353,9 +417,6 @@ onMounted(async () => {
           <div class="day-content">
             <div class="day-header">
               <h3>{{ dayName }}的班次安排</h3>
-              <el-button type="primary" size="small" @click="openShiftDialog()">
-                添加班次
-              </el-button>
             </div>
             <div class="shifts-list">
               <el-empty v-if="shiftsByDay[Number(index)]?.length === 0" description="暂无班次" />
@@ -479,13 +540,15 @@ onMounted(async () => {
   margin-bottom: 20px;
 }
 
-.card-header h2,
-.day-header h3 {
-  margin: 0;
-  font-weight: 500;
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .card-header h2 {
+  margin: 0;
+  font-weight: 500;
   font-size: 18px;
 }
 
