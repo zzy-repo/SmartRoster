@@ -143,14 +143,11 @@ async function submitShift() {
       start_time: currentShift.value.start_time,
       end_time: currentShift.value.end_time,
       store_id: storeId,
+      schedule_id: scheduleId,
       positions: [{
-        id: 0,
         position: currentShift.value.position,
-        count: currentShift.value.count,
-        shift_id: currentShift.value.id || 0,
-      }],
-      created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
+        count: currentShift.value.count
+      }]
     }
 
     if (currentShift.value.id) {

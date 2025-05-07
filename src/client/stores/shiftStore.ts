@@ -1,4 +1,4 @@
-import type { ScheduleShift, Shift } from '../types/shiftTypes'
+import type { ScheduleShift, Shift, ShiftPosition } from '../types/shiftTypes'
 import { defineStore } from 'pinia'
 import { createShift, deleteShift, fetchShifts, updateShift } from '../api/shiftApi'
 
@@ -25,13 +25,15 @@ export const useShiftStore = defineStore('shift', {
         const shifts = await fetchShifts(storeId)
         this.shifts = shifts.map(s => ({
           ...s,
-          start_time: s.startTime,
-          end_time: s.endTime,
-          store_id: s.storeId,
           assignments: {},
-          positions: [],
-          created_at: s.created_at || new Date().toISOString(),
-          updated_at: s.updated_at || new Date().toISOString(),
+          positions: s.positions.map(p => ({
+            position: p.position,
+            count: p.count,
+            id: 0,
+            shift_id: s.id
+          })),
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         }))
       }
       catch (error) {
@@ -47,13 +49,15 @@ export const useShiftStore = defineStore('shift', {
         const newShift = await createShift(shiftData)
         this.shifts.push({
           ...newShift,
-          positions: [],
           assignments: {},
-          start_time: newShift.startTime,
-          end_time: newShift.endTime,
-          store_id: newShift.storeId,
+          positions: shiftData.positions.map(p => ({
+            position: p.position,
+            count: p.count,
+            id: 0,
+            shift_id: newShift.id
+          })),
           created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         })
       }
       catch (error) {
@@ -70,8 +74,13 @@ export const useShiftStore = defineStore('shift', {
           this.shifts[index] = {
             ...this.shifts[index],
             ...updatedShift,
-            start_time: updatedShift.startTime || this.shifts[index].start_time,
-            end_time: updatedShift.endTime || this.shifts[index].end_time,
+            positions: (updateData.positions || this.shifts[index].positions).map(p => ({
+              position: p.position,
+              count: p.count,
+              id: p.id || 0,
+              shift_id: shiftId
+            })),
+            updated_at: new Date().toISOString()
           }
         }
       }

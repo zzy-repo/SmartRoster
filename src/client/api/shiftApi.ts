@@ -3,24 +3,28 @@ import http from './http'
 export interface Shift {
   id: number
   day: number
-  startTime: string
-  endTime: string
-  status: 'open' | 'closed'
-  storeId: number
+  start_time: string
+  end_time: string
+  store_id: number
+  schedule_id: number
+  positions: {
+    position: string
+    count: number
+  }[]
 }
 
-export function fetchShifts(storeId: number) {
-  return http.get<Shift[]>(`/shifts?storeId=${storeId}`).then(res => res.data)
+export function fetchShifts(scheduleId: number) {
+  return http.get<Shift[]>(`/schedule/shifts?scheduleId=${scheduleId}`).then(res => res.data)
 }
 
 export function createShift(data: Omit<Shift, 'id'>) {
-  return http.post<Shift>('/shifts', data).then(res => res.data)
+  return http.post<Shift>('/schedule/shifts', data).then(res => res.data)
 }
 
 export function updateShift(id: number, data: Partial<Shift>) {
-  return http.patch<Shift>(`/shifts/${id}`, data).then(res => res.data)
+  return http.put<Shift>(`/schedule/shifts/${id}`, data).then(res => res.data)
 }
 
 export function deleteShift(id: number) {
-  return http.delete(`/shifts/${id}`)
+  return http.delete(`/schedule/shifts/${id}`)
 }

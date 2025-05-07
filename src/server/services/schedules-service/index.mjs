@@ -11,10 +11,10 @@ app.use(express.json())
 
 // 注册排班规则路由
 app.use('/rules', scheduleRulesRouter)
-// 注册排班表路由
-app.use('', schedulesRouter)
 // 注册班次表路由
 app.use('/shifts', shiftsRouter)
+// 注册排班表路由
+app.use('', schedulesRouter)
 
 // 启动服务器
 app.listen(PORT, () => {

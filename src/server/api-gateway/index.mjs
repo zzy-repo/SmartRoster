@@ -6,13 +6,7 @@ import { verifyToken } from '../shared/utils/auth.mjs'
 const app = express()
 const PORT = config.gateway.port || 3000
 
-// 调整请求日志中间件的位置
-app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
-  next()
-})
-
-// 解析JSON请求体 - 改进错误处理
+// 解析JSON请求体 - 移到最前面
 app.use(express.json({
   verify: (req, res, buf) => {
     try {
@@ -25,6 +19,38 @@ app.use(express.json({
   },
   limit: '10mb',
 }))
+
+// 请求日志中间件
+app.use((req, res, next) => {
+  const requestId = Math.random().toString(36).substring(7)
+  req.requestId = requestId
+  
+  console.log(`\n[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`)
+  
+  // 输出请求体
+  if (req.method !== 'GET' && req.body) {
+    console.log('请求体:', JSON.stringify(req.body, null, 2))
+  }
+  
+  // 监听响应完成事件
+  res.on('finish', () => {
+    const responseBody = res.locals.body
+    if (responseBody) {
+      console.log('响应体:', JSON.stringify(responseBody, null, 2))
+    }
+  })
+  
+  // 保存原始的 res.json 方法
+  const originalJson = res.json
+  
+  // 重写 res.json 方法
+  res.json = function(body) {
+    res.locals.body = body
+    return originalJson.call(this, body)
+  }
+  
+  next()
+})
 
 // 添加连接错误处理中间件
 app.use((req, res, next) => {
@@ -98,7 +124,7 @@ Object.entries({
   })
 
   proxy.on('error', (err, req, res) => {
-    console.error(`服务连接失败: ${name}`)
+    console.error(`[${req.requestId}] 服务连接失败: ${name}`, err.message)
     if (!res.headersSent) {
       res.status(502).json({ error: '服务连接失败', message: err.message })
     }
@@ -112,6 +138,8 @@ Object.entries({
 
 // 添加全局错误处理中间件
 app.use((err, req, res, next) => {
+  console.error(`[${req.requestId}] 错误:`, err)
+  
   if (err instanceof SyntaxError) {
     return res.status(400).json({ error: '无效的JSON格式' })
   }

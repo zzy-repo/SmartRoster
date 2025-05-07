@@ -8,6 +8,7 @@ export interface Shift {
   start_time: string // 开始时间，格式HH:MM
   end_time: string // 结束时间，格式HH:MM
   store_id: number // 所属门店ID
+  schedule_id: number // 所属排班表ID
   positions: ShiftPosition[] // 该班次需要的岗位及人数
   created_at: string // 创建时间
   updated_at: string // 更新时间

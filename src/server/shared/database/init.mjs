@@ -1,31 +1,25 @@
 import { pool } from './index.mjs'
+import fs from 'fs'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
-/**
- * 清空数据库中所有表
- */
-async function clearDatabase() {
-  try {
-    const [tables] = await pool.query('SHOW TABLES')
-    for (const table of tables) {
-      const tableName = Object.values(table)[0]
-      await pool.query(`DROP TABLE IF EXISTS ${tableName}`)
-    }
-  }
-  catch (error) {
-    console.error('清空数据库失败')
-    throw error
-  }
-}
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /**
  * 设置数据库（测试连接并初始化表结构）
  */
 export async function setupDatabase() {
   try {
-    // 检查表结构
-    const statements = [
-      // ... 表结构定义 ...
-    ]
+    // 读取SQL文件
+    const sqlFilePath = path.join(__dirname, 'init_db.sql')
+    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8')
+    
+    // 分割SQL语句
+    const statements = sqlContent
+      .split(';')
+      .map(statement => statement.trim())
+      .filter(statement => statement.length > 0)
     
     // 执行SQL语句
     for (const statement of statements) {
@@ -33,7 +27,7 @@ export async function setupDatabase() {
         await pool.query(statement)
       }
       catch (error) {
-        console.error('执行SQL语句失败')
+        console.error('执行SQL语句失败:', error.message)
         throw error
       }
     }
@@ -41,21 +35,17 @@ export async function setupDatabase() {
     return true
   }
   catch (error) {
-    console.error('设置数据库失败')
+    console.error('设置数据库失败:', error.message)
     throw error
   }
 }
 
 /**
- * 初始化数据库表结构（先清空再执行SQL脚本）
+ * 初始化数据库表结构
  */
 export async function initDatabase() {
   try {
     console.log('开始初始化数据库...')
-    
-    // 清空数据库
-    console.log('清空数据库...')
-    await clearDatabase()
     
     // 初始化数据库
     const result = await setupDatabase()
