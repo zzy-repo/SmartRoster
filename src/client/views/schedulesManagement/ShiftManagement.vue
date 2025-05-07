@@ -354,10 +354,11 @@ onMounted(async () => {
                 <div class="shift-positions" v-if="shift.positions?.length">
                   <el-tag
                     v-for="position in shift.positions"
-                    :key="position"
+                    :key="position.position"
                     class="position-tag"
                   >
-                    {{ positionOptions.find(p => p.value === position)?.label || position }}
+                    {{ positionOptions.find(p => p.value === position.position)?.label || position.position }}
+                    <span class="position-count">({{ position.count }}人)</span>
                   </el-tag>
                 </div>
                 <div class="shift-actions">
@@ -502,5 +503,16 @@ onMounted(async () => {
   gap: 5px;
   margin-top: 10px;
   justify-content: flex-end;
+}
+
+.position-tag {
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.position-count {
+  margin-left: 4px;
+  font-size: 0.9em;
+  opacity: 0.8;
 }
 </style>

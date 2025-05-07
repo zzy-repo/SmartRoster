@@ -98,10 +98,21 @@ router.get('/', async (req, res) => {
       return res.status(400).json({ error: '缺少必要的排班ID参数' })
     }
 
+    // 查班次
     const [shifts] = await pool.query(
       'SELECT * FROM shifts WHERE schedule_id = ?',
       [scheduleId]
     )
+
+    // 查每个班次的岗位需求
+    for (const shift of shifts) {
+      const [positions] = await pool.query(
+        'SELECT * FROM shift_positions WHERE shift_id = ?',
+        [shift.id]
+      )
+      shift.positions = positions
+    }
+
     res.json({ shifts })
   }
   catch (error) {
