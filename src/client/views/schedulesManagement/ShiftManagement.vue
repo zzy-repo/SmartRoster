@@ -158,13 +158,16 @@ async function loadShifts() {
 // 打开新增/编辑班次对话框
 function openShiftDialog(shift?: any) {
   try {
-    console.log('打开对话框，传入的班次数据:', shift)
     if (shift) {
-      currentShift.value = { ...shift }
+      // 处理时间格式
+      const formattedShift = {
+        ...shift,
+        start_time: shift.start_time ? shift.start_time.split(':').slice(0, 2).join(':') : '09:00',
+        end_time: shift.end_time ? shift.end_time.split(':').slice(0, 2).join(':') : '17:00'
+      }
+      currentShift.value = { ...formattedShift }
       // 同步当前选中的工作日
       currentDayIndex.value = shift.day
-      console.log('编辑模式 - 当前班次数据:', currentShift.value)
-      console.log('编辑模式 - 当前工作日索引:', currentDayIndex.value)
     } else {
       // 确保使用当前选中的日期
       const currentDay = Number(currentDayIndex.value)
@@ -176,8 +179,6 @@ function openShiftDialog(shift?: any) {
         position: '',
         count: 1,
       }
-      console.log('新建模式 - 当前班次数据:', currentShift.value)
-      console.log('新建模式 - 当前工作日索引:', currentDayIndex.value)
     }
     dialogVisible.value = true
   } catch (error) {
@@ -274,7 +275,9 @@ async function deleteShift(id: number) {
 // 格式化时间显示
 function formatTime(time: string) {
   try {
-    return time || ''
+    if (!time) return ''
+    // 如果是HH:mm:ss格式，转换为HH:mm
+    return time.split(':').slice(0, 2).join(':')
   } catch (error) {
     console.error('格式化时间失败:', error)
     return ''

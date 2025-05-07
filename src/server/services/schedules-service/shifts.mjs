@@ -28,9 +28,9 @@ router.post('/', async (req, res) => {
     }
 
     // 验证时间格式
-    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)$/
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/
     if (!timeRegex.test(start_time) || !timeRegex.test(end_time)) {
-      return res.status(400).json({ error: '时间格式无效，请使用HH:mm格式' })
+      return res.status(400).json({ error: '时间格式无效，请使用HH:mm或HH:mm:ss格式' })
     }
 
     // 开始事务
@@ -140,23 +140,74 @@ router.get('/:id', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params
-    const { day, start_time, end_time, store_id, schedule_id } = req.body
+    const { day, start_time, end_time, store_id, schedule_id, positions } = req.body
 
     // 验证必要参数
-    if (!day || !start_time || !end_time || !store_id || !schedule_id) {
+    if (day === undefined || !start_time || !end_time || !store_id || !schedule_id) {
       return res.status(400).json({ error: '缺少必要参数' })
     }
 
-    const [result] = await pool.query(
-      'UPDATE shifts SET day = ?, start_time = ?, end_time = ?, store_id = ?, schedule_id = ? WHERE id = ?',
-      [day, start_time, end_time, store_id, schedule_id, id],
-    )
-
-    if (result.affectedRows === 0) {
-      return res.status(404).json({ error: '班次不存在' })
+    // 验证day范围
+    if (day < 0 || day > 6) {
+      return res.status(400).json({ error: 'day必须在0-6之间' })
     }
 
-    res.json({ message: '班次更新成功' })
+    // 验证时间格式
+    const timeRegex = /^([01]\d|2[0-3]):([0-5]\d)(?::([0-5]\d))?$/
+    if (!timeRegex.test(start_time) || !timeRegex.test(end_time)) {
+      return res.status(400).json({ error: '时间格式无效，请使用HH:mm或HH:mm:ss格式' })
+    }
+
+    // 开始事务
+    const connection = await pool.getConnection()
+    await connection.beginTransaction()
+
+    try {
+      // 更新班次基本信息
+      const [result] = await connection.query(
+        'UPDATE shifts SET day = ?, start_time = ?, end_time = ?, store_id = ?, schedule_id = ? WHERE id = ?',
+        [day, start_time, end_time, store_id, schedule_id, id],
+      )
+
+      if (result.affectedRows === 0) {
+        await connection.rollback()
+        return res.status(404).json({ error: '班次不存在' })
+      }
+
+      // 删除旧的职位信息
+      await connection.query(
+        'DELETE FROM shift_positions WHERE shift_id = ?',
+        [id]
+      )
+
+      // 插入新的职位信息
+      if (positions && positions.length > 0) {
+        for (const position of positions) {
+          if (!position.position || !position.count) {
+            throw new Error('岗位信息不完整，需要position和count字段')
+          }
+          await connection.query(
+            'INSERT INTO shift_positions (shift_id, position, count) VALUES (?, ?, ?)',
+            [id, position.position, position.count]
+          )
+        }
+      }
+
+      // 提交事务
+      await connection.commit()
+
+      res.json({ message: '班次更新成功' })
+    }
+    catch (error) {
+      // 如果出错，回滚事务
+      console.error('数据库操作失败:', error)
+      await connection.rollback()
+      throw error
+    }
+    finally {
+      // 释放连接
+      connection.release()
+    }
   }
   catch (error) {
     console.error('更新班次失败:', error)
