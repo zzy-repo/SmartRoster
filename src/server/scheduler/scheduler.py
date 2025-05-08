@@ -6,12 +6,15 @@ import logging
 from dataclasses import dataclass
 from typing import Dict, List, Tuple, Set, Any, Optional
 
-# 设置日志
+# 配置日志
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
-logger = logging.getLogger("StandaloneScheduler")
+logger = logging.getLogger('StandaloneScheduler')
+
+# 完全禁用模拟退火算法的日志输出
+logging.getLogger('StandaloneScheduler.simulated_annealing').setLevel(logging.WARNING)
 
 # 常量配置
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
@@ -118,6 +121,9 @@ class SchedulingAlgorithm:
             self.employee_store_position_map[key].append(e)
         
         logger.debug(f"员工数据预处理完成，共有{len(self.employee_store_position_map)}种门店-职位组合")
+        self.best_solution = None
+        self.best_cost = float('inf')
+        logger.info('初始化排班算法...')
     
     def _calculate_position_demand(self) -> Dict[str, int]:
         """计算各职位需求总量"""
@@ -546,9 +552,6 @@ class SchedulingAlgorithm:
             
             # 降温
             temperature *= self.sa_config["cooling_rate"]
-            
-            # 日志输出
-            logger.info(f"温度: {temperature:.2f}, 当前成本: {current_cost:.2f}, 最佳成本: {best_cost:.2f}")
         
         logger.info(f"模拟退火完成，最终成本: {best_cost:.2f}")
         

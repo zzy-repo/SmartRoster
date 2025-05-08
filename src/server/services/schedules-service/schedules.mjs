@@ -221,11 +221,9 @@ router.post('/run/:id', async (req, res) => {
         }
       })
     )
-    console.log('格式化后的班次数据:', JSON.stringify(shiftPositions, null, 2))
 
     // 3. 查询员工信息
     const [employees] = await pool.query('SELECT * FROM employees WHERE store_id = ?', [schedule.store_id])
-    console.log('原始员工数据:', JSON.stringify(employees, null, 2))
     
     // 转换员工数据格式，严格按照Employee类的定义
     const formattedEmployees = employees.map(emp => ({
@@ -245,7 +243,6 @@ router.post('/run/:id', async (req, res) => {
       phone: String(emp.phone || ''),
       email: String(emp.email || '')
     }))
-    console.log('格式化后的员工数据:', JSON.stringify(formattedEmployees, null, 2))
 
     // 3.1 查询排班规则参数
     // user_id优先从schedule.created_by获取，否则从header获取
@@ -280,9 +277,7 @@ router.post('/run/:id', async (req, res) => {
 
     // 4. 调用排班算法
     const pythonScriptPath = path.resolve(__dirname, '../../scheduler/scheduler_api.py')
-    console.log('当前目录:', __dirname)
-    console.log('Python脚本绝对路径:', pythonScriptPath)
-    console.log('文件是否存在:', fs.existsSync(pythonScriptPath))
+    console.log('开始运行排班算法...')
 
     if (!fs.existsSync(pythonScriptPath)) {
       return res.status(500).json({ 
@@ -290,8 +285,6 @@ router.post('/run/:id', async (req, res) => {
         error: `Python脚本不存在: ${pythonScriptPath}，请确保文件位于正确位置` 
       })
     }
-
-    console.log('请求数据:', JSON.stringify(requestData, null, 2))
 
     const pythonProcess = spawn('python3', [pythonScriptPath])
     let outputData = ''
@@ -306,7 +299,13 @@ router.post('/run/:id', async (req, res) => {
       } else {
         // 非JSON输出作为日志处理
         logData += output
-        console.log('Python日志:', output)
+        // 只输出关键流程信息
+        if (output.includes('初始化排班算法') || 
+            output.includes('开始生成初始解') || 
+            output.includes('初始解生成完成') || 
+            output.includes('模拟退火完成')) {
+          console.log('排班进度:', output.trim())
+        }
       }
     })
 
@@ -319,7 +318,13 @@ router.post('/run/:id', async (req, res) => {
       } else {
         // 其他stderr输出作为日志处理
         logData += error
-        console.log('Python日志:', error)
+        // 只输出关键流程信息
+        if (error.includes('初始化排班算法') || 
+            error.includes('开始生成初始解') || 
+            error.includes('初始解生成完成') || 
+            error.includes('模拟退火完成')) {
+          console.log('排班进度:', error.trim())
+        }
       }
     })
 
@@ -335,7 +340,12 @@ router.post('/run/:id', async (req, res) => {
       try {
         const result = JSON.parse(outputData)
         // 添加日志信息到返回结果
-        result.logs = logData.split('\n').filter(line => line.trim())
+        result.logs = logData.split('\n')
+          .filter(line => line.trim())
+          .filter(line => line.includes('初始化排班算法') || 
+                         line.includes('开始生成初始解') || 
+                         line.includes('初始解生成完成') || 
+                         line.includes('模拟退火完成'))
         res.json({ success: true, data: result })
       } catch (error) {
         console.error('解析排班结果失败:', error)
@@ -346,6 +356,7 @@ router.post('/run/:id', async (req, res) => {
       }
     })
 
+    // 移除请求数据的输出
     pythonProcess.stdin.write(JSON.stringify(requestData))
     pythonProcess.stdin.end()
 
