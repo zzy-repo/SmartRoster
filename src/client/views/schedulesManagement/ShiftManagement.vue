@@ -323,12 +323,14 @@ function getTimeBarStyle(start: string, end: string) {
 }
 
 // 添加排班生成相关函数
+const isGenerating = ref(false)
 const handleGenerateSchedule = async () => {
   try {
     if (!scheduleId.value) {
       ElMessage.error('缺少排班ID')
       return
     }
+    isGenerating.value = true
     // 调用后端排班接口
     const response = await scheduleApi.runSchedule(scheduleId.value)
     const resData = response?.data
@@ -341,6 +343,8 @@ const handleGenerateSchedule = async () => {
   } catch (error) {
     console.error('排班生成失败:', error)
     ElMessage.error('排班生成失败')
+  } finally {
+    isGenerating.value = false
   }
 }
 
@@ -363,8 +367,13 @@ onMounted(async () => {
       <template #header>
         <div class="card-header">
           <h2>班次管理 - {{ storeName }} (排班ID: {{ scheduleId }})</h2>
-          <el-button type="primary" @click="handleGenerateSchedule">
-            生成排班
+          <el-button 
+            type="primary" 
+            @click="handleGenerateSchedule"
+            :loading="isGenerating"
+            :disabled="isGenerating"
+          >
+            {{ isGenerating ? '正在生成排班...' : '生成排班' }}
           </el-button>
         </div>
       </template>

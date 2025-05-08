@@ -50,40 +50,80 @@ def _validate_time_format(time_str: str) -> Tuple[float, float]:
     except Exception as e:
         raise ValueError(f"时间格式无效: {str(e)}")
 
+def _validate_employee_data(employee_data: Dict[str, Any]) -> None:
+    """验证员工数据格式"""
+    required_fields = ['name', 'position', 'store']
+    for field in required_fields:
+        if field not in employee_data:
+            raise ValueError(f"缺少必要字段: {field}")
+    
+    # 验证workday_pref
+    workday_pref = employee_data.get('workday_pref', [0, 6])
+    if not isinstance(workday_pref, (list, tuple)) or len(workday_pref) != 2:
+        raise ValueError("workday_pref必须是包含两个整数的列表或元组")
+    if not all(isinstance(x, (int, float)) for x in workday_pref):
+        raise ValueError("workday_pref必须包含数字")
+    if not (0 <= workday_pref[0] <= 6 and 0 <= workday_pref[1] <= 6):
+        raise ValueError("workday_pref的值必须在0-6之间")
+    
+    # 验证time_pref
+    time_pref = employee_data.get('time_pref', ['00:00', '23:59'])
+    if not isinstance(time_pref, (list, tuple)) or len(time_pref) != 2:
+        raise ValueError("time_pref必须是包含两个时间字符串的列表或元组")
+    for time_str in time_pref:
+        _validate_time_format(time_str)
+    
+    # 验证工作时长
+    max_daily_hours = float(employee_data.get('max_daily_hours', 8.0))
+    max_weekly_hours = float(employee_data.get('max_weekly_hours', 40.0))
+    if max_daily_hours <= 0 or max_weekly_hours <= 0:
+        raise ValueError("工作时长必须大于0")
+    if max_daily_hours > 24 or max_weekly_hours > 168:
+        raise ValueError("工作时长超出合理范围")
+
+def _validate_shift_data(shift_data: Dict[str, Any]) -> None:
+    """验证班次数据格式"""
+    required_fields = ['day', 'start_time', 'end_time', 'store']
+    for field in required_fields:
+        if field not in shift_data:
+            raise ValueError(f"缺少必要字段: {field}")
+    
+    # 验证day
+    day = int(shift_data['day'])
+    if not (0 <= day <= 6):
+        raise ValueError("day必须在0-6之间")
+    
+    # 验证时间
+    _validate_time_format(shift_data['start_time'])
+    _validate_time_format(shift_data['end_time'])
+    
+    # 验证required_positions
+    required_positions = shift_data.get('required_positions', {})
+    if not isinstance(required_positions, dict):
+        raise ValueError("required_positions必须是字典类型")
+    for position, count in required_positions.items():
+        if not isinstance(count, (int, float)) or count < 0:
+            raise ValueError(f"职位{position}的需求人数必须是非负数")
+
 def _convert_employee(employee_data: Dict[str, Any]) -> Employee:
     """将API输入转换为Employee对象"""
     try:
         logger.debug(f"开始转换员工数据: {json.dumps(employee_data, ensure_ascii=False)}")
         
-        # 处理workday_pref
-        workday_pref_data = employee_data.get('workday_pref', [0, 6])
-        logger.debug(f"原始workday_pref数据: {workday_pref_data}, 类型: {type(workday_pref_data)}")
+        # 验证数据格式
+        _validate_employee_data(employee_data)
         
-        if isinstance(workday_pref_data, (list, tuple)):
-            logger.debug(f"workday_pref数据是列表或元组，长度: {len(workday_pref_data)}")
-            workday_pref = (int(workday_pref_data[0]), int(workday_pref_data[1]))
-            logger.debug(f"转换后的workday_pref: {workday_pref}, 类型: {type(workday_pref)}")
-        else:
-            logger.error(f"workday_pref数据格式错误: {workday_pref_data}")
-            raise ValueError("workday_pref必须是包含两个整数的列表或元组")
+        # 处理workday_pref
+        workday_pref = tuple(map(int, employee_data['workday_pref']))
         
         # 处理time_pref
-        time_pref_data = employee_data.get('time_pref', ['00:00', '23:59'])
-        logger.debug(f"原始time_pref数据: {time_pref_data}, 类型: {type(time_pref_data)}")
-        
-        if isinstance(time_pref_data, (list, tuple)):
-            logger.debug(f"time_pref数据是列表或元组，长度: {len(time_pref_data)}")
-            time_pref = (str(time_pref_data[0]), str(time_pref_data[1]))
-            logger.debug(f"转换后的time_pref: {time_pref}, 类型: {type(time_pref)}")
-        else:
-            logger.error(f"time_pref数据格式错误: {time_pref_data}")
-            raise ValueError("time_pref必须是包含两个时间字符串的列表或元组")
+        time_pref = tuple(str(t) for t in employee_data['time_pref'])
         
         # 创建Employee对象
         employee = Employee(
-            name=str(employee_data.get('name', '')),
-            position=str(employee_data.get('position', '')),
-            store=str(employee_data.get('store', '')),
+            name=str(employee_data['name']),
+            position=str(employee_data['position']),
+            store=str(employee_data['store']),
             workday_pref=workday_pref,
             time_pref=time_pref,
             max_daily_hours=float(employee_data.get('max_daily_hours', 8.0)),
@@ -95,9 +135,6 @@ def _convert_employee(employee_data: Dict[str, Any]) -> Employee:
         return employee
     except Exception as e:
         logger.error(f"转换员工数据失败: {str(e)}")
-        logger.error(f"错误类型: {type(e)}")
-        logger.error(f"错误详情: {str(e)}")
-        logger.error(f"员工数据: {json.dumps(employee_data, ensure_ascii=False)}")
         raise
 
 def _convert_shift(shift_data: Dict[str, Any]) -> Shift:
@@ -105,29 +142,41 @@ def _convert_shift(shift_data: Dict[str, Any]) -> Shift:
     try:
         logger.debug(f"开始转换班次数据: {json.dumps(shift_data, ensure_ascii=False)}")
         
-        # 确保required_positions是字典
-        required_positions = dict(shift_data.get('required_positions', {}))
-        logger.debug(f"required_positions数据: {required_positions}, 类型: {type(required_positions)}")
-        
-        if not isinstance(required_positions, dict):
-            logger.error(f"required_positions格式错误: {required_positions}")
-            raise ValueError("required_positions必须是字典类型")
+        # 验证数据格式
+        _validate_shift_data(shift_data)
         
         # 创建Shift对象
         shift = Shift(
-            day=int(shift_data.get('day', 0)),
-            start_time=str(shift_data.get('start_time', '00:00')),
-            end_time=str(shift_data.get('end_time', '23:59')),
-            required_positions=required_positions,
-            store=str(shift_data.get('store', ''))
+            day=int(shift_data['day']),
+            start_time=str(shift_data['start_time']),
+            end_time=str(shift_data['end_time']),
+            required_positions=dict(shift_data['required_positions']),
+            store=str(shift_data['store'])
         )
         logger.debug(f"成功创建Shift对象: {shift}")
         return shift
     except Exception as e:
         logger.error(f"转换班次数据失败: {str(e)}")
-        logger.error(f"错误类型: {type(e)}")
-        logger.error(f"错误详情: {str(e)}")
-        logger.error(f"班次数据: {json.dumps(shift_data, ensure_ascii=False)}")
+        raise
+
+def format_schedule_output(schedule: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    """格式化排班结果输出"""
+    try:
+        formatted_schedule = []
+        for assignment in schedule:
+            # 确保所有必要字段都存在且类型正确
+            if not all(key in assignment for key in ['employee_id', 'shift_id', 'position']):
+                raise ValueError("排班结果缺少必要字段")
+            
+            formatted_assignment = {
+                'employee_id': int(assignment['employee_id']),
+                'shift_id': int(assignment['shift_id']),
+                'position': str(assignment['position'])
+            }
+            formatted_schedule.append(formatted_assignment)
+        return formatted_schedule
+    except Exception as e:
+        logger.error(f"格式化排班结果失败: {str(e)}")
         raise
 
 def generate_schedule(
@@ -141,8 +190,6 @@ def generate_schedule(
         logger.debug("开始生成排班表")
         logger.debug(f"员工数据数量: {len(employees_data)}")
         logger.debug(f"班次数据数量: {len(shifts_data)}")
-        logger.debug(f"SA配置: {sa_config}")
-        logger.debug(f"成本参数: {cost_params}")
         
         # 转换输入数据
         logger.debug("开始转换员工数据...")
@@ -173,19 +220,20 @@ def generate_schedule(
         formatted_schedule = format_schedule_output(schedule)
         logger.debug("输出格式化完成")
         
+        # 确保输出格式严格符合要求
         result = {
-            "schedule": formatted_schedule,
-            "cost": cost,
-            "violations": violations,
-            "convergence_data": convergence_data
+            "schedule": formatted_schedule,  # 只包含必要的字段
+            "cost": float(cost),  # 确保是浮点数
+            "violations": {str(k): int(v) for k, v in violations.items()},  # 确保键是字符串，值是整数
+            "convergence_data": {
+                "temperatures": [float(t) for t in convergence_data.get('temperatures', [])],
+                "costs": [float(c) for c in convergence_data.get('costs', [])]
+            }
         }
         logger.debug("排班表生成完成")
         return result
     except Exception as e:
         logger.error(f"生成排班表失败: {str(e)}")
-        logger.error(f"错误类型: {type(e)}")
-        logger.error(f"错误详情: {str(e)}")
-        logger.error(f"错误堆栈: {sys.exc_info()}")
         raise
 
 # 使用示例

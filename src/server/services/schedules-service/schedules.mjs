@@ -117,76 +117,6 @@ router.delete('/:id', async (req, res) => {
   }
 })
 
-/**
- * 生成排班
- */
-router.post('/generate', async (req, res) => {
-  try {
-    const { schedule_id, store_id, sa_config, cost_params } = req.body
-
-    // 验证必要参数
-    if (!schedule_id || !store_id) {
-      return res.status(400).json({ error: '缺少必要参数' })
-    }
-
-    // 获取排班表信息
-    const [schedules] = await pool.query(
-      'SELECT * FROM schedules WHERE id = ? AND store_id = ?',
-      [schedule_id, store_id]
-    )
-
-    if (schedules.length === 0) {
-      return res.status(404).json({ error: '排班表不存在' })
-    }
-
-    // 获取该门店的所有员工信息
-    const [employees] = await pool.query(
-      'SELECT * FROM employees WHERE store_id = ?',
-      [store_id]
-    )
-
-    // 获取该排班表的所有班次信息
-    const [shifts] = await pool.query(
-      'SELECT * FROM shifts WHERE schedule_id = ?',
-      [schedule_id]
-    )
-
-    // 获取每个班次的职位需求
-    const shiftPositions = await Promise.all(
-      shifts.map(async (shift) => {
-        const [positions] = await pool.query(
-          'SELECT * FROM shift_positions WHERE shift_id = ?',
-          [shift.id]
-        )
-        return {
-          ...shift,
-          positions
-        }
-      })
-    )
-
-    // TODO: 调用排班算法生成排班
-    // const scheduleResult = await generateSchedule({
-    //   employees,
-    //   shifts: shiftPositions,
-    //   sa_config,
-    //   cost_params
-    // })
-
-    // 返回生成结果
-    res.json({
-      message: '排班生成成功',
-      data: {
-        schedule_id,
-        store_id,
-        // schedule: scheduleResult
-      }
-    })
-  } catch (error) {
-    console.error('生成排班失败:', error)
-    res.status(500).json({ error: '服务器错误' })
-  }
-})
 
 /**
  * 运行排班算法（根据排班ID）
@@ -226,23 +156,40 @@ router.post('/run/:id', async (req, res) => {
     const [employees] = await pool.query('SELECT * FROM employees WHERE store_id = ?', [schedule.store_id])
     
     // 转换员工数据格式，严格按照Employee类的定义
-    const formattedEmployees = employees.map(emp => ({
-      name: String(emp.name || ''),
-      position: String(emp.position || ''),
-      store: String(schedule.store_id),
-      workday_pref: [
-        Number(emp.workday_pref_start || 0),
-        Number(emp.workday_pref_end || 6)
-      ],
-      time_pref: [
-        String(emp.time_pref_start || '08:00').split(':').slice(0, 2).join(':'),
-        String(emp.time_pref_end || '20:00').split(':').slice(0, 2).join(':')
-      ],
-      max_daily_hours: Number(emp.max_daily_hours || 8),
-      max_weekly_hours: Number(emp.max_weekly_hours || 40),
-      phone: String(emp.phone || ''),
-      email: String(emp.email || '')
-    }))
+    const formattedEmployees = employees.map(emp => {
+      // 验证并格式化工作日偏好
+      const workday_pref_start = Number(emp.workday_pref_start ?? 0)
+      const workday_pref_end = Number(emp.workday_pref_end ?? 6)
+      if (workday_pref_start < 0 || workday_pref_start > 6 || workday_pref_end < 0 || workday_pref_end > 6) {
+        throw new Error(`员工 ${emp.name} 的工作日偏好超出范围(0-6)`)
+      }
+
+      // 验证并格式化时间偏好
+      const time_pref_start = String(emp.time_pref_start ?? '08:00').split(':').slice(0, 2).join(':')
+      const time_pref_end = String(emp.time_pref_end ?? '20:00').split(':').slice(0, 2).join(':')
+      if (!/^([01]\d|2[0-3]):([0-5]\d)$/.test(time_pref_start) || !/^([01]\d|2[0-3]):([0-5]\d)$/.test(time_pref_end)) {
+        throw new Error(`员工 ${emp.name} 的时间偏好格式错误`)
+      }
+
+      // 验证工作时长
+      const max_daily_hours = Number(emp.max_daily_hours ?? 8)
+      const max_weekly_hours = Number(emp.max_weekly_hours ?? 40)
+      if (max_daily_hours <= 0 || max_daily_hours > 24 || max_weekly_hours <= 0 || max_weekly_hours > 168) {
+        throw new Error(`员工 ${emp.name} 的工作时长超出合理范围`)
+      }
+
+      return {
+        name: String(emp.name || ''),
+        position: String(emp.position || ''),
+        store: String(schedule.store_id),
+        workday_pref: [workday_pref_start, workday_pref_end],
+        time_pref: [time_pref_start, time_pref_end],
+        max_daily_hours,
+        max_weekly_hours,
+        phone: String(emp.phone || ''),
+        email: String(emp.email || '')
+      }
+    })
 
     // 3.1 查询排班规则参数
     // user_id优先从schedule.created_by获取，否则从header获取
@@ -328,9 +275,17 @@ router.post('/run/:id', async (req, res) => {
       }
     })
 
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on('close', async (code) => {
       if (code !== 0) {
-        console.error('排班运行失败:', errorData)
+        // 更新排班状态为失败
+        try {
+          await pool.query(
+            'UPDATE schedules SET status = ? WHERE id = ?',
+            ['failed', id]
+          )
+        } catch (error) {
+          console.error('更新排班状态失败:', error)
+        }
         return res.status(500).json({ 
           success: false, 
           error: `排班算法执行失败: ${errorData}` 
@@ -346,22 +301,80 @@ router.post('/run/:id', async (req, res) => {
                          line.includes('开始生成初始解') || 
                          line.includes('初始解生成完成') || 
                          line.includes('模拟退火完成'))
-        res.json({ success: true, data: result })
+
+        // 5. 更新排班状态
+        await pool.query(
+          'UPDATE schedules SET status = ? WHERE id = ?',
+          ['completed', id]
+        )
+
+        // 6. 存储排班结果
+        if (result.schedule) {
+          // 6.1 删除旧的排班结果
+          await pool.query('DELETE FROM schedule_results WHERE schedule_id = ?', [id])
+          
+          // 6.2 插入新的排班结果
+          const scheduleResults = result.schedule.map(assignment => ({
+            schedule_id: id,
+            employee_id: assignment.employee_id,
+            shift_id: assignment.shift_id,
+            position: assignment.position
+          }))
+
+          if (scheduleResults.length > 0) {
+            const values = scheduleResults.map(result => 
+              `(${result.schedule_id}, ${result.employee_id}, ${result.shift_id}, '${result.position}')`
+            ).join(',')
+
+            await pool.query(`
+              INSERT INTO schedule_results 
+              (schedule_id, employee_id, shift_id, position) 
+              VALUES ${values}
+            `)
+          }
+        }
+
+        res.json({ 
+          success: true, 
+          data: {
+            ...result,
+            schedule_id: id,
+            status: 'completed'
+          }
+        })
       } catch (error) {
-        console.error('解析排班结果失败:', error)
+        console.error('处理排班结果失败:', error)
+        // 更新排班状态为失败
+        try {
+          await pool.query(
+            'UPDATE schedules SET status = ? WHERE id = ?',
+            ['failed', id]
+          )
+        } catch (dbError) {
+          console.error('更新排班状态失败:', dbError)
+        }
         res.status(500).json({ 
           success: false, 
-          error: `解析排班结果失败: ${error.message}` 
+          error: `处理排班结果失败: ${error.message}` 
         })
       }
     })
 
-    // 移除请求数据的输出
+    // 发送请求数据到Python进程
     pythonProcess.stdin.write(JSON.stringify(requestData))
     pythonProcess.stdin.end()
 
   } catch (error) {
     console.error('排班运行失败:', error)
+    // 更新排班状态为失败
+    try {
+      await pool.query(
+        'UPDATE schedules SET status = ? WHERE id = ?',
+        ['failed', id]
+      )
+    } catch (dbError) {
+      console.error('更新排班状态失败:', dbError)
+    }
     res.status(500).json({ success: false, error: error.message })
   }
 })
