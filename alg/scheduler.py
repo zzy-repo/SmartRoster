@@ -57,6 +57,7 @@ class Shift:
     start_time: str  # 格式: "HH:MM"
     end_time: str  # 格式: "HH:MM"
     required_positions: Dict[str, int]  # 职位: 需要人数
+    # 员工的职位有：门店经理，副经理，小组长，店员（收银，导购，库房）
     store: str  # 门店
 
 
