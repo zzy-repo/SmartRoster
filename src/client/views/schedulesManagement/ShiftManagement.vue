@@ -4,7 +4,8 @@ import { useStoreStore } from '@/stores/storeStore'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
-import type { Shift, ShiftPosition } from '@/types/shiftTypes'
+import type { Shift } from '@/types/shiftTypes'
+import { scheduleApi } from '@/api/scheduleApi'
 
 const route = useRoute()
 const shiftStore = useShiftStore()
@@ -324,40 +325,19 @@ function getTimeBarStyle(start: string, end: string) {
 // 添加排班生成相关函数
 const handleGenerateSchedule = async () => {
   try {
-    // 获取当前周的日期
-    const today = new Date()
-    const currentDay = today.getDay()
-    const monday = new Date(today)
-    monday.setDate(today.getDate() - (currentDay === 0 ? 6 : currentDay - 1))
-
-    // 准备请求数据
-    const requestData = {
-      schedule_id: scheduleId.value,
-      store_id: storeId.value,
-      sa_config: {
-        initial_temp: 100.0,
-        min_temp: 0.1,
-        cooling_rate: 0.95,
-        iter_per_temp: 100,
-        iterations: 50
-      },
-      cost_params: {
-        understaff_penalty: 100,
-        workday_violation: 10,
-        time_pref_violation: 5,
-        daily_hours_violation: 20,
-        weekly_hours_violation: 50
-      }
+    if (!scheduleId.value) {
+      ElMessage.error('缺少排班ID')
+      return
     }
-
-    // 打印请求数据到控制台
-    console.log('排班请求数据:', JSON.stringify(requestData, null, 2))
-
-    // TODO: 实际调用API
-    // const response = await scheduleApi.generateSchedule(requestData)
-    // console.log('排班结果:', response)
-
-    ElMessage.success('排班生成成功')
+    // 调用后端排班接口
+    const response = await scheduleApi.runSchedule(scheduleId.value)
+    const resData = response?.data
+    if (resData?.success) {
+      ElMessage.success('排班生成成功')
+      await loadShifts()
+    } else {
+      ElMessage.error(resData?.error || '排班生成失败')
+    }
   } catch (error) {
     console.error('排班生成失败:', error)
     ElMessage.error('排班生成失败')

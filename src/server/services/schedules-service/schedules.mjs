@@ -1,8 +1,14 @@
 import express from 'express'
 import { pool } from '../../shared/database/index.mjs'
 import { spawn } from 'child_process'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs'
 
 const router = express.Router()
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
 /**
  * 创建排班
@@ -201,17 +207,45 @@ router.post('/run/:id', async (req, res) => {
     const shiftPositions = await Promise.all(
       shifts.map(async (shift) => {
         const [positions] = await pool.query('SELECT * FROM shift_positions WHERE shift_id = ?', [shift.id])
-        // 转换为算法需要的格式
+        // 转换为算法需要的格式，严格按照Shift类的定义
         const required_positions = {}
         positions.forEach(pos => {
-          required_positions[pos.position] = pos.count
+          required_positions[String(pos.position)] = Number(pos.count)
         })
-        return { ...shift, required_positions }
+        return { 
+          day: Number(shift.day),
+          start_time: String(shift.start_time).split(':').slice(0, 2).join(':'),
+          end_time: String(shift.end_time).split(':').slice(0, 2).join(':'),
+          required_positions,
+          store: String(schedule.store_id)
+        }
       })
     )
+    console.log('格式化后的班次数据:', JSON.stringify(shiftPositions, null, 2))
 
     // 3. 查询员工信息
     const [employees] = await pool.query('SELECT * FROM employees WHERE store_id = ?', [schedule.store_id])
+    console.log('原始员工数据:', JSON.stringify(employees, null, 2))
+    
+    // 转换员工数据格式，严格按照Employee类的定义
+    const formattedEmployees = employees.map(emp => ({
+      name: String(emp.name || ''),
+      position: String(emp.position || ''),
+      store: String(schedule.store_id),
+      workday_pref: [
+        Number(emp.workday_pref_start || 0),
+        Number(emp.workday_pref_end || 6)
+      ],
+      time_pref: [
+        String(emp.time_pref_start || '08:00').split(':').slice(0, 2).join(':'),
+        String(emp.time_pref_end || '20:00').split(':').slice(0, 2).join(':')
+      ],
+      max_daily_hours: Number(emp.max_daily_hours || 8),
+      max_weekly_hours: Number(emp.max_weekly_hours || 40),
+      phone: String(emp.phone || ''),
+      email: String(emp.email || '')
+    }))
+    console.log('格式化后的员工数据:', JSON.stringify(formattedEmployees, null, 2))
 
     // 3.1 查询排班规则参数
     // user_id优先从schedule.created_by获取，否则从header获取
@@ -223,101 +257,101 @@ router.post('/run/:id', async (req, res) => {
     if (!rulesRows.length) {
       return res.status(400).json({ success: false, error: '未找到排班规则' })
     }
-    const rules = rulesRows[0]
-    // 组装参数
-    const sa_config = {
-      initial_temp: rules.initial_temp,
-      min_temp: rules.min_temp,
-      cooling_rate: rules.cooling_rate,
-      iter_per_temp: rules.iter_per_temp,
-      iterations: rules.iterations
-    }
-    const cost_params = {
-      understaff_penalty: rules.understaff_penalty,
-      workday_violation: rules.workday_violation,
-      time_pref_violation: rules.time_pref_violation,
-      daily_hours_violation: rules.daily_hours_violation,
-      weekly_hours_violation: rules.weekly_hours_violation
-    }
 
-    // 4. 组装数据，调用Python脚本
-    const pyInput = JSON.stringify({
-      employees,
+    // 4. 准备请求数据，确保所有数值都是数字类型
+    const requestData = {
+      employees: formattedEmployees,
       shifts: shiftPositions,
-      sa_config,
-      cost_params
-    })
-
-    const result = await new Promise((resolve, reject) => {
-      const py = spawn('python3', ['alg/scheduler_api.py'])
-      let stdout = ''
-      let stderr = ''
-      py.stdout.on('data', data => { stdout += data })
-      py.stderr.on('data', data => { stderr += data })
-      py.on('close', code => {
-        if (code === 0) {
-          try {
-            resolve(JSON.parse(stdout))
-          } catch (e) {
-            reject('Python输出解析失败: ' + e)
-          }
-        } else {
-          reject(stderr || 'Python脚本执行失败')
-        }
-      })
-      py.stdin.write(pyInput)
-      py.stdin.end()
-    })
-
-    // 6. 写入排班分配结果到数据库
-    // 解析result.schedule，将分配写入数据库（如shift_assignments表）
-    if (result.schedule && Array.isArray(result.schedule)) {
-      const conn = await pool.getConnection()
-      try {
-        await conn.beginTransaction()
-        // 删除旧分配
-        await conn.query('DELETE FROM shift_assignments WHERE schedule_id = ?', [id])
-        // 批量插入新分配
-        for (const shift of result.schedule) {
-          const { day, start_time, end_time, store, assignments } = shift
-          for (const position in assignments) {
-            for (const worker of assignments[position]) {
-              // worker: { name, position, store, ... }
-              // 需要查找employee_id和store_id
-              const [empRows] = await conn.query('SELECT id, store_id FROM employees WHERE name = ? AND store_id = ?', [worker.name, schedule.store_id])
-              if (empRows.length === 0) continue // 未找到员工
-              const employee_id = empRows[0].id
-              const store_id = empRows[0].store_id
-              // 找到shift_id
-              const [shiftRows] = await conn.query('SELECT id FROM shifts WHERE schedule_id = ? AND day = ? AND start_time = ? AND end_time = ? AND store_id = ?', [id, shift.day, shift.start_time, shift.end_time, schedule.store_id])
-              if (shiftRows.length === 0) continue // 未找到班次
-              const shift_id = shiftRows[0].id
-              await conn.query(
-                'INSERT INTO shift_assignments (position, schedule_id, shift_id, employee_id, store_id, assigned_by) VALUES (?, ?, ?, ?, ?, ?)',
-                [position, id, shift_id, employee_id, store_id, schedule.created_by || null]
-              )
-            }
-          }
-        }
-        await conn.commit()
-      } catch (err) {
-        await conn.rollback()
-        throw err
-      } finally {
-        conn.release()
+      sa_config: {
+        initial_temp: Number(rulesRows[0].initial_temp),
+        min_temp: Number(rulesRows[0].min_temp),
+        cooling_rate: Number(rulesRows[0].cooling_rate),
+        iter_per_temp: Number(rulesRows[0].iter_per_temp),
+        iterations: Number(rulesRows[0].iterations)
+      },
+      cost_params: {
+        understaff_penalty: Number(rulesRows[0].understaff_penalty),
+        workday_violation: Number(rulesRows[0].workday_violation),
+        time_pref_violation: Number(rulesRows[0].time_pref_violation),
+        daily_hours_violation: Number(rulesRows[0].daily_hours_violation),
+        weekly_hours_violation: Number(rulesRows[0].weekly_hours_violation)
       }
     }
 
-    // 7. 返回排班任务状态/结果
-    res.json({
-      success: true,
-      message: '排班成功',
-      schedule_id: id,
-      result
+    // 4. 调用排班算法
+    const pythonScriptPath = path.resolve(__dirname, '../../scheduler/scheduler_api.py')
+    console.log('当前目录:', __dirname)
+    console.log('Python脚本绝对路径:', pythonScriptPath)
+    console.log('文件是否存在:', fs.existsSync(pythonScriptPath))
+
+    if (!fs.existsSync(pythonScriptPath)) {
+      return res.status(500).json({ 
+        success: false, 
+        error: `Python脚本不存在: ${pythonScriptPath}，请确保文件位于正确位置` 
+      })
+    }
+
+    console.log('请求数据:', JSON.stringify(requestData, null, 2))
+
+    const pythonProcess = spawn('python3', [pythonScriptPath])
+    let outputData = ''
+    let errorData = ''
+    let logData = ''
+
+    pythonProcess.stdout.on('data', (data) => {
+      const output = data.toString()
+      // 检查是否是JSON格式的输出
+      if (output.trim().startsWith('{')) {
+        outputData += output
+      } else {
+        // 非JSON输出作为日志处理
+        logData += output
+        console.log('Python日志:', output)
+      }
     })
+
+    pythonProcess.stderr.on('data', (data) => {
+      const error = data.toString()
+      // 检查是否包含"Python错误:"前缀
+      if (error.includes('Python错误:')) {
+        errorData += error
+        console.error('Python错误:', error)
+      } else {
+        // 其他stderr输出作为日志处理
+        logData += error
+        console.log('Python日志:', error)
+      }
+    })
+
+    pythonProcess.on('close', (code) => {
+      if (code !== 0) {
+        console.error('排班运行失败:', errorData)
+        return res.status(500).json({ 
+          success: false, 
+          error: `排班算法执行失败: ${errorData}` 
+        })
+      }
+
+      try {
+        const result = JSON.parse(outputData)
+        // 添加日志信息到返回结果
+        result.logs = logData.split('\n').filter(line => line.trim())
+        res.json({ success: true, data: result })
+      } catch (error) {
+        console.error('解析排班结果失败:', error)
+        res.status(500).json({ 
+          success: false, 
+          error: `解析排班结果失败: ${error.message}` 
+        })
+      }
+    })
+
+    pythonProcess.stdin.write(JSON.stringify(requestData))
+    pythonProcess.stdin.end()
+
   } catch (error) {
     console.error('排班运行失败:', error)
-    res.status(500).json({ success: false, error: '服务器错误', detail: error?.toString?.() })
+    res.status(500).json({ success: false, error: error.message })
   }
 })
 

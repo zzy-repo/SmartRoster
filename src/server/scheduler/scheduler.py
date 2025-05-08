@@ -63,15 +63,37 @@ class Shift:
 
 def time_to_minutes(time_str: str) -> int:
     """将时间字符串转换为分钟数"""
-    hours, minutes = map(int, time_str.split(':'))
-    return hours * 60 + minutes
+    try:
+        # 处理时间格式，只保留小时和分钟
+        time_parts = time_str.split(':')[:2]
+        if len(time_parts) != 2:
+            raise ValueError(f"时间格式错误，期望 HH:MM 格式，实际: {time_str}")
+            
+        hours = int(time_parts[0])
+        minutes = int(time_parts[1])
+        
+        if hours < 0 or hours > 23:
+            raise ValueError(f"小时数超出范围(0-23): {hours}")
+        if minutes < 0 or minutes > 59:
+            raise ValueError(f"分钟数超出范围(0-59): {minutes}")
+            
+        return hours * 60 + minutes
+    except Exception as e:
+        raise ValueError(f"时间格式无效: {str(e)}")
 
 
 def calculate_shift_duration(shift: Shift) -> float:
     """计算班次时长（小时）"""
-    start = time_to_minutes(shift.start_time)
-    end = time_to_minutes(shift.end_time)
-    return (end - start) / 60
+    try:
+        start = float(time_to_minutes(shift.start_time))
+        end = float(time_to_minutes(shift.end_time))
+        duration = (end - start) / 60.0
+        logger.debug(f"计算班次时长: {shift.start_time}-{shift.end_time} = {duration:.2f}小时")
+        return duration
+    except Exception as e:
+        logger.error(f"计算班次时长失败: {str(e)}")
+        logger.error(f"班次信息: day={shift.day}, start={shift.start_time}, end={shift.end_time}")
+        raise ValueError(f"计算班次时长失败: {str(e)}")
 
 
 class SchedulingAlgorithm:

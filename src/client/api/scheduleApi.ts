@@ -19,4 +19,8 @@ export const scheduleApi = {
   deleteSchedule: (id: string) => {
     return del<{ success: boolean }>(`/schedule/${id}`)
   },
+
+  runSchedule: async (scheduleId: number|string) => {
+    return post(`/schedule/run/${scheduleId}`)
+  },
 }
