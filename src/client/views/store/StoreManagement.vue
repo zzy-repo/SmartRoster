@@ -2,6 +2,7 @@
 import { useStoreStore } from '@/stores/storeStore'
 import { onMounted, reactive, ref } from 'vue'
 import type { Store } from '@/types'
+import { ElMessage } from 'element-plus'
 
 // 获取 store 实例
 const storeStore = useStoreStore()
@@ -100,10 +101,16 @@ async function updateStore() {
       stores.value[index] = data
       selectedStore.value = data
       showEditStoreForm.value = false
+      ElMessage.success('门店更新成功')
     }
   }
-  catch (error) {
+  catch (error: any) {
     console.error('更新门店失败', error)
+    if (error.response?.data?.error) {
+      ElMessage.error(error.response.data.error)
+    } else {
+      ElMessage.error('更新门店失败，请检查您是否有权限进行此操作')
+    }
   }
 }
 

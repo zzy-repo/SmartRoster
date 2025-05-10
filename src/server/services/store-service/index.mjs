@@ -206,16 +206,10 @@ app.put('/:id', async (req, res) => {
       return res.status(400).json({ error: '门店名称不能为空' })
     }
 
-    // 检查用户是否有权限更新门店
-    const [store] = await pool.query('SELECT manager_id FROM stores WHERE id = ?', [id])
+    // 检查门店是否存在
+    const [store] = await pool.query('SELECT id FROM stores WHERE id = ?', [id])
     if (!store.length) {
       return res.status(404).json({ error: '门店不存在' })
-    }
-
-    // 只有管理员或店长可以更新门店信息
-    const [user] = await pool.query('SELECT role FROM users WHERE id = ?', [userId])
-    if (user[0].role !== 'admin' && store[0].manager_id !== userId) {
-      return res.status(403).json({ error: '无权更新门店信息' })
     }
 
     const [result] = await pool.query(
