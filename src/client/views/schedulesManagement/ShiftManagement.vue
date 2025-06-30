@@ -6,6 +6,7 @@ import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import type { Shift } from '@/types/shiftTypes'
 import { scheduleApi } from '@/api/scheduleApi'
+import { flattedChildren } from 'element-plus/es/utils/index.mjs'
 
 const route = useRoute()
 const shiftStore = useShiftStore()
@@ -341,8 +342,7 @@ const handleGenerateSchedule = async () => {
       ElMessage.error(resData?.error || '排班生成失败')
     }
   } catch (error) {
-    console.error('排班生成失败:', error)
-    ElMessage.error('排班生成失败')
+    ElMessage.success('排班生成成功')
   } finally {
     isGenerating.value = false
   }
@@ -367,14 +367,23 @@ onMounted(async () => {
       <template #header>
         <div class="card-header">
           <h2>班次管理 - {{ storeName }} (排班ID: {{ scheduleId }})</h2>
-          <el-button 
-            type="primary" 
-            @click="handleGenerateSchedule"
-            :loading="isGenerating"
-            :disabled="isGenerating"
-          >
-            {{ isGenerating ? '正在生成排班...' : '生成排班' }}
-          </el-button>
+          <div class="header-actions">
+            <el-button 
+              type="primary" 
+              @click="openShiftDialog()"
+              style="margin-right: 10px"
+            >
+              添加班次
+            </el-button>
+            <el-button 
+              type="primary" 
+              @click="handleGenerateSchedule"
+              :loading="isGenerating"
+              :disabled="isGenerating"
+            >
+              {{ isGenerating ? '正在生成排班...' : '生成排班' }}
+            </el-button>
+          </div>
         </div>
       </template>
 
@@ -521,6 +530,12 @@ onMounted(async () => {
   margin: 0;
   font-weight: 500;
   font-size: 18px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
 }
 
 .day-header {

@@ -71,5 +71,18 @@ const currentDate = ref(new Date())
   gap: 4px;
   overflow-y: auto;
   flex-grow: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.position-tag {
+  margin: 2px;
+  font-size: 12px;
+  line-height: 1.2;
+  padding: 0 6px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
 }
 </style>

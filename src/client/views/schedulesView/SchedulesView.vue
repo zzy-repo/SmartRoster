@@ -18,7 +18,6 @@ scheduleStore.fetchSchedules()
 
 const scheduleData = computed(() => {
   const data = initialScheduleData
-  //   const data = scheduleStore.schedules.length > 0 ? scheduleStore.schedules : initialScheduleData
   return data.map(schedule => ({
     date: new Date(schedule.start_date),
     content: {
@@ -58,6 +57,14 @@ const weeklyPositionCount = computed(() => {
 function handleMonthClick(monthIndex: number) {
   currentView.value = 'month'
   currentDate.value = new Date(currentYear.value, monthIndex, 1)
+}
+
+// 处理年份变化
+function handleYearChange(year: number) {
+  currentYear.value = year
+  if (currentView.value === 'year') {
+    currentDate.value = new Date(year, 0, 1)
+  }
 }
 </script>
 

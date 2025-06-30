@@ -3,9 +3,9 @@
     <el-card class="year-card">
       <template #header>
         <div class="year-header">
-          <el-button plain @click="$emit('prev-year')">last year</el-button>
+          <el-button plain @click="$emit('prev-year')">上一年</el-button>
           <span class="year-title">{{ currentYear }}年排班统计</span>
-          <el-button plain @click="$emit('next-year')">next year</el-button>
+          <el-button plain @click="$emit('next-year')">下一年</el-button>
         </div>
       </template>
       <div class="months-grid">
